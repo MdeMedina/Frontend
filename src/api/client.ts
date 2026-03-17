@@ -2,6 +2,11 @@ import axios, { AxiosError } from 'axios';
 
 // Detectar automáticamente la URL del backend basándose en la URL actual del frontend
 export const getApiUrl = () => {
+  // Primero, priorizar la variable de entorno si existe
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
   const hostname = window.location.hostname;
 
   // Si estamos usando localtunnel, usar la URL del backend en localtunnel
@@ -9,15 +14,9 @@ export const getApiUrl = () => {
     return 'https://miguel-airbnb-backend-v2.loca.lt';
   }
 
-  // Si estamos en una IP de red (no localhost), siempre usar esa IP para el backend
-  // Esto asegura que funcione cuando se accede desde otros dispositivos en la red
+  // Si estamos en una IP de red local (no localhost), usar esa IP para el backend
   if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
     return `http://${hostname}:3000`;
-  }
-
-  // Si estamos en localhost, usar la variable de entorno o localhost por defecto
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
   }
 
   return 'http://localhost:3000';
