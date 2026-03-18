@@ -4,12 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { Building2, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
 
 export const Login = () => {
-  const [email, setEmail]       = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError]       = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login }  = useAuth();
-  const navigate   = useNavigate();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,10 +18,10 @@ export const Login = () => {
     try {
       const loggedUser = await login(email, password);
       const routes: Record<string, string> = {
-        ADMIN:            '/admin',
-        OWNER:            '/propietario',
+        ADMIN: '/admin',
+        OWNER: '/propietario',
         ASSIGNED_MANAGER: '/responsable',
-        CONCIERGE:        '/conserje',
+        CONCIERGE: '/conserje',
       };
       navigate(routes[loggedUser.role] ?? '/', { replace: true });
     } catch (err: any) {
@@ -43,7 +43,7 @@ export const Login = () => {
 
       {/* ── Left panel — brand statement (desktop only) ─────────── */}
       <div className="hidden lg:flex lg:w-[55%] bg-primary flex-col justify-between p-16">
-        
+
         {/* Logotype */}
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-9 h-9 rounded-[var(--radius-sm)] bg-white/10 border border-white/20">
@@ -60,8 +60,7 @@ export const Login = () => {
             Plataforma de Control
           </p>
           <h1 className="text-fluid-hero text-white font-bold leading-none tracking-tight">
-            Gestión de<br />
-            <span className="text-action">Precisión.</span>
+            Hubitat
           </h1>
           <p className="mt-8 text-white/60 text-base leading-relaxed max-w-xs">
             Control total de residencias, reservas y peticiones en un sistema
