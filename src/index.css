@@ -127,6 +127,11 @@
     from { opacity: 0; transform: translateY(-4px); }
     to   { opacity: 1; transform: translateY(0); }
   }
+
+  @keyframes fade-slide-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 }
 
 /* ============================================================
@@ -169,5 +174,37 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
+  }
+}
+
+/* ============================================================
+   UTILITY LAYER — Component-level utilities
+   ============================================================ */
+
+@layer utilities {
+  /* Login page — staggered entrance animations */
+  .anim-1 { animation: fade-slide-up 0.4s var(--ease-surgical) 0.05s both; }
+  .anim-2 { animation: fade-slide-up 0.4s var(--ease-surgical) 0.15s both; }
+  .anim-3 { animation: fade-slide-up 0.4s var(--ease-surgical) 0.25s both; }
+  .anim-4 { animation: fade-slide-up 0.4s var(--ease-surgical) 0.35s both; }
+
+  /* Fluid type helpers */
+  .text-fluid-hero  { font-size: clamp(2.5rem, 4vw, 4rem); }
+  .text-fluid-title { font-size: clamp(1.75rem, 3vw, 2.25rem); }
+
+  /* Brand surface utilities */
+  .bg-primary        { background-color: var(--color-primary); }
+  .text-action       { color: var(--color-action); }
+  .border-danger     { border-color: var(--color-danger); }
+  .bg-danger-subtle  { background-color: var(--color-danger-subtle); }
+  .text-danger       { color: var(--color-danger); }
+
+  /* Reduced motion — disable entrance animations */
+  @media (prefers-reduced-motion: reduce) {
+    .anim-1, .anim-2, .anim-3, .anim-4 {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
   }
 }
