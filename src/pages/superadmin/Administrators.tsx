@@ -8,7 +8,27 @@ import { formatPhoneNumber } from '../../utils/phone';
 import { PhoneInput } from '../../components/PhoneInput';
 import { SearchableSelect } from '../../components/SearchableSelect';
 import { Modal } from '../../components/Modal';
+import { Star, Plus, Search, Trash, ArrowLeft, X } from 'lucide-react';
 import { handleRutInput } from '../../utils/rut';
+
+const card         = 'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-sm)]';
+const input        = 'w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-3 py-2 text-sm text-[var(--color-text-primary)] bg-[var(--color-surface)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]';
+const label        = 'block text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1';
+const btnPrimary   = 'px-4 py-2 bg-primary text-white text-sm font-semibold rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity';
+const btnSecondary = 'px-4 py-2 bg-[var(--color-background)] border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)] rounded-[var(--radius-sm)] hover:bg-[var(--color-border)] transition-colors';
+const tdCell       = 'px-6 py-4 whitespace-nowrap text-sm text-[var(--color-text-muted)]';
+
+const SkeletonRow = () => (
+  <tr className="animate-pulse">
+    <td className="px-6 py-4"><div className="h-4 bg-[var(--color-border)] rounded w-24 mb-1"></div><div className="h-3 bg-[var(--color-border)] rounded w-16"></div></td>
+    <td className="px-6 py-4 text-sm"><div className="h-4 bg-[var(--color-border)] rounded w-32"></div></td>
+    <td className="px-6 py-4 text-sm"><div className="h-4 bg-[var(--color-border)] rounded w-20"></div></td>
+    <td className="px-6 py-4 text-sm"><div className="h-4 bg-[var(--color-border)] rounded w-24"></div></td>
+    <td className="px-6 py-4 text-sm"><div className="h-4 bg-[var(--color-border)] rounded w-12"></div></td>
+    <td className="px-6 py-4 text-sm"><div className="h-4 bg-[var(--color-border)] rounded w-28"></div></td>
+    <td className="px-6 py-4 text-sm"><div className="flex gap-2"><div className="h-4 bg-[var(--color-border)] rounded w-8"></div><div className="h-4 bg-[var(--color-border)] rounded w-12"></div></div></td>
+  </tr>
+);
 
 type AdminWithResidences = {
   id: string;
@@ -30,16 +50,21 @@ type AdminWithResidences = {
 export default function Administrators() {
   const navigate = useNavigate();
   const { stopImpersonation } = useAuth();
-  const [admins, setAdmins] = useState<AdminWithResidences[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [admins, setAdmins]                   = useState<AdminWithResidences[]>([]);
+  const [loading, setLoading]                 = useState(true);
+  const [error, setError]                     = useState<string | null>(null);
+  const [successMessage, setSuccessMessage]   = useState('');
+  const [searchTerm, setSearchTerm]           = useState('');
+  const [confirmDialog, setConfirmDialog]     = useState<{ message: string; onConfirm: () => Promise<void> } | null>(null);
+  const [confirmLoading, setConfirmLoading]   = useState(false);
+
+  // Modals
+  const [showEditModal, setShowEditModal]     = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showResidencesModal, setShowResidencesModal] = useState(false);
-  const [editingAdmin, setEditingAdmin] = useState<AdminWithResidences | null>(null);
-  const [adminFormData, setAdminFormData] = useState({ firstName: '', lastName: '', email: '', rut: '', phone: '+56', password: '', residenceId: '' });
-  const [isPhoneValid, setIsPhoneValid] = useState(true);
+  const [editingAdmin, setEditingAdmin]       = useState<AdminWithResidences | null>(null);
+  const [adminFormData, setAdminFormData]     = useState({ firstName: '', lastName: '', email: '', rut: '', phone: '+56', password: '', residenceId: '' });
+  const [isPhoneValid, setIsPhoneValid]       = useState(true);
   const [availableResidences, setAvailableResidences] = useState<{ id: string, name: string }[]>([]);
   const [selectedResidenceToAssign, setSelectedResidenceToAssign] = useState<string>('');
 
@@ -69,47 +94,63 @@ export default function Administrators() {
     try {
       setLoading(true);
       setError(null);
-      // Obtener todos los administradores (incluyendo inactivos)
       const availableAdmins = await residencesApi.getAvailableAdmins(true);
-
-      // Obtener información adicional de cada administrador desde el API de usuarios
       const adminsWithDetails = await Promise.all(
         availableAdmins.map(async (admin) => {
           try {
             const userDetails = await usersApi.getById(admin.id);
             return {
-              id: admin.id,
-              email: admin.email,
-              firstName: admin.firstName,
-              lastName: admin.lastName,
+              ...admin,
               rut: (userDetails as any).rut,
-              phone: admin.phone,
               isActive: userDetails.isActive,
               lastLogin: userDetails.lastLogin,
               createdAt: userDetails.createdAt,
               residences: admin.residences || (admin.residence ? [admin.residence] : []),
             };
           } catch {
-            // Si falla obtener detalles, usar datos básicos
             return {
-              id: admin.id,
-              email: admin.email,
-              firstName: admin.firstName,
-              lastName: admin.lastName,
-              phone: admin.phone,
-              isActive: true, // Asumir activo si no se pueden cargar detalles
-              createdAt: new Date().toISOString(), // Fallback
+              ...admin,
+              isActive: true,
+              createdAt: new Date().toISOString(),
               residences: admin.residences || (admin.residence ? [admin.residence] : []),
             };
           }
         })
       );
-
       setAdmins(adminsWithDetails);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al cargar administradores');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al cargar administradores');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshAdminInModal = async (adminId: string) => {
+    try {
+      const updatedAdmins = await residencesApi.getAvailableAdmins(true);
+      const updatedAdmin = updatedAdmins.find(a => a.id === adminId);
+      if (!updatedAdmin) return;
+
+      try {
+        const userDetails = await usersApi.getById(updatedAdmin.id);
+        setEditingAdmin({
+          ...updatedAdmin,
+          rut: (userDetails as any).rut,
+          isActive: userDetails.isActive,
+          lastLogin: userDetails.lastLogin,
+          createdAt: userDetails.createdAt,
+          residences: updatedAdmin.residences || (updatedAdmin.residence ? [updatedAdmin.residence] : []),
+        });
+      } catch {
+        setEditingAdmin({
+          ...updatedAdmin,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          residences: updatedAdmin.residences || (updatedAdmin.residence ? [updatedAdmin.residence] : []),
+        });
+      }
+    } catch (err) {
+      console.error('Error refreshing admin:', err);
     }
   };
 
@@ -126,6 +167,27 @@ export default function Administrators() {
       admin.residences.some(r => r.name.toLowerCase().includes(term))
     );
   }, [admins, searchTerm]);
+
+  // ── Confirmation helper ────────────────────────────────────────────────
+  const showConfirm = (message: string, onConfirm: () => Promise<void>) => {
+    setConfirmDialog({ message, onConfirm });
+  };
+
+  const runConfirm = async () => {
+    if (!confirmDialog) return;
+    setConfirmLoading(true);
+    try {
+      await confirmDialog.onConfirm();
+    } finally {
+      setConfirmLoading(false);
+      setConfirmDialog(null);
+    }
+  };
+
+  const showSuccess = (msg: string) => {
+    setSuccessMessage(msg);
+    setTimeout(() => setSuccessMessage(''), 4000);
+  };
 
   const handleEditAdmin = (admin: AdminWithResidences) => {
     setEditingAdmin(admin);
@@ -234,367 +296,270 @@ export default function Administrators() {
 
   const handleAssignResidence = async () => {
     if (!editingAdmin || !selectedResidenceToAssign) return;
-
     try {
       setError(null);
-      const selectedResidence = availableResidences.find(r => r.id === selectedResidenceToAssign);
-
-      // Use the residences API to assign the admin to the residence
-      await residencesApi.update(
-        selectedResidenceToAssign,
-        selectedResidence?.name || '',
-        { userId: editingAdmin.id }
-      );
-
-      // Refresh the admin list and update the modal
+      const res = availableResidences.find(r => r.id === selectedResidenceToAssign);
+      await residencesApi.update(selectedResidenceToAssign, res?.name || '', { userId: editingAdmin.id });
       await fetchAdmins();
-
-      // Update the admin in the modal
-      const updatedAdmins = await residencesApi.getAvailableAdmins(true);
-      const updatedAdmin = updatedAdmins.find(a => a.id === editingAdmin.id);
-      if (updatedAdmin) {
-        try {
-          const userDetails = await usersApi.getById(updatedAdmin.id);
-          setEditingAdmin({
-            ...updatedAdmin,
-            rut: (userDetails as any).rut,
-            isActive: userDetails.isActive,
-            lastLogin: userDetails.lastLogin,
-            createdAt: userDetails.createdAt,
-            residences: updatedAdmin.residences || (updatedAdmin.residence ? [updatedAdmin.residence] : []),
-          });
-        } catch {
-          setEditingAdmin({
-            ...updatedAdmin,
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            residences: updatedAdmin.residences || (updatedAdmin.residence ? [updatedAdmin.residence] : []),
-          });
-        }
-      }
-
-      // Clear selection and show success message
+      await refreshAdminInModal(editingAdmin.id);
       setSelectedResidenceToAssign('');
-      alert(`Residencia "${selectedResidence?.name}" asignada correctamente`);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al asignar residencia');
+      showSuccess(`Residencia "${res?.name}" asignada correctamente`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al asignar residencia');
     }
   };
 
   const handleRemoveResidence = async (residenceId: string) => {
     if (!editingAdmin) return;
+    const res = editingAdmin.residences.find(r => r.id === residenceId);
+    if (!res) return;
 
-    const residence = editingAdmin.residences.find(r => r.id === residenceId);
-    if (!residence) return;
-
-    const confirmMessage = `¿Estás seguro de remover a ${editingAdmin.firstName} ${editingAdmin.lastName} de la residencia "${residence.name}"?\n\nSi este administrador no tiene otras residencias asignadas, su cuenta será desactivada.`;
-
-    if (!confirm(confirmMessage)) {
-      return;
-    }
-
-    try {
-      setError(null);
-      const result = await residencesApi.removeAdmin(residenceId, editingAdmin.id);
-
-      // Actualizar la lista de administradores
-      await fetchAdmins();
-
-      // Actualizar el administrador en el modal
-      const updatedAdmins = await residencesApi.getAvailableAdmins(true);
-      const updatedAdmin = updatedAdmins.find(a => a.id === editingAdmin.id);
-      if (updatedAdmin) {
-        try {
-          const userDetails = await usersApi.getById(updatedAdmin.id);
-          setEditingAdmin({
-            ...updatedAdmin,
-            rut: (userDetails as any).rut,
-            isActive: userDetails.isActive,
-            lastLogin: userDetails.lastLogin,
-            createdAt: userDetails.createdAt,
-            residences: updatedAdmin.residences || (updatedAdmin.residence ? [updatedAdmin.residence] : []),
-          });
-        } catch {
-          setEditingAdmin({
-            ...updatedAdmin,
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            residences: updatedAdmin.residences || (updatedAdmin.residence ? [updatedAdmin.residence] : []),
-          });
-        }
+    showConfirm(
+      `¿Remover a ${editingAdmin.firstName} ${editingAdmin.lastName} de "${res.name}"? Si es su única residencia, la cuenta se desactivará.`,
+      async () => {
+        const result = await residencesApi.removeAdmin(residenceId, editingAdmin.id);
+        await fetchAdmins();
+        await refreshAdminInModal(editingAdmin.id);
+        showSuccess(result.message);
       }
-
-      // Mostrar mensaje de éxito
-      alert(result.message);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al remover residencia');
-    }
-  };
-
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-lg text-gray-600">Cargando administradores...</div>
-        </div>
-      </Layout>
     );
-  }
+  };
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/superadmin')}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              ← Volver al Inicio
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="mb-10">
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[var(--color-primary)] mb-2">
+            Super Administrador
+          </p>
+          <div className="flex items-end justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => navigate('/superadmin')}
+                className={`${btnSecondary} flex items-center gap-2 pr-5`}
+                aria-label="Volver al panel principal"
+              >
+                <ArrowLeft size={14} strokeWidth={2} />
+                Volver
+              </button>
+              <h1 className="dashboard-hero-title font-bold tracking-tight text-[var(--color-text-primary)] leading-none" aria-current="page">
+                Administradores
+              </h1>
+            </div>
+            <button onClick={() => setShowCreateModal(true)}
+              className={`${btnPrimary} flex items-center gap-2 shrink-0`}
+              aria-label="Crear nuevo administrador">
+              <Plus size={14} strokeWidth={2} aria-hidden="true" />
+              Crear Administrador
             </button>
-            <h1 className="text-3xl font-bold text-gray-800">Gestión de Administradores</h1>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
-          >
-            <span>➕</span>
-            Crear Administrador
-          </button>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-            {error}
+          <div role="alert" className="flex items-center gap-3 border border-[var(--color-danger)] bg-[var(--color-danger-subtle)]
+                          rounded-[var(--radius-sm)] px-4 py-3 mb-6">
+            <p className="text-sm text-[var(--color-danger)]">{error}</p>
+            <button onClick={() => setError(null)}
+              className="ml-auto text-xs font-semibold text-[var(--color-danger)] hover:opacity-70 transition-opacity">
+              Cerrar
+            </button>
+          </div>
+        )}
+        {successMessage && (
+          <div role="status" className="border border-[var(--color-action)] bg-[var(--color-action-subtle)]
+                          rounded-[var(--radius-sm)] px-4 py-3 mb-6">
+            <p className="text-sm text-[var(--color-action)]">{successMessage}</p>
+          </div>
+        )}
+        {confirmDialog && (
+          <div role="alertdialog"
+               className="border-2 border-[var(--color-primary)] bg-[var(--color-surface)]
+                          rounded-[var(--radius-sm)] px-5 py-4 mb-6 flex items-center gap-4">
+            <p className="text-sm font-medium text-[var(--color-text-primary)] flex-1">{confirmDialog.message}</p>
+            <div className="flex gap-2 shrink-0">
+              <button onClick={() => setConfirmDialog(null)} className={btnSecondary} disabled={confirmLoading}>
+                Cancelar
+              </button>
+              <button onClick={runConfirm} disabled={confirmLoading}
+                className="px-4 py-2 bg-[var(--color-danger)] text-white text-sm font-semibold
+                           rounded-[var(--radius-sm)] hover:opacity-90 motion-safe:transition-opacity disabled:opacity-50">
+                {confirmLoading ? 'Procesando…' : 'Confirmar'}
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Filtro de búsqueda */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Buscar Administrador
-          </label>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por nombre, RUT, email o residencia..."
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-
-        {/* Estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-600">Total Administradores</div>
-            <div className="text-2xl font-bold text-gray-800">{admins.length}</div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-600">Administradores Activos</div>
-            <div className="text-2xl font-bold text-green-600">
-              {admins.filter(a => a.isActive).length}
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-600">Administradores Inactivos</div>
-            <div className="text-2xl font-bold text-red-600">
-              {admins.filter(a => !a.isActive).length}
-            </div>
+        <div className={`${card} p-4 mb-6`}>
+          <label htmlFor="search" className={label}>Buscar Administrador</label>
+          <div className="relative">
+            <Search size={15} strokeWidth={1.5}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none"
+              aria-hidden="true" />
+            <input
+              id="search"
+              type="search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por nombre, RUT, email o residencia…"
+              className={`${input} pl-9`}
+              aria-label="Filtrar administradores"
+            />
           </div>
         </div>
 
-        {/* Tabla de administradores */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          {[
+            { label: 'Total Administradores', value: loading ? '…' : admins.length, color: 'text-[var(--color-text-primary)]', desc: 'Cuentas registradas' },
+            { label: 'Administradores Activos', value: loading ? '…' : admins.filter(a => a.isActive).length, color: 'text-[var(--color-action-text)]', desc: 'Con acceso al sistema' },
+            { label: 'Administradores Inactivos', value: loading ? '…' : admins.filter(a => !a.isActive).length, color: 'text-[var(--color-danger)]', desc: 'Sin residencias asignadas' },
+          ].map((stat) => (
+            <div key={stat.label} className={`${card} p-5 relative overflow-hidden group hover:border-[var(--color-primary)] transition-colors`}>
+              <div className="absolute top-0 left-0 w-1 h-full bg-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <p className="text-[10px] text-[var(--color-text-muted)] font-bold uppercase tracking-widest mb-1">{stat.label}</p>
+              <div className="flex items-baseline gap-2">
+                <p className={`text-3xl font-bold ${stat.color} leading-none tabular-nums tracking-tight`}>{stat.value}</p>
+                <p className="text-[11px] text-[var(--color-text-muted)] font-medium">{stat.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className={`${card} overflow-x-auto`}>
+          <table className="min-w-full divide-y divide-[var(--color-border)]">
+            <thead className="bg-[var(--color-background)]">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Administrador
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  RUT
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Residencias
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Último Acceso
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
+                {['Administrador', 'Email', 'RUT', 'Residencias', 'Estado', 'Acceso', 'Acciones'].map(col => (
+                  <th key={col} className="px-6 py-3 text-left text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-widest bg-[var(--color-background)]">
+                    {col}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredAdmins.length === 0 ? (
+            <tbody className="bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+              {loading ? (
+                Array(5).fill(0).map((_, i) => <SkeletonRow key={i} />)
+              ) : filteredAdmins.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-8 text-center text-sm text-[var(--color-text-muted)]">
                     {searchTerm ? 'No se encontraron administradores' : 'No hay administradores registrados'}
                   </td>
                 </tr>
-              ) : (
-                filteredAdmins.map((admin) => (
-                  <tr key={admin.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {admin.firstName} {admin.lastName}
+              ) : filteredAdmins.map((admin) => (
+                <tr key={admin.id} className="hover:bg-[var(--color-background)] transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <p className="text-sm font-semibold text-[var(--color-text-primary)]">{admin.firstName} {admin.lastName}</p>
+                    {admin.phone && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{formatPhoneNumber(admin.phone)}</p>}
+                  </td>
+                  <td className={tdCell}>{admin.email}</td>
+                  <td className={tdCell}>{admin.rut || '-'}</td>
+                  <td className="px-6 py-4">
+                    {admin.residences && admin.residences.length > 0 ? (
+                      <div className="space-y-1">
+                        <div className="text-xs font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
+                          {admin.residences.length} {admin.residences.length === 1 ? 'residencia' : 'residencias'}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {admin.residences.slice(0, 3).map((residence) => (
+                            <span key={residence.id}
+                                  className="px-2 py-0.5 text-[10px] font-bold rounded-[var(--radius-sm)]
+                                             bg-[var(--color-primary-subtle)] text-[var(--color-primary)]
+                                             border border-[var(--color-border)] flex items-center gap-1">
+                              {residence.name}
+                              {residence.isMain && <Star size={8} strokeWidth={3} className="text-[var(--color-warning)] fill-[var(--color-warning)]" aria-label="Principal" />}
+                            </span>
+                          ))}
+                          {admin.residences.length > 3 && (
+                            <span className="px-2 py-0.5 text-[10px] items-center text-[var(--color-text-muted)] bg-[var(--color-background)]
+                                             rounded-[var(--radius-sm)] border border-[var(--color-border)]">
+                              +{admin.residences.length - 3}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      {admin.phone && (
-                        <div className="text-sm text-gray-500">{formatPhoneNumber(admin.phone)}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{admin.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{admin.rut || '-'}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {admin.residences && admin.residences.length > 0 ? (
-                        <div>
-                          <div className="text-sm font-medium text-gray-900 mb-1">
-                            {admin.residences.length} {admin.residences.length === 1 ? 'residencia' : 'residencias'}
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {admin.residences.slice(0, 3).map((residence) => (
-                              <span
-                                key={residence.id}
-                                className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 flex items-center gap-1"
-                                title={residence.name}
-                              >
-                                {residence.name}
-                                {residence.isMain && <span title="Administrador Principal" className="text-amber-600 font-bold">★</span>}
-                              </span>
-                            ))}
-                            {admin.residences.length > 3 && (
-                              <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
-                                +{admin.residences.length - 3} más
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div>
-                          <span className="text-sm font-medium text-red-600">0 residencias</span>
-                          <div className="text-xs text-gray-400 mt-1">Cuenta inactiva</div>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${admin.isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                          }`}
-                      >
-                        {admin.isActive ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {admin.lastLogin
-                        ? new Date(admin.lastLogin).toLocaleString('es-ES')
-                        : 'Nunca'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => handleEditAdmin(admin)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        Editar
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-[var(--color-danger)] uppercase tracking-tighter">Sin residencias</span>
+                        <span className="text-[10px] text-[var(--color-text-muted)] font-medium">Cuenta inactiva</span>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-0.5 text-xs font-semibold rounded-[var(--radius-sm)]
+                      ${admin.isActive
+                        ? 'bg-[var(--color-action-subtle)] text-[var(--color-action-text)]'
+                        : 'bg-[var(--color-danger-subtle)] text-[var(--color-danger)]'}`}>
+                      {admin.isActive ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </td>
+                  <td className={tdCell}>
+                    {admin.lastLogin ? new Date(admin.lastLogin).toLocaleString('es-ES') : 'Nunca'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <div className="flex items-center gap-4">
+                      <button onClick={() => handleEditAdmin(admin)}
+                        className="text-xs font-bold text-[var(--color-primary)] uppercase tracking-tight
+                                   hover:underline underline-offset-4 decoration-2 transition-all">
+                        PerfiL
                       </button>
-                      <button
-                        onClick={() => handleManageResidences(admin)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
+                      <button onClick={() => handleManageResidences(admin)}
+                        className="text-xs font-bold text-[var(--color-primary)] uppercase tracking-tight
+                                   hover:underline underline-offset-4 decoration-2 transition-all">
                         Residencias ({admin.residences.length})
                       </button>
-                    </td>
-                  </tr>
-                ))
-              )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
-        {/* Modal de edición de administrador */}
         <Modal
           isOpen={showEditModal && !!editingAdmin}
           onClose={handleCloseEditModal}
           title="Editar Administrador"
         >
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            <div role="alert" className="border border-[var(--color-danger)] bg-[var(--color-danger-subtle)]
+                            rounded-[var(--radius-sm)] px-4 py-3 mb-4 text-sm text-[var(--color-danger)]">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmitAdminEdit}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre
-              </label>
-              <input
-                type="text"
-                value={adminFormData.firstName}
+          <form onSubmit={handleSubmitAdminEdit} className="space-y-4">
+            <div>
+              <label className={label}>Nombre</label>
+              <input type="text" value={adminFormData.firstName}
                 onChange={(e) => setAdminFormData({ ...adminFormData, firstName: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              />
+                className={input} required />
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Apellido
-              </label>
-              <input
-                type="text"
-                value={adminFormData.lastName}
+            <div>
+              <label className={label}>Apellido</label>
+              <input type="text" value={adminFormData.lastName}
                 onChange={(e) => setAdminFormData({ ...adminFormData, lastName: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              />
+                className={input} required />
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={adminFormData.email}
+            <div>
+              <label className={label}>Email</label>
+              <input type="email" value={adminFormData.email}
                 onChange={(e) => setAdminFormData({ ...adminFormData, email: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              />
+                className={input} required />
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                RUT
-              </label>
-              <input
-                type="text"
-                value={adminFormData.rut || ''}
+            <div>
+              <label className={label}>RUT</label>
+              <input type="text" value={adminFormData.rut || ''}
                 onChange={(e) => {
                   const formatted = handleRutInput(e.target.value);
                   setAdminFormData({ ...adminFormData, rut: formatted });
                 }}
-                placeholder="12.345.678-9"
-                maxLength={12}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+                placeholder="12.345.678-9" maxLength={12} className={input} />
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Teléfono (Opcional)
-              </label>
+            <div>
+              <label className={label}>Teléfono (Opcional)</label>
               <PhoneInput
                 value={adminFormData.phone || '+56'}
                 onChange={(value) => setAdminFormData({ ...adminFormData, phone: value })}
@@ -602,112 +567,66 @@ export default function Administrators() {
               />
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                type="button"
-                onClick={handleCloseEditModal}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-              >
-                Guardar Cambios
-              </button>
+            <div className="flex justify-end gap-3 pt-2">
+              <button type="button" onClick={handleCloseEditModal} className={btnSecondary}>Cancelar</button>
+              <button type="submit" className={btnPrimary}>Guardar Cambios</button>
             </div>
           </form>
         </Modal>
 
-        {/* Modal de crear administrador */}
         <Modal
           isOpen={showCreateModal}
           onClose={handleCloseCreateModal}
           title="Crear Nuevo Administrador"
         >
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            <div role="alert" className="border border-[var(--color-danger)] bg-[var(--color-danger-subtle)]
+                            rounded-[var(--radius-sm)] px-4 py-3 mb-4 text-sm text-[var(--color-danger)]">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmitCreateAdmin}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre
-              </label>
-              <input
-                type="text"
-                value={adminFormData.firstName}
+          <form onSubmit={handleSubmitCreateAdmin} className="space-y-4">
+            <div>
+              <label className={label}>Nombre</label>
+              <input type="text" value={adminFormData.firstName}
                 onChange={(e) => setAdminFormData({ ...adminFormData, firstName: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              />
+                className={input} required />
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Apellido
-              </label>
-              <input
-                type="text"
-                value={adminFormData.lastName}
+            <div>
+              <label className={label}>Apellido</label>
+              <input type="text" value={adminFormData.lastName}
                 onChange={(e) => setAdminFormData({ ...adminFormData, lastName: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              />
+                className={input} required />
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={adminFormData.email}
+            <div>
+              <label className={label}>Email</label>
+              <input type="email" value={adminFormData.email}
                 onChange={(e) => setAdminFormData({ ...adminFormData, email: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              />
+                className={input} required />
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contraseña
-              </label>
-              <input
-                type="password"
-                value={adminFormData.password}
+            <div>
+              <label className={label}>Contraseña</label>
+              <input type="password" value={adminFormData.password}
                 onChange={(e) => setAdminFormData({ ...adminFormData, password: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-                minLength={8}
-                placeholder="Mínimo 8 caracteres"
-              />
+                className={input} required minLength={8} placeholder="Mínimo 8 caracteres" />
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                RUT
-              </label>
-              <input
-                type="text"
-                value={adminFormData.rut || ''}
+            <div>
+              <label className={label}>RUT</label>
+              <input type="text" value={adminFormData.rut || ''}
                 onChange={(e) => {
                   const formatted = handleRutInput(e.target.value);
                   setAdminFormData({ ...adminFormData, rut: formatted });
                 }}
-                placeholder="12.345.678-9"
-                maxLength={12}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+                placeholder="12.345.678-9" maxLength={12} className={input} />
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Teléfono (Opcional)
-              </label>
+            <div>
+              <label className={label}>Teléfono (Opcional)</label>
               <PhoneInput
                 value={adminFormData.phone || '+56'}
                 onChange={(value) => setAdminFormData({ ...adminFormData, phone: value })}
@@ -715,35 +634,22 @@ export default function Administrators() {
               />
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Asignar Residencia (Opcional)
-              </label>
+            <div>
+              <label className={label}>Asignar Residencia (Opcional)</label>
               <SearchableSelect
                 options={availableResidences}
                 value={adminFormData.residenceId}
                 onChange={(value) => setAdminFormData({ ...adminFormData, residenceId: String(value) })}
                 placeholder="Buscar y seleccionar residencia..."
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-[10px] text-[var(--color-text-muted)] mt-1 tracking-tight">
                 Puedes asignar una residencia inicial ahora. Podrás agregar más después.
               </p>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                type="button"
-                onClick={handleCloseCreateModal}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-              >
-                Crear Administrador
-              </button>
+            <div className="flex justify-end gap-3 pt-2">
+              <button type="button" onClick={handleCloseCreateModal} className={btnSecondary}>Cancelar</button>
+              <button type="submit" className={btnPrimary}>Crear Administrador</button>
             </div>
           </form>
         </Modal>
@@ -753,17 +659,17 @@ export default function Administrators() {
           isOpen={showResidencesModal && !!editingAdmin}
           onClose={handleCloseResidencesModal}
           title={`Residencias de ${editingAdmin?.firstName} ${editingAdmin?.lastName}`}
-          width="max-w-2xl"
         >
-          <div className="max-h-[80vh] overflow-y-auto pr-2">
+          <div className="max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              <div role="alert" className="border border-[var(--color-danger)] bg-[var(--color-danger-subtle)]
+                              rounded-[var(--radius-sm)] px-4 py-3 mb-6 text-sm text-[var(--color-danger)]">
                 {error}
               </div>
             )}
 
-            <div className="mb-6 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Asignar Nueva Residencia</h4>
+            <div className={`${card} p-4 mb-8`}>
+              <h4 className={label}>Asignar Nueva Residencia</h4>
               <div className="flex gap-2">
                 <div className="flex-grow">
                   <SearchableSelect
@@ -776,53 +682,61 @@ export default function Administrators() {
                 <button
                   onClick={handleAssignResidence}
                   disabled={!selectedResidenceToAssign}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  className={btnPrimary}
                 >
                   Asignar
                 </button>
               </div>
             </div>
 
-            <div className="mb-4">
-              <div className="text-sm text-gray-600 mb-2">
-                Total de residencias asignadas: <strong>{editingAdmin?.residences.length || 0}</strong>
+            <div className="mb-6">
+              <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-widest mb-3">
+                Residencias Asignadas ({editingAdmin?.residences.length || 0})
               </div>
+              
               {editingAdmin?.residences.length === 0 && (
-                <div className="text-sm text-gray-500 bg-yellow-50 p-3 rounded-lg">
-                  ⚠️ Este administrador no tiene residencias asignadas. Su cuenta está inactiva.
+                <div className="text-xs font-medium text-[var(--color-danger)] bg-[var(--color-danger-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-danger)]">
+                  Este administrador no tiene residencias asignadas. Su cuenta está inactiva.
+                </div>
+              )}
+
+              {editingAdmin && editingAdmin.residences.length > 0 ? (
+                <div className="space-y-2">
+                  {editingAdmin.residences.map((residence) => (
+                    <div
+                      key={residence.id}
+                      className={`${card} p-3 flex justify-between items-center group hover:border-[var(--color-primary)] transition-colors`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)]"></div>
+                        <span className="text-sm font-semibold text-[var(--color-text-primary)]">{residence.name}</span>
+                        {residence.isMain && (
+                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-[var(--radius-sm)] bg-[var(--color-warning-subtle)] text-[var(--color-warning)] border border-[var(--color-warning)]">
+                            Principal
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleRemoveResidence(residence.id)}
+                        className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-subtle)] rounded-[var(--radius-sm)] transition-all"
+                        aria-label={`Remover ${residence.name}`}
+                      >
+                        <Trash size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10 text-xs text-[var(--color-text-muted)] font-medium bg-[var(--color-background)] rounded-[var(--radius-sm)] border border-dashed border-[var(--color-border)]">
+                  No hay residencias asignadas
                 </div>
               )}
             </div>
 
-            {editingAdmin && editingAdmin.residences.length > 0 ? (
-              <div className="space-y-3">
-                {editingAdmin.residences.map((residence) => (
-                  <div
-                    key={residence.id}
-                    className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex justify-between items-center"
-                  >
-                    <div>
-                      <div className="font-medium text-gray-900">{residence.name}</div>
-                    </div>
-                    <button
-                      onClick={() => handleRemoveResidence(residence.id)}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                    >
-                      Remover
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                No hay residencias asignadas
-              </div>
-            )}
-
-            <div className="mt-6 flex justify-end">
+            <div className="pt-4 flex justify-end">
               <button
                 onClick={handleCloseResidencesModal}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                className={btnSecondary}
               >
                 Cerrar
               </button>

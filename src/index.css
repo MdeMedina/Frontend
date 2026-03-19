@@ -17,10 +17,11 @@
   --color-primary-hover:   oklch(27% 0.10 254);
   --color-primary-subtle:  oklch(21% 0.09 254 / 0.08);
 
-  /* Action / Success — Soft Confirmation Green */
-  --color-action:          oklch(87% 0.07 158);      /* #A8E6CF */
-  --color-action-hover:    oklch(80% 0.09 158);
-  --color-action-text:     oklch(28% 0.09 158);
+  /* Action / Success — Surgical Clinical Green (Vivid) */
+  --color-action:          oklch(62% 0.17 150);      /* High-precision vivid green */
+  --color-action-hover:    oklch(55% 0.19 150);
+  --color-action-subtle:   oklch(62% 0.17 150 / 0.12);
+  --color-action-text:     oklch(35% 0.12 150);      /* High contrast for text */
 
   /* Surface & Background */
   --color-surface:         oklch(100% 0 0);           /* #FFFFFF — Cards, panels */
@@ -189,8 +190,9 @@
   .anim-4 { animation: fade-slide-up 0.4s var(--ease-surgical) 0.35s both; }
 
   /* Fluid type helpers */
-  .text-fluid-hero  { font-size: clamp(2.5rem, 4vw, 4rem); }
-  .text-fluid-title { font-size: clamp(1.75rem, 3vw, 2.25rem); }
+  .text-fluid-hero       { font-size: clamp(2.5rem, 4vw, 4rem); }
+  .text-fluid-title      { font-size: clamp(1.75rem, 3vw, 2.25rem); }
+  .dashboard-hero-title  { font-size: clamp(2rem, 3.5vw, 3rem); }
 
   /* Brand surface utilities */
   .bg-primary        { background-color: var(--color-primary); }
