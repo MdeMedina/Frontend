@@ -58,6 +58,13 @@ const managerMenuItems = [
     color: 'from-emerald-500 to-emerald-600',
   },
   {
+    title: 'Mis Peticiones',
+    description: 'Ver peticiones enviadas y recibidas',
+    icon: '📝',
+    path: '/responsable/petitions',
+    color: 'from-purple-500 to-purple-600',
+  },
+  {
     title: 'Calendario',
     description: 'Ver calendario visual de check-in/check-out',
     icon: '📆',

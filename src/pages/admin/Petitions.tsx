@@ -7,11 +7,11 @@ import { es } from 'date-fns/locale';
 import { Modal } from '../../components/Modal';
 
 export const AdminPetitions = () => {
-  const { impersonationMode } = useAuth();
+  const { currentBuilding, impersonationMode } = useAuth();
   const [petitions, setPetitions] = useState<Petition[]>([]);
   const [selectedPetition, setSelectedPetition] = useState<Petition | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'propias' | 'generales'>('propias');
+  const [activeTab, setActiveTab] = useState<'pending' | 'resolved' | 'general'>('pending');
 
   // Review Modal State
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -23,10 +23,42 @@ export const AdminPetitions = () => {
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
 
+  // Correction Modal State
+  const [showCorrectionModal, setShowCorrectionModal] = useState(false);
+  const [correctionStatus, setCorrectionStatus] = useState<'APPROVED' | 'REJECTED'>('APPROVED');
+  const [correctionNotes, setCorrectionNotes] = useState('');
+  const [isSubmittingCorrection, setIsSubmittingCorrection] = useState(false);
+
+  const handleCorrectResolution = async () => {
+    if (!selectedPetition || !correctionNotes.trim()) {
+      alert('Por favor agrega notas sobre la causa de esta corrección.');
+      return;
+    }
+
+    try {
+      setIsSubmittingCorrection(true);
+      await petitionsApi.correct(selectedPetition.id, {
+        status: correctionStatus,
+        notes: correctionNotes
+      });
+
+      await fetchPetitions();
+      setShowCorrectionModal(false);
+      setCorrectionNotes('');
+    } catch (err: any) {
+      alert('Error al corregir la petición: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsSubmittingCorrection(false);
+    }
+  };
+
   const fetchPetitions = async () => {
     try {
       setLoading(true);
-      const response = await petitionsApi.getAll({ limit: 100 });
+      const response = await petitionsApi.getAll({ 
+        limit: 100,
+        ...(currentBuilding?.id ? { buildingId: currentBuilding.id } : {})
+      });
       // Remove filter to allow CONCIERGE petitions (like CANCEL_MOVEMENT)
       // const filteredPetitions = response.data.filter(p => !p.user || p.user.role !== 'CONCIERGE'); 
       const filteredPetitions = response.data;
@@ -46,7 +78,7 @@ export const AdminPetitions = () => {
 
   useEffect(() => {
     fetchPetitions();
-  }, []);
+  }, [currentBuilding?.id]);
 
   // Helper to determine if a petition belongs to "Generales" (Admin can't approve)
   const isAdminApprovalRestricted = (petition: Petition) => {
@@ -55,7 +87,18 @@ export const AdminPetitions = () => {
 
   const filteredItems = petitions.filter(p => {
     const isRestricted = isAdminApprovalRestricted(p);
-    return activeTab === 'propias' ? !isRestricted : isRestricted;
+    
+    // Tab "Generales" shows ONLY restricted petitions (e.g. CONCIERGE)
+    if (activeTab === 'general') return isRestricted;
+    
+    // For other tabs, exclude restricted petitions
+    if (isRestricted) return false;
+    
+    // Filter by status for Pendientes/Resueltas
+    if (activeTab === 'pending') return p.status === 'PENDING';
+    if (activeTab === 'resolved') return p.status === 'APPROVED' || p.status === 'REJECTED';
+    
+    return false;
   });
 
   // Auto-select first petition when tab changes
@@ -98,7 +141,10 @@ export const AdminPetitions = () => {
         adminNotes: finalNote
       });
 
-      const response = await petitionsApi.getAll({ limit: 100 });
+      const response = await petitionsApi.getAll({ 
+        limit: 100,
+        ...(currentBuilding?.id ? { buildingId: currentBuilding.id } : {})
+      });
       // Remove filter here as well
       const filteredPetitions = response.data;
       setPetitions(filteredPetitions);
@@ -133,6 +179,12 @@ export const AdminPetitions = () => {
 
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
+  };
+
+  const getRecipientLabel = (petition: Petition) => {
+    if (petition.type === 'CANCEL_MOVEMENT') return 'Para: Administración';
+    const owner = petition.apartment?.owner || (petition.stay as any)?.apartment?.owner;
+    return owner ? `Para: ${owner.firstName} ${owner.lastName}` : 'Para: Propietario';
   };
 
   const formatDate = (dateString: string) => {
@@ -205,6 +257,14 @@ export const AdminPetitions = () => {
     }
   };
 
+  const isCorrectionAllowed = (petition: Petition) => {
+    if (!petition.reviewedAt) return false;
+    const reviewedDate = new Date(petition.reviewedAt);
+    const now = new Date();
+    const diffInHours = (now.getTime() - reviewedDate.getTime()) / (1000 * 60 * 60);
+    return diffInHours <= 24;
+  };
+
   // --- RENDER HELPERS ---
 
   const renderPetitionDetails = (petition: Petition) => {
@@ -273,8 +333,55 @@ export const AdminPetitions = () => {
 
     // 2. APARTMENT PETITIONS
     if (['CREATE_APARTMENT', 'MODIFY_APARTMENT', 'DELETE_APARTMENT'].includes(petition.type)) {
-      const aptData = petition.type === 'CREATE_APARTMENT' ? data : (petition.apartment || data);
+      const aptData = (petition.type === 'CREATE_APARTMENT' || !petition.apartment) ? data : petition.apartment;
       const buildingName = typeof aptData.building === 'string' ? aptData.building : aptData.building?.name || data.buildingName;
+
+      if (petition.type === 'MODIFY_APARTMENT') {
+        const DiffField = ({ label, current, requested }: { label: string, current: any, requested: any }) => {
+          const isChanged = requested !== undefined && requested !== current && requested !== '' && requested !== 0;
+          return (
+            <div className={`p-2 rounded border ${isChanged ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100'}`}>
+              <p className="text-[8px] uppercase font-bold text-slate-400 mb-0.5">{label}</p>
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs ${isChanged ? 'text-slate-400 line-through' : 'font-bold text-slate-800'}`}>
+                  {current || 'N/A'}
+                </span>
+                {isChanged && (
+                  <>
+                    <span className="material-symbols-outlined text-[10px] text-amber-500">arrow_forward</span>
+                    <span className="text-xs font-bold text-amber-700">{requested}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <Card title="Comparativa de Departamento" icon="compare_arrows" className="h-full border-amber-200 bg-amber-50/10">
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <DiffField label="Número" current={aptData.number} requested={data.number} />
+                <DiffField label="Piso" current={aptData.floor} requested={data.floor} />
+              </div>
+              <div className="grid grid-cols-1">
+                <DiffField label="Estacionamiento" current={(aptData as any).parkingNumber} requested={data.parkingNumber} />
+              </div>
+              <div className="grid grid-cols-1">
+                <DiffField 
+                  label="Descripción" 
+                  current={aptData.description} 
+                  requested={data.description !== undefined ? data.description : undefined} 
+                />
+              </div>
+              <div className="p-2 bg-slate-100 rounded text-center">
+                <p className="text-[8px] uppercase font-bold text-slate-400">Torre (Fijo)</p>
+                <p className="text-xs font-bold text-slate-700">{buildingName}</p>
+              </div>
+            </div>
+          </Card>
+        );
+      }
 
       return (
         <Card title="Datos del Departamento" icon="apartment" className="h-full">
@@ -303,26 +410,61 @@ export const AdminPetitions = () => {
       const apartment = stayData.apartment || (petition.apartment) || {};
       const building = apartment.building || {};
 
+      const DiffField = ({ label, current, requested, isDate = false }: { label: string, current: any, requested: any, isDate?: boolean }) => {
+        const currentVal = isDate ? current?.split('T')[0] : current;
+        const requestedVal = isDate ? requested?.split('T')[0] : requested;
+        const isChanged = requestedVal !== undefined && requestedVal !== currentVal && requestedVal !== '';
+        
+        return (
+          <div className={`p-2 rounded border ${isChanged ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100'}`}>
+            <p className="text-[8px] uppercase font-bold text-slate-400 mb-0.5">{label}</p>
+            <div className="flex items-center justify-between gap-2">
+              <span className={`text-xs ${isChanged ? 'text-slate-400 line-through' : 'font-bold text-slate-800'}`}>
+                {isDate ? formatDate(current) : (current || 'N/A')}
+              </span>
+              {isChanged && (
+                <>
+                  <span className="material-symbols-outlined text-[10px] text-amber-500">arrow_forward</span>
+                  <span className="text-xs font-bold text-amber-700">{isDate ? formatDate(requested) : requested}</span>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      };
+
+      const isModify = petition.type === 'MODIFY_STAY' || petition.type === 'MODIFY_GUEST_DATA';
+
       return (
         <div className="grid grid-cols-1 gap-4">
-          <Card title="Datos de la Reserva" icon="bed" className="h-full">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="col-span-2">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Huésped</p>
-                <p className="font-semibold text-sm">
-                  {stayData.guestFirstName} {stayData.guestLastName}
-                </p>
-                <p className="text-xs text-mono text-slate-500">{stayData.guestDocument || 'N/A'}</p>
-              </div>
-
-              <Field label="Check-In" value={formatDate(stayData.scheduledCheckIn)} />
-              <Field label="Check-Out" value={formatDate(stayData.scheduledCheckOut)} />
-
-              {stayData.actualCheckIn && (
-                <Field label="Check-In Real" value={formatDate(stayData.actualCheckIn)} />
+          <Card title={isModify ? "Comparativa de Reserva" : "Datos de la Reserva"} icon={isModify ? "compare_arrows" : "bed"} className={`h-full ${isModify ? 'border-amber-200 bg-amber-50/10' : ''}`}>
+            <div className="space-y-2">
+              {!isModify ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="col-span-2">
+                    <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Huésped</p>
+                    <p className="font-semibold text-sm">{stayData.guestFirstName} {stayData.guestLastName}</p>
+                    <p className="text-xs text-mono text-slate-500">{stayData.guestDocument || 'N/A'}</p>
+                  </div>
+                  <Field label="Check-In" value={formatDate(stayData.scheduledCheckIn)} />
+                  <Field label="Check-Out" value={formatDate(stayData.scheduledCheckOut)} />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <DiffField label="Nombre" current={petition.stay?.guestFirstName} requested={data.guestFirstName} />
+                    <DiffField label="Apellido" current={petition.stay?.guestLastName} requested={data.guestLastName} />
+                  </div>
+                  <DiffField label="Documento" current={petition.stay?.guestDocument} requested={data.guestDocument} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <DiffField label="Check-In" current={petition.stay?.scheduledCheckIn} requested={data.scheduledCheckIn || data.newCheckIn} isDate />
+                    <DiffField label="Check-Out" current={petition.stay?.scheduledCheckOut} requested={data.scheduledCheckOut || data.newCheckOut} isDate />
+                  </div>
+                </div>
               )}
-              {stayData.actualCheckOut && (
-                <Field label="Check-Out Real" value={formatDate(stayData.actualCheckOut)} />
+              
+              {stayData.actualCheckIn && !isModify && (
+                <Field label="Check-In Real" value={formatDate(stayData.actualCheckIn)} />
               )}
             </div>
           </Card>
@@ -349,24 +491,52 @@ export const AdminPetitions = () => {
     if (petition.type === 'ASSIGN_PARKING') {
       const assignment = (petition as any).parkingAssignment;
       // Use assignment if available (approved/active), otherwise use requestedData (pending)
-      const targetNum = assignment?.targetApartment?.number || data.targetApartmentNumber || 'Desconocido';
+      const targetApt = assignment?.targetApartment;
+      const targetNum = targetApt 
+        ? `${targetApt.number}${targetApt.building?.name ? ` - ${targetApt.building.name}` : ''}`
+        : data.targetApartmentNumber 
+          ? `${data.targetApartmentNumber}${data.targetBuildingName ? ` - ${data.targetBuildingName}` : ''}`
+          : 'Desconocido';
 
-      const sourceNum = assignment?.sourceApartment?.number || petition.apartment?.number || 'Mío';
+      const sourceApt = assignment?.sourceApartment || petition.apartment;
+      const sourceNum = sourceApt 
+        ? `${sourceApt.number}${sourceApt.building?.name ? ` - ${sourceApt.building.name}` : ''}`
+        : 'Mío';
 
       return (
-        <Card title="Asignación de Estacionamiento" icon="local_parking" className="h-full bg-pink-50/30 border-pink-100">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="col-span-2 flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">Estacionamiento:</span>
-              <span className="text-sm font-bold text-slate-900">{data.parkingNumber || assignment?.parkingNumber}</span>
+        <Card title="Asignación de Estacionamiento" icon="local_parking" className="h-full border-pink-200 bg-pink-50/10">
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="col-span-2 bg-white p-3 rounded-lg border border-pink-100 flex items-center justify-between shadow-sm">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">N° Estacionamiento</p>
+                  <p className="text-2xl font-black text-pink-700 tracking-tight">{data.parkingNumber || assignment?.parkingNumber || 'N/A'}</p>
+                </div>
+                <div className="bg-pink-100 p-2 rounded-full text-pink-600">
+                  <span className="material-symbols-outlined text-3xl">local_parking</span>
+                </div>
+              </div>
+
+              <div className="p-2 bg-slate-50 rounded border border-slate-100">
+                <p className="text-[8px] uppercase font-bold text-slate-400 mb-0.5">Propiedad Origen</p>
+                <p className="text-xs font-bold text-slate-800">{sourceNum}</p>
+              </div>
+
+              <div className="p-2 bg-pink-50 rounded border border-pink-200">
+                <p className="text-[8px] uppercase font-bold text-pink-400 mb-0.5">Beneficiario (Destino)</p>
+                <p className="text-xs font-bold text-pink-700">{targetNum}</p>
+              </div>
             </div>
 
-            <Field label="Origen (Prop.)" value={sourceNum} />
-            <Field label="Destino (Benef.)" value={targetNum} />
-
-            <div className="col-span-2 grid grid-cols-2 gap-2 mt-1 bg-white p-2 rounded border border-pink-50">
-              <Field label="Desde" value={formatDate(data.startDate || assignment?.startDate).split(',')[0]} />
-              <Field label="Hasta" value={formatDate(data.endDate || assignment?.endDate).split(',')[0]} />
+            <div className="grid grid-cols-2 gap-2 mt-1 bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+              <div className="text-center border-r border-slate-100">
+                <p className="text-[8px] uppercase font-bold text-slate-400 mb-0.5">Vigencia Desde</p>
+                <p className="text-xs font-bold text-slate-800">{formatDate(data.startDate || assignment?.startDate).split(',')[0]}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[8px] uppercase font-bold text-slate-400 mb-0.5">Vigencia Hasta</p>
+                <p className="text-xs font-bold text-slate-800">{formatDate(data.endDate || assignment?.endDate).split(',')[0]}</p>
+              </div>
             </div>
           </div>
         </Card>
@@ -441,17 +611,25 @@ export const AdminPetitions = () => {
             {/* Tabs */}
             <div className="flex bg-slate-200  p-0.5 rounded-lg">
               <button
-                onClick={() => setActiveTab('propias')}
+                onClick={() => setActiveTab('pending')}
                 className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${
-                  activeTab === 'propias' ? 'bg-white shadow text-primary' : 'text-slate-500 hover:text-slate-700'
+                  activeTab === 'pending' ? 'bg-white shadow text-primary' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                Propias
+                Pendientes
               </button>
               <button
-                onClick={() => setActiveTab('generales')}
+                onClick={() => setActiveTab('resolved')}
                 className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${
-                  activeTab === 'generales' ? 'bg-white shadow text-primary' : 'text-slate-500 hover:text-slate-700'
+                  activeTab === 'resolved' ? 'bg-white shadow text-primary' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Resueltas
+              </button>
+              <button
+                onClick={() => setActiveTab('general')}
+                className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${
+                  activeTab === 'general' ? 'bg-white shadow text-primary' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 Generales
@@ -464,7 +642,7 @@ export const AdminPetitions = () => {
               <div className="flex justify-center p-4"><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div></div>
             ) : filteredItems.length === 0 ? (
               <div className="text-center p-4 text-xs text-slate-400">
-                No hay solicitudes {activeTab === 'propias' ? 'para ti' : 'generales'}.
+                No hay solicitudes {activeTab === 'pending' ? 'pendientes' : activeTab === 'resolved' ? 'resueltas' : 'generales'}.
               </div>
             ) : (
               filteredItems.map((petition) => (
@@ -477,8 +655,12 @@ export const AdminPetitions = () => {
                     }`}
                 >
                   <div className="flex justify-between items-start mb-0.5">
-                    <span className={`text-[8px] uppercase font-bold tracking-wider px-1 py-0.5 rounded ${getTypeColor(petition.type)}`}>
-                      {getTypeLabel(petition.type)}
+                    <span className={`text-[8px] uppercase font-bold tracking-wider px-1 py-0.5 rounded ${
+                      petition.type === 'CANCEL_MOVEMENT' 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'bg-purple-100 text-purple-700'
+                    }`}>
+                      {getRecipientLabel(petition)}
                     </span>
                     <span className="text-[9px] text-slate-500">{formatRelativeTime(petition.createdAt)}</span>
                   </div>
@@ -509,8 +691,11 @@ export const AdminPetitions = () => {
                       })()}
                     </p>
                     {petition.status !== 'PENDING' && (
-                      <span className={`ml-auto text-[8px] font-bold px-1.5 py-0.5 rounded border ${getStatusColor(petition.status)}`}>
+                      <span className={`ml-auto text-[8px] font-bold px-1.5 py-0.5 rounded border ${getStatusColor(petition.status)} flex items-center gap-1`}>
                         {getStatusLabel(petition.status)}
+                        {petition.isCorrected && (
+                          <span className="material-symbols-outlined text-[10px] text-amber-500" title="Corregida">edit_square</span>
+                        )}
                       </span>
                     )}
                   </div>
@@ -645,24 +830,26 @@ export const AdminPetitions = () => {
 
               {/* FIXED ACTION BAR */}
               {!impersonationMode && selectedPetition.status === 'PENDING' && (
-                <div className="bg-white  border-t border-slate-200  p-2 flex items-center justify-end gap-2 shrink-0">
+                <div className="bg-slate-100 border-t border-slate-200 p-8 flex flex-col sm:flex-row items-center justify-center gap-6 shrink-0">
                   {selectedPetition.user.role === 'CONCIERGE' && selectedPetition.type !== 'CANCEL_MOVEMENT' ? (
-                    <div className="flex-1 text-center text-xs text-slate-500 italic">
+                    <div className="flex-1 text-center text-xs text-slate-500 italic bg-white/50 py-3 rounded-lg border border-slate-200/50 max-w-md">
                       Esta petición debe ser revisada por el Propietario.
                     </div>
                   ) : (
                     <>
                       <button
                         onClick={openRejectModal}
-                        className="px-4 py-1.5 text-[11px] font-semibold rounded border border-red-500/50 text-red-600 hover:bg-red-50  transition-colors"
+                        className="w-full sm:w-[240px] py-4 px-6 text-[13px] font-black uppercase tracking-widest rounded-xl border-2 border-red-500/20 bg-white text-red-600 shadow-sm hover:bg-red-50 hover:border-red-500/40 transition-all flex items-center justify-center gap-2 group ring-offset-2 focus:ring-2 focus:ring-red-500/20"
                       >
+                        <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">cancel</span>
                         Rechazar
                       </button>
                       <button
                         onClick={openApproveModal}
-                        className="px-5 py-1.5 text-[11px] font-bold rounded bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-all"
+                        className="w-full sm:w-[240px] py-4 px-6 text-[13px] font-black uppercase tracking-widest rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group ring-offset-2 focus:ring-2 focus:ring-blue-500/50"
                       >
-                        Aprobar Solicitud
+                        <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">check_circle</span>
+                        Aprobar
                       </button>
                     </>
                   )}
@@ -671,12 +858,35 @@ export const AdminPetitions = () => {
 
               {/* READ ONLY ACTION BAR FOR PROCESSED PETITIONS */}
               {selectedPetition.status !== 'PENDING' && (
-                <div className="bg-slate-50 border-t border-slate-200 p-3 text-center text-xs text-slate-500">
-                  Esta solicitud fue {selectedPetition.status === 'APPROVED' ? 'aprobada' : 'rechazada'} el {formatDate(selectedPetition.reviewedAt || '')}.
+                <div className="bg-slate-50 border-t border-slate-200 p-3 flex flex-col items-center gap-2">
+                  <div className="text-[11px] text-slate-500">
+                    Esta solicitud fue {selectedPetition.status === 'APPROVED' ? 'aprobada' : 'rechazada'} el {formatDate(selectedPetition.reviewedAt || '')}.
+                  </div>
                   {selectedPetition.adminNotes && (
-                    <div className="mt-1 font-medium bg-white p-2 rounded border border-slate-200 inline-block text-left max-w-lg">
+                    <div className="text-[11px] font-medium bg-white p-2 rounded border border-slate-200 text-left max-w-lg">
                       Nota: {selectedPetition.adminNotes}
                     </div>
+                  )}
+                  {selectedPetition.isCorrected && (
+                    <div className="text-[11px] font-medium bg-amber-50 text-amber-800 p-2 rounded border border-amber-200 text-left max-w-lg mt-1 flex items-start gap-1.5">
+                      <span className="material-symbols-outlined text-sm">info</span>
+                      <div>
+                        <span className="font-bold">Corrección:</span> {selectedPetition.correctionNotes}
+                      </div>
+                    </div>
+                  )}
+                  {!impersonationMode && isCorrectionAllowed(selectedPetition) && (
+                    <button
+                      onClick={() => {
+                        setCorrectionStatus(selectedPetition.status as 'APPROVED' | 'REJECTED');
+                        setCorrectionNotes('');
+                        setShowCorrectionModal(true);
+                      }}
+                      className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-600 hover:text-blue-600 font-bold transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-sm">edit_square</span>
+                      Editar Resolución
+                    </button>
                   )}
                 </div>
               )}
@@ -770,6 +980,77 @@ export const AdminPetitions = () => {
           </div>
         </div>
       </Modal>
+      {/* CORRECTION MODAL */}
+      <Modal
+        isOpen={showCorrectionModal}
+        onClose={() => setShowCorrectionModal(false)}
+        title="Corregir Resolución"
+        width="max-w-lg"
+      >
+        <div className="p-1">
+          <p className="text-sm text-slate-600 mb-6">
+            Estás editando la resolución de una petición ya procesada. 
+            <span className="block mt-2 font-bold text-amber-600">
+              ⚠️ Si cambias de Aprobado a Rechazado, el sistema intentará revertir los cambios automáticos (como fechas o estacionamientos).
+            </span>
+          </p>
+
+          <div className="mb-6">
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Nuevo Estado</label>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setCorrectionStatus('APPROVED')}
+                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                  correctionStatus === 'APPROVED' 
+                    ? 'border-green-600 bg-green-50 text-green-700' 
+                    : 'border-slate-100 bg-white text-slate-400 opacity-50'
+                }`}
+              >
+                <span className="material-symbols-outlined">check_circle</span>
+                Aprobada
+              </button>
+              <button
+                onClick={() => setCorrectionStatus('REJECTED')}
+                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                  correctionStatus === 'REJECTED' 
+                    ? 'border-red-600 bg-red-50 text-red-700' 
+                    : 'border-slate-100 bg-white text-slate-400 opacity-50'
+                }`}
+              >
+                <span className="material-symbols-outlined">cancel</span>
+                Rechazada
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Motivo de la Corrección</label>
+            <textarea
+              value={correctionNotes}
+              onChange={(e) => setCorrectionNotes(e.target.value)}
+              placeholder="Explica brevemente por qué se está realizando esta corrección..."
+              className="w-full p-3 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-32"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 mt-8">
+            <button
+              onClick={() => setShowCorrectionModal(false)}
+              className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleCorrectResolution}
+              disabled={isSubmittingCorrection || !correctionNotes.trim()}
+              className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition shadow-lg shadow-blue-500/20"
+            >
+              {isSubmittingCorrection ? 'Guardando...' : 'Guardar Corrección'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       {/* DOCUMENT PREVIEW MODAL */}
       <Modal
         isOpen={previewModalOpen}

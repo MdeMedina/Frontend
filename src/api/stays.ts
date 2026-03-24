@@ -45,6 +45,8 @@ export type Stay = {
   // Huéspedes adicionales
   guests?: Guest[];
   notes?: string;
+  parkingNumber?: string;
+  effectiveParkingNumber?: string;
   isLocked: boolean;
   lockedAt?: string;
   createdAt: string;
@@ -54,6 +56,7 @@ export type Stay = {
 export type PaginationParams = {
   page?: number;
   limit?: number;
+  buildingId?: string;
 };
 
 export type PaginatedResponse<T> = {

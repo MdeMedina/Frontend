@@ -57,6 +57,8 @@ export type Petition = {
     number: string;
     floor: number;
     building: string;
+    description?: string;
+    parkingNumber?: string;
     manager?: {
       id: string;
       firstName: string;
@@ -82,8 +84,11 @@ export type Petition = {
   title: string;
   reason: string;
   requestedData?: Record<string, any>;
+  originalData?: Record<string, any>;
   status: PetitionStatus;
   adminNotes?: string;
+  isCorrected?: boolean;
+  correctionNotes?: string;
   reviewedBy?: string;
   reviewedAt?: string;
   createdAt: string;
@@ -110,6 +115,7 @@ export type PaginationParams = {
   limit?: number;
   status?: PetitionStatus;
   type?: PetitionType;
+  buildingId?: string;
 };
 
 export type PaginatedResponse<T> = {
@@ -140,6 +146,11 @@ export const petitionsApi = {
 
   review: async (id: string, data: ReviewPetitionDto): Promise<Petition> => {
     const response = await apiClient.patch(`/petitions/${id}/review`, data);
+    return response.data;
+  },
+
+  correct: async (id: string, data: { status: PetitionStatus, notes: string }): Promise<Petition> => {
+    const response = await apiClient.patch(`/petitions/${id}/correct`, data);
     return response.data;
   },
 };

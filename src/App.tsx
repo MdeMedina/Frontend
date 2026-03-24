@@ -18,8 +18,9 @@ import { AdminAuditLog } from './pages/admin/AuditLog';
 import { AdminCalendar } from './pages/admin/Calendar';
 // SuperAdmin
 import { SuperAdminDashboard } from './pages/superadmin/Dashboard';
-import Residences from './pages/superadmin/Residences';
+// import Residences from './pages/superadmin/Residences'; (Removed)
 import Administrators from './pages/superadmin/Administrators';
+import ResidencePanel from './pages/superadmin/ResidencePanel';
 // Propietario
 import { PropietarioDashboard } from './pages/propietario/Dashboard';
 import { PropietarioApartments } from './pages/propietario/Apartments';
@@ -135,11 +136,12 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
-            path="/superadmin/residences"
+            path="/superadmin/residences/:id"
             element={
               <ProtectedRoute allowedRoles={['SUPERADMIN']}>
-                <Residences />
+                <ResidencePanel />
               </ProtectedRoute>
             }
           />
@@ -240,6 +242,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['ASSIGNED_MANAGER']}>
                 <PropietarioReservations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/responsable/petitions"
+            element={
+              <ProtectedRoute allowedRoles={['ASSIGNED_MANAGER']}>
+                <PropietarioPetitions />
               </ProtectedRoute>
             }
           />

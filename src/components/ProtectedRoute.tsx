@@ -3,11 +3,11 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: ('ADMIN' | 'OWNER' | 'ASSIGNED_MANAGER' | 'CONCIERGE')[];
+  allowedRoles?: ('SUPERADMIN' | 'ADMIN' | 'OWNER' | 'ASSIGNED_MANAGER' | 'CONCIERGE')[];
 }
 
 export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-  const { isAuthenticated, user, isLoading, impersonationMode, managedResidence } = useAuth();
+  const { isAuthenticated, user, isLoading, impersonationMode, managedResidence, managedBuilding } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -27,15 +27,26 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <>{children}</>;
   }
 
-  // Verificar si necesita seleccionar residencia (Solo si NO es superadmin)
-  // Si tiene múltiples residencias disponibles y no ha seleccionado ninguna,
-  // redirigir a la página de selección, A MENOS que ya esté ahí.
-  if (
-    user?.availableResidences && 
-    user.availableResidences.length > 1 && 
-    !managedResidence &&    location.pathname !== '/select-residence'
-  ) {
+  // Verificar si necesita seleccionar residencia o torre (Solo si NO es superadmin)
+  // Redirigir a la página de selección si falta la residencia o el edificio (torre) gestionado,
+  // siempre que no sea SUPERADMIN y no esté ya en la vista de selección.
+  if (user?.role !== 'SUPERADMIN' && location.pathname !== '/select-residence') {
+    // Caso 1: Tiene múltiples residencias y no ha elegido ninguna
+    if (user?.availableResidences && user.availableResidences.length > 1 && !managedResidence) {
       return <Navigate to="/select-residence" replace />;
+    }
+    
+    // Caso 2: Tiene residencia (o se auto-seleccionó la única que hay) pero falta elegir torre
+    // Solo si la residencia tiene edificios (>1) o si managedBuilding es null y hay edificios
+    if (!managedBuilding) {
+      // Buscar los edificios de la residencia actual (ya sea la seleccionada o la única que tiene)
+      const resId = managedResidence?.id || (user?.availableResidences?.length === 1 ? user.availableResidences[0].id : null);
+      const resObj = user?.availableResidences?.find((r: any) => r.id === resId);
+      
+      if (resObj && resObj.buildings && resObj.buildings.length > 1) {
+        return <Navigate to="/select-residence" replace />;
+      }
+    }
   }
 
   // Si está en modo impersonación, también lo tratamos como ADMIN para la UI, pero el check de arriba ya pasó si es SUPERADMIN
