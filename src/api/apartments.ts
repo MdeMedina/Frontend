@@ -27,6 +27,8 @@ export type Apartment = {
     email: string;
     firstName: string;
     lastName: string;
+    phone?: string;
+    rut?: string;
   };
   createdAt: string;
   updatedAt: string;
@@ -49,6 +51,7 @@ export type UpdateApartmentDto = Partial<CreateApartmentDto> & {
 export type PaginationParams = {
   page?: number;
   limit?: number;
+  buildingId?: string;
 };
 
 export type PaginatedResponse<T> = {

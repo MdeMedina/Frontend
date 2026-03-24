@@ -36,6 +36,7 @@ type Petition = {
     building: string;
     manager?: any;
     floor?: string;
+    owner?: { id: string; firstName: string; lastName: string };
   };
   stayId?: string;
   stay?: {
@@ -58,6 +59,7 @@ type Petition = {
       id: string;
       number: string;
       floor: number;
+      owner?: { id: string; firstName: string; lastName: string };
       building: string | {
         id: string;
         name: string;
@@ -139,6 +141,7 @@ export const PropietarioPetitions = () => {
   const [reviewAction, setReviewAction] = useState<'APPROVED' | 'REJECTED' | null>(null);
   const [rejectionReasonEnum, setRejectionReasonEnum] = useState('INCOMPLETE_INFO');
   const [reviewReason, setReviewReason] = useState('');
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     type: 'OTHER' as PetitionType,
@@ -189,6 +192,12 @@ export const PropietarioPetitions = () => {
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
   };
 
+  const getRecipientLabel = (petition: Petition) => {
+    if (petition.type === 'CANCEL_MOVEMENT') return 'Para: Administración';
+    const owner = petition.apartment?.owner || (petition.stay as any)?.apartment?.owner;
+    return owner ? `Para: ${owner.firstName} ${owner.lastName}` : 'Para: Propietario';
+  };
+
   const fetchPetitions = async () => {
     try {
       setLoading(true);
@@ -201,8 +210,10 @@ export const PropietarioPetitions = () => {
       const apartmentsList = apartmentsRes.data.data || apartmentsRes.data;
       setAllApartments(apartmentsList);
 
-      // Mis departamentos
-      const mine = apartmentsList.filter((apt: any) => apt.owner?.id === user?.id);
+      // Mis departamentos (como dueño o responsable)
+      const mine = apartmentsList.filter((apt: any) => 
+        apt.owner?.id === user?.id || apt.manager?.id === user?.id
+      );
       setMyApartments(mine);
       const myApartmentIds = mine.map((a: any) => a.id);
 
@@ -299,26 +310,35 @@ export const PropietarioPetitions = () => {
     e.preventDefault();
     try {
       const targetApt = allApartments.find(a => a.id === formData.targetApartment);
+      const finalTitle = formData.title.trim() || typeLabels[formData.type] || 'Nueva Petición';
 
       await apiClient.post('/petitions', {
         type: formData.type,
-        title: formData.title,
+        title: finalTitle,
         reason: formData.showDescription && formData.reason.trim() ? formData.reason : 'Sin descripción adicional',
         apartmentId: formData.apartmentId || undefined,
         requestedData: formData.type === 'ASSIGN_PARKING' ? {
           targetApartmentId: formData.targetApartment,
           targetApartmentNumber: targetApt?.number,
+          targetBuildingName: typeof targetApt?.building === 'string' ? targetApt.building : targetApt?.building?.name,
           parkingNumber: formData.parkingNumber,
           startDate: formData.startDate,
           endDate: formData.endDate
         } : undefined,
       });
+      
+      setSuccessMessage('Su petición ha sido procesada exitosamente');
+      setShowModal(false);
+      
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+
       fetchPetitions();
       setFormData({
         type: 'OTHER', title: '', reason: '', apartmentId: '', showDescription: false,
         targetApartment: '', parkingNumber: '', startDate: '', endDate: ''
       });
-      setTimeout(() => {}, 3000);
     } catch (err: any) {
       console.error(err);
     }
@@ -389,19 +409,19 @@ export const PropietarioPetitions = () => {
     const data = petition.requestedData || {};
 
     const Card = ({ title, icon, children, className }: any) => (
-      <div className={`bg-white  rounded-lg p-3 border border-slate-200  shadow-sm ${className}`}>
-        <div className="flex items-center gap-2 mb-2 border-b border-slate-100  pb-1.5">
-          <span className="material-symbols-outlined text-primary text-base">{icon}</span>
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{title}</h3>
+      <div className={`bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col ${className}`}>
+        <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+          <span className="material-symbols-outlined text-primary text-xl">{icon}</span>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">{title}</h3>
         </div>
         {children}
       </div>
     );
 
     const Field = ({ label, value }: any) => (
-      <div className="bg-slate-50  p-1.5 rounded border border-slate-100  text-center">
-        <p className="text-[8px] uppercase font-bold text-slate-400">{label}</p>
-        <p className="text-xs font-bold text-slate-800  truncate">{value || 'N/A'}</p>
+      <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-center">
+        <p className="text-xs uppercase font-bold text-slate-400 mb-1">{label}</p>
+        <p className="text-base font-bold text-slate-800 truncate">{value || 'N/A'}</p>
       </div>
     );
 
@@ -441,22 +461,22 @@ export const PropietarioPetitions = () => {
 
       return (
         <Card title="Datos del Responsable" icon="manage_accounts" className="h-full">
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-lg">
               {getInitials(name, '')}
             </div>
             <div className="min-w-0">
-              <h4 className="text-xs font-bold truncate text-slate-900">{name}</h4>
-              <p className="text-[10px] text-slate-500 truncate">{managerData.email || 'N/A'}</p>
+              <h4 className="text-base font-bold truncate text-slate-900">{name}</h4>
+              <p className="text-sm text-slate-500 truncate">{managerData.email || 'N/A'}</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid grid-cols-2 gap-3">
             <Field label="RUT" value={managerData.rut || (managerData as any).rut} />
             <Field label="Teléfono" value={managerData.phone || (managerData as any).phoneNumber} />
             <Field label="Acción" value={petition.type === 'DELETE_MANAGER' ? 'Eliminar' : 'Asignar'} />
           </div>
           {petition.apartment && (
-            <div className="mt-2 text-center text-[10px] text-slate-500 bg-slate-100 p-1 rounded">
+            <div className="mt-3 text-center text-sm text-slate-500 bg-slate-100 p-2 rounded-lg">
               Dept: {petition.apartment.number}
             </div>
           )}
@@ -469,9 +489,9 @@ export const PropietarioPetitions = () => {
       const aptData = petition.type === 'CREATE_APARTMENT' ? data : (petition.apartment || data);
 
       return (
-        <div className="grid grid-cols-1 gap-3 h-full">
+        <div className="grid grid-cols-1 gap-4 h-full">
           <Card title="Datos del Departamento" icon="apartment">
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-3">
               <Field label="Número" value={aptData.number} />
               <Field label="Piso" value={aptData.floor} />
               <Field label="Torre" value={typeof aptData.building === 'string' ? aptData.building : aptData.building?.name} />
@@ -481,12 +501,12 @@ export const PropietarioPetitions = () => {
 
           {petition.type === 'MODIFY_APARTMENT' && (
             <Card title="Cambios Solicitados" icon="edit_note" className="border-amber-200 bg-amber-50/30">
-              <div className="space-y-1.5">
+              <div className="space-y-3">
                 {data.parkingNumber !== undefined && data.parkingNumber !== aptData.parkingNumber &&
                   <Field label="Nuevo Estacionamiento" value={data.parkingNumber} />
                 }
                 {data.description !== undefined && data.description !== aptData.description &&
-                  <div className="text-[10px] italic text-slate-600 bg-white p-1 rounded border border-amber-100">"{data.description}"</div>
+                  <div className="text-sm font-medium text-slate-600 bg-white p-3 rounded-lg border border-amber-100">{data.description}</div>
                 }
               </div>
             </Card>
@@ -502,36 +522,36 @@ export const PropietarioPetitions = () => {
 
       return (
         <Card title="Datos de la Reserva" icon="hotel" className="h-full">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
               {getInitials(stay.guestFirstName || '', '')}
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900">{stay.guestFirstName} {stay.guestLastName}</h4>
-              <p className="text-[9px] text-slate-500">ID: {stay.guestDocument || 'N/A'}</p>
+              <h4 className="text-base font-bold text-slate-900">{stay.guestFirstName} {stay.guestLastName}</h4>
+              <p className="text-sm text-slate-500">ID: {stay.guestDocument || 'N/A'}</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-1.5 mb-2">
+          <div className="grid grid-cols-2 gap-3 mb-3">
             <Field label="Check-in Actual" value={formatDate(stay.scheduledCheckIn).split(',')[0]} />
             <Field label="Check-out Actual" value={formatDate(stay.scheduledCheckOut).split(',')[0]} />
           </div>
 
           {data && (data.newCheckIn || data.newCheckOut) && (
-            <div className="bg-amber-50 border border-amber-100 p-1.5 rounded">
-              <p className="text-[9px] font-bold text-amber-700 uppercase mb-1 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[10px]">edit</span> Cambios
+            <div className="bg-amber-50 border border-amber-100 p-3 rounded-lg mt-2">
+              <p className="text-xs font-bold text-amber-700 uppercase mb-2 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">edit</span> Cambios
               </p>
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-2 gap-3">
                 {data.newCheckIn && (
                   <div>
-                    <p className="text-[8px] text-amber-600">Nuevo Check-in</p>
-                    <p className="text-[10px] font-bold text-slate-800">{formatDate(data.newCheckIn).split(',')[0]}</p>
+                    <p className="text-xs text-amber-600 mb-1">Nuevo Check-in</p>
+                    <p className="text-base font-bold text-slate-800">{formatDate(data.newCheckIn).split(',')[0]}</p>
                   </div>
                 )}
                 {data.newCheckOut && (
                   <div>
-                    <p className="text-[8px] text-amber-600">Nuevo Check-out</p>
-                    <p className="text-[10px] font-bold text-slate-800">{formatDate(data.newCheckOut).split(',')[0]}</p>
+                    <p className="text-xs text-amber-600 mb-1">Nuevo Check-out</p>
+                    <p className="text-base font-bold text-slate-800">{formatDate(data.newCheckOut).split(',')[0]}</p>
                   </div>
                 )}
               </div>
@@ -543,25 +563,30 @@ export const PropietarioPetitions = () => {
 
     // 4. ASSIGN PARKING
     if (petition.type === 'ASSIGN_PARKING') {
-      const assignment = (petition as any).parkingAssignment; // If backend populates it
-      const targetAptName = assignment?.targetApartment
-        ? `${assignment.targetApartment.number} (${assignment.targetApartment.building?.name})`
-        : 'Desconocido';
-      const sourceAptName = assignment?.sourceApartment
-        ? `${assignment.sourceApartment.number} (${assignment.sourceApartment.building?.name})`
-        : petition.apartment?.number || 'Mío';
+      const assignment = (petition as any).parkingAssignment;
+      const targetApt = assignment?.targetApartment;
+      const targetAptName = targetApt 
+        ? `${targetApt.number} (${targetApt.building?.name || 'Sin torre'})`
+        : data.targetApartmentNumber 
+          ? `${data.targetApartmentNumber} (${data.targetBuildingName || 'Cargando...'})`
+          : 'Desconocido';
+
+      const sourceApt = assignment?.sourceApartment || petition.apartment;
+      const sourceAptName = sourceApt 
+        ? `${sourceApt.number} (${sourceApt.building?.name || (sourceApt.building as any)})`
+        : 'Mío';
 
       return (
         <Card title="Asignación Temporal" icon="local_parking" className="h-full bg-pink-50/50 border-pink-100">
-          <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               <Field label="Origen" value={sourceAptName} />
               <Field label="Estacionamiento" value={data.parkingNumber || assignment?.parkingNumber} />
             </div>
             <div className="grid grid-cols-1">
-              <Field label="Destino (Beneficiario)" value={targetAptName || 'Cargando...'} />
+              <Field label="Destino (Beneficiario)" value={targetAptName} />
             </div>
-            <div className="bg-white p-2 rounded border border-pink-100 grid grid-cols-2 gap-2">
+            <div className="bg-white p-3 rounded-lg border border-pink-100 grid grid-cols-2 gap-3">
               <Field label="Desde" value={formatDate(data.startDate || assignment?.startDate).split(',')[0]} />
               <Field label="Hasta" value={formatDate(data.endDate || assignment?.endDate).split(',')[0]} />
             </div>
@@ -581,15 +606,26 @@ export const PropietarioPetitions = () => {
         <aside className="w-[300px] border-r border-slate-200  bg-white  flex flex-col shrink-0">
           <div className="p-3 border-b border-slate-200  bg-slate-50/50 ">
             <div className="flex justify-between items-center mb-3">
-              <h2 className="font-bold text-xs">Mis Peticiones</h2>
+              <h2 className="font-bold text-xs uppercase tracking-tight text-slate-500">Mis Peticiones</h2>
               <button
                 onClick={openCreateModal}
-                className="bg-pink-600 text-white p-1.5 rounded-full hover:bg-pink-700 transition shadow-md flex items-center justify-center"
+                className="bg-pink-600 text-white px-3 py-1.5 rounded-full hover:bg-pink-700 transition shadow-lg shadow-pink-500/20 flex items-center justify-center gap-1.5 font-black uppercase text-[10px] tracking-widest group active:scale-95"
                 title="Nueva Petición"
               >
-                <span className="material-symbols-outlined text-lg font-bold">add</span>
+                <span>Crear</span>
+                <span className="material-symbols-outlined text-[16px] font-black group-hover:rotate-90 transition-transform">add</span>
               </button>
             </div>
+
+            {/* Success Message */}
+            {successMessage && (
+              <div className="mb-3 p-2.5 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <span className="material-symbols-outlined text-emerald-500 text-lg">check_circle</span>
+                <p className="text-[10px] font-bold text-emerald-700 leading-tight">
+                  {successMessage}
+                </p>
+              </div>
+            )}
 
             {/* Tabs */}
             <div className="flex bg-slate-200  p-0.5 rounded-lg mb-3">
@@ -638,13 +674,21 @@ export const PropietarioPetitions = () => {
                     }`}
                 >
                   <div className="flex justify-between items-start mb-0.5">
-                    <span className={`text-[8px] uppercase font-bold tracking-wider px-1 py-0.5 rounded ${getTypeColor(petition.type)}`}>
-                      {typeLabels[petition.type] || petition.type}
+                    <span className={`text-[8px] uppercase font-bold tracking-wider px-1 py-0.5 rounded ${
+                      petition.type === 'CANCEL_MOVEMENT' 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'bg-purple-100 text-purple-700'
+                    }`}>
+                      {getRecipientLabel(petition)}
                     </span>
                     <span className="text-[9px] text-slate-500">{formatRelativeTime(petition.createdAt)}</span>
                   </div>
                   <h3 className="text-[13px] font-semibold text-slate-800  truncate mt-1">
                     {petition.title}
+                    {(() => {
+                      const aptNum = petition.apartment?.number || (petition.stay as any)?.apartment?.number;
+                      return aptNum ? <span className="text-slate-400 text-[10px] ml-1">(Dpto {aptNum})</span> : null;
+                    })()}
                   </h3>
                   <div className="flex items-center justify-between mt-1.5">
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${statusColors[petition.status]}`}>
@@ -684,39 +728,39 @@ export const PropietarioPetitions = () => {
               {/* CONTENT BODY */}
               <div className="flex-1 p-3 flex flex-col gap-3 min-h-0 overflow-y-auto">
 
-                {/* GRID: INFO & CONTEXT */}
-                <div className="grid grid-cols-2 gap-3 shrink-0">
+                {/* GRID: CONTENT CARDS */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 shrink-0">
 
-                  {/* User Info Card (Sender) - Only relevant if Received or verifying Sent info */}
-                  <div className="bg-white  rounded-lg p-3 border border-slate-200  shadow-sm">
-                    <div className="flex items-center gap-2 mb-2 border-b border-slate-100  pb-1.5">
-                      <span className="material-symbols-outlined text-primary text-base">account_circle</span>
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  {/* User Info Card (Sender) */}
+                  <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+                    <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                      <span className="material-symbols-outlined text-primary text-xl">account_circle</span>
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">
                         {activeTab === 'received' ? 'Solicitante' : 'Enviado por mí'}
                       </h3>
                     </div>
                     {selectedPetition.user && (
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 text-xl border border-slate-200 shrink-0 uppercase font-black">
                           {getInitials(selectedPetition.user.firstName, selectedPetition.user.lastName)}
                         </div>
                         <div className="min-w-0">
-                          <h4 className="text-[13px] font-bold truncate">
+                          <h4 className="text-lg font-bold text-slate-800 truncate mb-1">
                             {selectedPetition.user.firstName} {selectedPetition.user.lastName}
                           </h4>
-                          <span className={`text-[8px] font-bold px-1 rounded border mr-2 ${selectedPetition.user.role === 'CONCIERGE' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded border mb-2 inline-block ${selectedPetition.user.role === 'CONCIERGE' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
                             {selectedPetition.user.role === 'CONCIERGE' ? 'CONSERJE' : 'SOLICITANTE'}
                           </span>
-                          <div className="flex flex-col gap-0.5 mt-0.5">
-                            <div className="text-[10px] text-slate-500 truncate flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[10px]">mail</span>
+                          <div className="flex flex-col gap-1.5 mt-1">
+                            <div className="text-sm text-slate-600 truncate flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-sm">mail</span>
                               {selectedPetition.user.email}
                             </div>
 
                             {/* Context Info: Apartment & Building */}
                             {(selectedPetition.apartment || (selectedPetition.stay as any)?.apartment) && (
-                              <div className="text-[10px] text-slate-600 font-medium flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[10px]">apartment</span>
+                              <div className="text-sm text-slate-600 font-medium flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-sm">apartment</span>
                                 <span>
                                   Dpto {selectedPetition.apartment?.number || (selectedPetition.stay as any)?.apartment?.number} - {
                                     selectedPetition.apartment?.building
@@ -731,8 +775,8 @@ export const PropietarioPetitions = () => {
 
                             {/* Context Info: Guest / Stay */}
                             {selectedPetition.stay && (
-                              <div className="text-[10px] text-slate-600 font-medium flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[10px]">person</span>
+                              <div className="text-sm text-slate-600 font-medium flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-sm">person</span>
                                 <span>
                                   Huésped: {selectedPetition.stay.guestFirstName} {selectedPetition.stay.guestLastName}
                                 </span>
@@ -744,29 +788,29 @@ export const PropietarioPetitions = () => {
                     )}
                   </div>
 
+                  {/* DESCRIPTION CARD */}
+                  {selectedPetition.reason &&
+                    !selectedPetition.reason.startsWith('Solicito registrar a') &&
+                    !selectedPetition.reason.startsWith('Solicito actualizar los datos') &&
+                    !selectedPetition.reason.startsWith('Modificación de datos') &&
+                    selectedPetition.reason !== 'Sin descripción adicional' ? (
+                      <div className="flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0">
+                        <div className="px-4 py-2 border-b border-slate-100 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-primary text-xl">chat_bubble</span>
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500">Descripción / Motivo</h3>
+                        </div>
+                        <div className="p-4 bg-blue-50/20 flex-1 flex items-start">
+                          <p className="text-slate-800 text-lg leading-relaxed font-medium">
+                            {selectedPetition.reason}
+                          </p>
+                        </div>
+                      </div>
+                    ) : null}
+
                   {/* Detail Card (Dynamic based on type) */}
                   {renderPetitionDetails(selectedPetition)}
 
                 </div>
-
-                {/* DESCRIPTION CARD */}
-                {selectedPetition.reason &&
-                  !selectedPetition.reason.startsWith('Solicito registrar a') &&
-                  !selectedPetition.reason.startsWith('Solicito actualizar los datos') &&
-                  !selectedPetition.reason.startsWith('Modificación de datos') &&
-                  selectedPetition.reason !== 'Sin descripción adicional' && (
-                    <div className="flex flex-col bg-white  rounded-lg border border-slate-200  shadow-sm overflow-hidden shrink-0">
-                      <div className="px-3 py-1.5 border-b border-slate-100  flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary text-base">chat_bubble</span>
-                        <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Descripción / Motivo</h3>
-                      </div>
-                      <div className="p-3 bg-blue-50/20 ">
-                        <p className="text-slate-700  leading-snug text-[13px] italic">
-                          "{selectedPetition.reason}"
-                        </p>
-                      </div>
-                    </div>
-                  )}
 
                 {/* ATTACHED DOCUMENTS CARD */}
                 {(selectedPetition.requestedData as any)?.rutDocumentUrl && (
@@ -809,17 +853,19 @@ export const PropietarioPetitions = () => {
 
               {/* FIXED ACTION BAR - Only for Received Petitions */}
               {activeTab === 'received' && selectedPetition.status === 'PENDING' && (
-                <div className="bg-white  border-t border-slate-200  p-2 flex items-center justify-end gap-2 shrink-0">
+                <div className="bg-slate-100 border-t border-slate-200 p-8 flex flex-col sm:flex-row items-center justify-center gap-6 shrink-0">
                   <button
                     onClick={openRejectModal}
-                    className="px-4 py-1.5 text-[11px] font-semibold rounded border border-red-500/50 text-red-600 hover:bg-red-50  transition-colors"
+                    className="w-full sm:w-[240px] py-4 px-6 text-[13px] font-black uppercase tracking-widest rounded-xl border-2 border-red-500/20 bg-white text-red-600 shadow-sm hover:bg-red-50 hover:border-red-500/40 transition-all flex items-center justify-center gap-2 group ring-offset-2 focus:ring-2 focus:ring-red-500/20"
                   >
+                    <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">cancel</span>
                     Rechazar
                   </button>
                   <button
                     onClick={openApproveModal}
-                    className="px-5 py-1.5 text-[11px] font-bold rounded bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-all"
+                    className="w-full sm:w-[240px] py-4 px-6 text-[13px] font-black uppercase tracking-widest rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group ring-offset-2 focus:ring-2 focus:ring-blue-500/50"
                   >
+                    <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">check_circle</span>
                     Aprobar
                   </button>
                 </div>
@@ -853,7 +899,7 @@ export const PropietarioPetitions = () => {
             >
               <option value="OTHER">Otro</option>
               <option value="CREATE_APARTMENT">Registrar Nuevo Departamento</option>
-              <option value="MODIFY_APARTMENT">Modificar Departamento</option>
+              <option value="DELETE_APARTMENT">Eliminar Departamento</option>
               <option value="CREATE_MANAGER">Asignar Responsable</option>
               <option value="ASSIGN_PARKING">Asignar Estacionamiento Temporal</option>
             </select>
@@ -865,8 +911,7 @@ export const PropietarioPetitions = () => {
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-primary focus:border-primary"
-              placeholder="Resumen breve"
-              required
+              placeholder="Resumen breve (Opcional)"
             />
           </div>
           {['MODIFY_APARTMENT', 'CREATE_MANAGER'].includes(formData.type) && (
@@ -1136,8 +1181,11 @@ export const PropietarioPetitions = () => {
             </button>
             <button
               onClick={handleProcessReview}
-              className={`px-4 py-2 rounded-lg text-white font-bold text-xs shadow-md ${reviewAction === 'APPROVED' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'
-                }`}
+              className={`px-8 py-2 rounded-lg font-bold text-sm shadow-lg transition-all ${
+                reviewAction === 'APPROVED' 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20' 
+                  : 'bg-red-600 text-white hover:bg-red-700 shadow-red-500/20'
+              }`}
             >
               Confirmar {reviewAction === 'APPROVED' ? 'Aprobación' : 'Rechazo'}
             </button>

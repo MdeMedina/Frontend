@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { Layout } from '../../components/Layout';
 import { staysApi, categoryLabels, getGuestFullName } from '../../api/stays';
 import type { Stay, Guest } from '../../api/stays';
-/* import { apartmentsApi } from '../../api/apartments';
-import type { Apartment } from '../../api/apartments'; */
 import { DateSelector } from '../../components/DateSelector';
 import { Modal } from '../../components/Modal';
 
@@ -37,8 +36,8 @@ const categoryColors: Record<string, string> = {
 };
 
 export const AdminReservations = () => {
+  const { currentBuilding } = useAuth();
   const [stays, setStays] = useState<Stay[]>([]);
-  /* const [apartments, setApartments] = useState<Apartment[]>([]); */
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedStay, setSelectedStay] = useState<Stay | null>(null);
@@ -55,7 +54,10 @@ export const AdminReservations = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const staysRes = await staysApi.getAll({ limit: 500 });
+      const staysRes = await staysApi.getAll({ 
+        limit: 500,
+        ...(currentBuilding?.id ? { buildingId: currentBuilding.id } : {})
+      });
       setStays(staysRes.data);
     } catch (err) {
       setError('Error al cargar los datos');
@@ -67,7 +69,7 @@ export const AdminReservations = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentBuilding?.id]);
 
   // Filtrar reservas
   const filteredStays = useMemo(() => {
@@ -387,6 +389,7 @@ export const AdminReservations = () => {
                   {(typeof selectedStay?.apartment.building === 'object' ? selectedStay?.apartment.building?.name : selectedStay?.apartment.building) || 'Sin torre'}
                 </span></div>
                 <div><span className="text-gray-500">Piso:</span> <span className="font-medium">{selectedStay?.apartment.floor}</span></div>
+                <div><span className="text-gray-500">Estacionamiento:</span> <span className="font-bold text-blue-600">{selectedStay?.effectiveParkingNumber || 'N/A'}</span></div>
               </div>
             </div>
 

@@ -16,7 +16,7 @@ export const Notifications = () => {
   const [toastNotification, setToastNotification] = useState<Notification | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -172,15 +172,7 @@ export const Notifications = () => {
     }
   };
 
-  const handleMarkAllAsRead = async () => {
-    try {
-      await notificationsApi.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-      setUnreadCount(0);
-    } catch (error) {
-      console.error('Error marking all as read:', error);
-    }
-  };
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -200,21 +192,21 @@ export const Notifications = () => {
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
       case 'PETITION_APPROVED':
-        return '✅';
+        return 'check_circle';
       case 'PETITION_REJECTED':
-        return '❌';
+        return 'cancel';
       case 'PETITION_CREATED':
-        return '📝';
+        return 'edit_document';
       case 'RESERVATION_CREATED':
-        return '📅';
+        return 'calendar_month';
       case 'CHECK_IN_CONFIRMED':
-        return '🔑';
+        return 'key';
       case 'CHECK_OUT_CONFIRMED':
-        return '🚪';
+        return 'door_open';
       case 'ADMIN_ACTION':
-        return '⚙️';
+        return 'admin_panel_settings';
       default:
-        return '🔔';
+        return 'notifications';
     }
   };
 
@@ -255,9 +247,9 @@ export const Notifications = () => {
             style={{ pointerEvents: 'auto' }}
           >
             <div className="flex items-start gap-3">
-              <span className="text-3xl flex-shrink-0">
-                {getNotificationIcon(toastNotification.type)}
-              </span>
+                <span className="material-symbols-outlined text-3xl flex-shrink-0 text-indigo-500">
+                  {getNotificationIcon(toastNotification.type)}
+                </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <h4 className="text-sm font-semibold text-gray-900">
@@ -288,17 +280,23 @@ export const Notifications = () => {
       <div className="relative" ref={dropdownRef} style={{ position: 'relative' }}>
         {/* Botón de notificaciones */}
         <button
-          onClick={() => {
-            setIsOpen(!isOpen);
+          onClick={async () => {
             if (!isOpen) {
-              loadNotifications();
+              setIsOpen(true);
+              await loadNotifications();
+              if (unreadCount > 0) {
+                setUnreadCount(0);
+                notificationsApi.markAllAsRead().catch(console.error);
+              }
+            } else {
+              setIsOpen(false);
             }
           }}
           className="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-lg transition"
           title={`Notificaciones${unreadCount > 0 ? ` (${unreadCount} no leídas)` : ''}`}
           style={{ position: 'relative' }}
         >
-          <span className="text-2xl">🔔</span>
+          <span className="material-symbols-outlined text-[26px]">notifications</span>
           {unreadCount > 0 && (
             <span 
               className="absolute bg-red-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-white"
@@ -321,16 +319,8 @@ export const Notifications = () => {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[500px] flex flex-col">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50 rounded-t-lg">
             <h3 className="font-semibold text-gray-900">Notificaciones</h3>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllAsRead}
-                className="text-sm text-indigo-600 hover:text-indigo-700"
-              >
-                Marcar todas como leídas
-              </button>
-            )}
           </div>
 
           {/* Lista de notificaciones */}
@@ -354,7 +344,7 @@ export const Notifications = () => {
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <span className="text-2xl flex-shrink-0">
+                      <span className="material-symbols-outlined text-2xl flex-shrink-0 text-gray-500">
                         {getNotificationIcon(notification.type)}
                       </span>
                       <div className="flex-1 min-w-0">

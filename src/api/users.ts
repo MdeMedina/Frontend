@@ -1,6 +1,6 @@
 import apiClient from './client';
 
-export type UserRole = 'ADMIN' | 'OWNER' | 'ASSIGNED_MANAGER' | 'CONCIERGE';
+export type UserRole = 'SUPERADMIN' | 'ADMIN' | 'OWNER' | 'ASSIGNED_MANAGER' | 'CONCIERGE';
 
 export type User = {
   id: string;
@@ -41,6 +41,7 @@ export type UpdateUserDto = {
 export type PaginationParams = {
   page?: number;
   limit?: number;
+  buildingId?: string;
 };
 
 export type PaginatedResponse<T> = {
@@ -67,7 +68,7 @@ export type OwnerWithHierarchy = {
     id: string;
     number: string;
     floor: number;
-    building: string;
+    building: string | { name: string, id: string };
     isActive: boolean;
     manager?: {
       id: string;
@@ -117,14 +118,15 @@ export const usersApi = {
     return response.data;
   },
 
-  getHierarchy: async (): Promise<OwnerWithHierarchy[]> => {
-    const response = await apiClient.get('/users/hierarchy');
+  getHierarchy: async (params?: { buildingId?: string }): Promise<OwnerWithHierarchy[]> => {
+    const response = await apiClient.get('/users/hierarchy', { params });
     return response.data;
   },
 };
 
 // Etiquetas para roles en español
 export const roleLabels: Record<UserRole, string> = {
+  SUPERADMIN: 'Superadministrador',
   ADMIN: 'Administrador',
   OWNER: 'Propietario',
   ASSIGNED_MANAGER: 'Responsable Asignado',
@@ -133,6 +135,7 @@ export const roleLabels: Record<UserRole, string> = {
 
 // Colores para roles
 export const roleColors: Record<UserRole, string> = {
+  SUPERADMIN: 'bg-indigo-100 text-indigo-800',
   ADMIN: 'bg-red-100 text-red-800',
   OWNER: 'bg-blue-100 text-blue-800',
   ASSIGNED_MANAGER: 'bg-purple-100 text-purple-800',

@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { staysApi, getGuestFullName } from '../../api/stays';
 import type { Stay, Guest } from '../../api/stays';
+import { useAuth } from '../../contexts/AuthContext';
 import { buildingsApi } from '../../api/buildings';
 import type { Building } from '../../api/buildings';
 import { apartmentsApi } from '../../api/apartments';
@@ -11,14 +12,22 @@ import { formatRut, handleRutInput, cleanRut } from '../../utils/rut';
 import { petitionsApi } from '../../api/petitions';
 import type { Petition, CreatePetitionDto } from '../../api/petitions';
 import { Modal } from '../../components/Modal';
+import { Notifications } from '../../components/Notifications';
 
 
-type TabType = 'control' | 'petitions';
+type TabType = 'control' | 'petitions' | 'directory';
 
 export const ControlPiso = () => {
 
   const location = useLocation();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('control');
+
+  const getOwnerName = (petition: any) => {
+    const owner = petition.apartment?.owner || petition.stay?.apartment?.owner;
+    if (!owner) return 'Propietario';
+    return `${owner.firstName} ${owner.lastName}`;
+  };
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>('');
 
@@ -63,6 +72,20 @@ export const ControlPiso = () => {
     correctDocument?: string;
   }>({});
 
+  // Cargar opciones para conserje
+  const [expandedApartments, setExpandedApartments] = useState<Set<string>>(new Set());
+  const [directorySearchTerm, setDirectorySearchTerm] = useState('');
+
+  const toggleApartmentExpand = (apartmentId: string) => {
+    const newExpanded = new Set(expandedApartments);
+    if (newExpanded.has(apartmentId)) {
+      newExpanded.delete(apartmentId);
+    } else {
+      newExpanded.add(apartmentId);
+    }
+    setExpandedApartments(newExpanded);
+  };
+
   // Opciones predefinidas de peticiones para conserje
   const petitionOptions = [
     {
@@ -73,7 +96,7 @@ export const ControlPiso = () => {
     {
       id: 'early_checkin',
       title: 'Ingreso anticipado fuera del horario de check-in',
-      description: 'Se requiere modificación.',
+      description: 'Se requiere aprobación.',
     },
     {
       id: 'staff_access',
@@ -83,17 +106,17 @@ export const ControlPiso = () => {
     {
       id: 'guest_data_mismatch',
       title: 'Los datos del huésped no coinciden con el registro',
-      description: '',
+      description: 'Por favor corregir.',
     },
     {
       id: 'additional_guests',
       title: 'Ingreso de huéspedes adicionales no registrados',
-      description: 'Favor completar.',
+      description: 'Por favor completar datos, para autorizar ingresos.',
     },
     {
       id: 'noise_complaint',
       title: 'Hay reclamo por ruidos molestos desde el dpto',
-      description: '',
+      description: 'Agradecemos contactar a su huésped.',
     },
     {
       id: 'CANCEL_MOVEMENT',
@@ -138,7 +161,7 @@ export const ControlPiso = () => {
 
   // Cargar departamentos para las peticiones
   useEffect(() => {
-    const loadApartments = async () => {
+  const loadApartments = async () => {
       try {
         console.log('🏢 Cargando departamentos para conserje...');
         const response = await apartmentsApi.getAll({ limit: 500 });
@@ -354,23 +377,33 @@ export const ControlPiso = () => {
 
 
 
-  const handleRowClick = (stay: Stay) => {
+  const handleRowClick = async (stay: Stay) => {
     setSelectedStay(stay);
-    // Determinar qué modal abrir o qué acción mostrar por defecto
-    // Si no ha hecho check-in, sugerir check-in. Si ya hizo, sugerir check-out.
+    setShowDetailModal(true);
+    
+    // Determinar tipo de movimiento base
     if (stay.status === 'SCHEDULED') {
       setSelectedMovementType('checkin');
     } else {
       setSelectedMovementType('checkout');
     }
-    setShowDetailModal(true);
+
+    // Refrescar datos por ID para asegurar parking actualizado
+    try {
+      const freshStay = await staysApi.getById(stay.id);
+      setSelectedStay(freshStay);
+    } catch (err) {
+      console.error('Error al refrescar stay:', err);
+    }
   };
 
   const loadPetitions = async () => {
     try {
       setLoadingPetitions(true);
       const response = await petitionsApi.getAll({ limit: 100 });
-      setPetitions(response.data);
+      // El conserje solo debe poder ver en su historial las peticiones que él envía
+      const myPetitions = response.data.filter((p: Petition) => p.userId === user?.id || p.user?.id === user?.id);
+      setPetitions(myPetitions);
     } catch (err: any) {
       setError('Error al cargar las peticiones');
     } finally {
@@ -517,12 +550,15 @@ export const ControlPiso = () => {
     // Validar campos según el tipo de petición
     const requiredFields = getRequiredFields(selectedPetitionOption);
 
+    // Los datos del huésped ahora son opcionales según solicitud del usuario
+    /*
     if (requiredFields.needsGuestData) {
       if (!petitionFormData.guestFirstName || !petitionFormData.guestLastName) {
         setError('Por favor completa el nombre y apellido');
         return;
       }
     }
+    */
 
     if (requiredFields.needsApartment && !requiredFields.needsGuestData && selectedPetitionOption !== 'early_checkin') {
       if (!petitionFormData.apartmentId && !newPetitionData.stayId) {
@@ -537,12 +573,15 @@ export const ControlPiso = () => {
       return;
     }
 
+    // Los datos correctos también son opcionales
+    /*
     if (requiredFields.needsCorrectData) {
       if (!petitionFormData.correctFirstName || !petitionFormData.correctLastName) {
         setError('Por favor completa los datos correctos del huésped');
         return;
       }
     }
+    */
 
     try {
       // Preparar datos adicionales para requestedData
@@ -611,8 +650,8 @@ export const ControlPiso = () => {
     <Layout>
       <div className="p-6">
         <div className="max-w-7xl mx-auto">
-          {/* Pestañas */}
-          <div className="mb-6 border-b border-gray-200">
+          {/* Pestañas y Notificaciones */}
+          <div className="mb-6 border-b border-gray-200 flex justify-between items-center sm:pr-4">
             <nav className="flex space-x-8">
               <button
                 onClick={() => setActiveTab('control')}
@@ -632,7 +671,19 @@ export const ControlPiso = () => {
               >
                 Peticiones
               </button>
+              <button
+                onClick={() => setActiveTab('directory')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'directory'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                Directorio
+              </button>
             </nav>
+            <div className="flex items-center">
+              <Notifications />
+            </div>
           </div>
 
           {/* Contenido de Control de Piso */}
@@ -709,15 +760,24 @@ export const ControlPiso = () => {
                             Depto
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Huésped Principal
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Identificación
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Check-In
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Check-Out
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Estado
-                          </th>
-                        </tr>
+                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                             Estado
+                           </th>
+                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                             Estacionamiento
+                           </th>
+                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {filteredStays.map((stay, index) => {
@@ -738,6 +798,16 @@ export const ControlPiso = () => {
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900">
                                   {stay.apartment.number}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">
+                                  {getGuestFullName(stay)}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-500">
+                                  {stay.guestDocument || 'N/A'}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -796,7 +866,15 @@ export const ControlPiso = () => {
                                   </span>
                                 )}
                               </td>
-                            </tr>
+                               <td className="px-6 py-4 whitespace-nowrap">
+                                 <div className="flex items-center gap-1.5">
+                                   <span className="material-symbols-outlined text-sm text-blue-500">local_parking</span>
+                                   <span className="text-sm font-bold text-gray-900">
+                                     {stay.effectiveParkingNumber || 'N/A'}
+                                   </span>
+                                 </div>
+                               </td>
+                             </tr>
                           );
                         })}
                       </tbody>
@@ -850,7 +928,10 @@ export const ControlPiso = () => {
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Tipo
+                            Dirigida a
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Depto
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Título
@@ -874,12 +955,21 @@ export const ControlPiso = () => {
                             className="hover:bg-blue-50 cursor-pointer transition"
                           >
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="text-sm text-gray-900">
-                                {petition.type === 'MODIFY_STAY' ? 'Modificar Reserva' : petition.type}
+                              <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${
+                                petition.type === 'CANCEL_MOVEMENT' 
+                                  ? 'bg-blue-100 text-blue-700' 
+                                  : 'bg-purple-100 text-purple-700'
+                              }`}>
+                                {petition.type === 'CANCEL_MOVEMENT' ? 'Administración' : `Propietario: ${getOwnerName(petition)}`}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="text-sm font-bold text-gray-900">
+                                {petition.apartment?.number || (petition.stay as any)?.apartment?.number || (petition.requestedData as any)?.apartmentNumber || 'N/A'}
                               </span>
                             </td>
                             <td className="px-6 py-4">
-                              <div className="text-sm text-gray-900">{petition.title}</div>
+                              <div className="text-sm text-gray-900 line-clamp-1">{petition.title}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`px-2 py-1 text-xs rounded-full ${petition.status === 'PENDING'
@@ -902,6 +992,205 @@ export const ControlPiso = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Contenido del Directorio */}
+          {activeTab === 'directory' && (
+            <div>
+              <div className="mb-6 flex justify-between items-start">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Directorio</h1>
+                  <p className="text-gray-600">
+                    Propietarios y responsables asignados por departamento
+                  </p>
+                </div>
+              </div>
+
+              {/* Selector de torre y buscador */}
+              <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Torre seleccionada:
+                    </label>
+                    <div className="flex gap-2 p-1 bg-gray-100 rounded-lg w-max">
+                      {buildings.map(building => (
+                        <button
+                          key={building.id}
+                          onClick={() => setSelectedBuildingId(building.id)}
+                          className={`px-4 py-2 rounded-md font-medium text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            selectedBuildingId === building.id
+                              ? 'bg-white text-blue-700 shadow-sm ring-1 ring-black ring-opacity-5'
+                              : 'text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {building.name}
+                        </button>
+                      ))}
+                      {buildings.length === 0 && (
+                        <span className="px-4 py-2 text-sm text-gray-500">Sin torres disponibles</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Buscador de directorio */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Buscar en el directorio
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="material-symbols-outlined text-gray-400">search</span>
+                      </span>
+                      <input
+                        type="text"
+                        placeholder="Buscar por departamento, nombre o correo..."
+                        value={directorySearchTerm}
+                        onChange={(e) => setDirectorySearchTerm(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lista de Departamentos (Acordeones) */}
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                  <h2 className="text-lg font-semibold text-slate-800">
+                    🏢 Departamentos → Propietarios → Responsables
+                  </h2>
+                </div>
+                
+                <div className="divide-y divide-slate-100">
+                  {(() => {
+                    // Filtrar apartamentos por torre seleccionada y búsqueda
+                    let filteredApts = apartments.filter(apt => apt.buildingId === selectedBuildingId || apt.building?.id === selectedBuildingId);
+                    
+                    if (directorySearchTerm) {
+                      const term = directorySearchTerm.toLowerCase();
+                      filteredApts = filteredApts.filter(apt => {
+                        const ownerName = `${apt.owner?.firstName || ''} ${apt.owner?.lastName || ''}`.toLowerCase();
+                        const managerName = `${apt.manager?.firstName || ''} ${apt.manager?.lastName || ''}`.toLowerCase();
+                        return (
+                          apt.number.toLowerCase().includes(term) ||
+                          ownerName.includes(term) ||
+                          (apt.owner?.email || '').toLowerCase().includes(term) ||
+                          managerName.includes(term) ||
+                          (apt.manager?.email || '').toLowerCase().includes(term)
+                        );
+                      });
+                    }
+
+                    // Ordenar por número de depto numéricamente
+                    filteredApts.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }));
+
+                    if (filteredApts.length === 0) {
+                      return (
+                        <div className="p-8 text-center text-slate-500">
+                          {directorySearchTerm ? 'No se encontraron departamentos con esa búsqueda.' : 'No hay departamentos en esta torre.'}
+                        </div>
+                      );
+                    }
+
+                    return filteredApts.map(apt => {
+                      const isExpanded = expandedApartments.has(apt.id);
+                      return (
+                        <div key={apt.id} className="group">
+                          <button
+                            onClick={() => toggleApartmentExpand(apt.id)}
+                            className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors focus:outline-none"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="bg-blue-100 text-blue-700 h-10 w-10 flex items-center justify-center rounded-lg font-bold">
+                                {apt.number}
+                              </div>
+                              <div className="text-left">
+                                <div className="font-semibold text-slate-800">Depto {apt.number}</div>
+                                <div className="text-sm text-slate-500">
+                                  Piso {apt.floor} • {apt.owner ? 'Registrado' : 'Sin Propietario'}
+                                </div>
+                              </div>
+                            </div>
+                            <span className="material-symbols-outlined text-slate-400 transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : '' }}>
+                              expand_more
+                            </span>
+                          </button>
+
+                          {isExpanded && (
+                            <div className="p-4 pt-0 bg-slate-50 border-t border-slate-100 grid md:grid-cols-2 gap-4">
+                              {/* Tarjeta Propietario */}
+                              <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <div className="h-8 w-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-[18px]">person</span>
+                                  </div>
+                                  <h3 className="font-semibold text-slate-800">Propietario</h3>
+                                </div>
+                                {apt.owner ? (
+                                  <div className="space-y-2">
+                                    <div className="font-medium text-slate-900 border-b border-slate-100 pb-2">
+                                      {apt.owner.firstName} {apt.owner.lastName}
+                                    </div>
+                                    <div className="text-sm text-slate-600 flex items-center gap-2 pt-1">
+                                      <span className="material-symbols-outlined text-[16px] text-slate-400">mail</span>
+                                      <a href={`mailto:${apt.owner.email}`} className="text-blue-600 hover:text-blue-800 truncate">{apt.owner.email}</a>
+                                    </div>
+                                    {apt.owner.phone && (
+                                      <div className="text-sm text-slate-600 flex items-center gap-2 pt-1">
+                                        <span className="material-symbols-outlined text-[16px] text-slate-400">phone</span>
+                                        <a href={`tel:${apt.owner.phone}`} className="text-blue-600 hover:text-blue-800">{apt.owner.phone}</a>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center py-4 text-slate-400">
+                                    <span className="material-symbols-outlined text-3xl mb-2 opacity-50">person_off</span>
+                                    <p className="italic text-sm">No registrado</p>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Tarjeta Responsable */}
+                              <div className="bg-white p-4 rounded-lg shadow-sm border border-purple-100">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <div className="h-8 w-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-[18px]">manage_accounts</span>
+                                  </div>
+                                  <h3 className="font-semibold text-slate-800">Responsable Asignado</h3>
+                                </div>
+                                {apt.manager ? (
+                                  <div className="space-y-2">
+                                    <div className="font-medium text-slate-900 border-b border-slate-100 pb-2">
+                                      {apt.manager.firstName} {apt.manager.lastName}
+                                    </div>
+                                    <div className="text-sm text-slate-600 flex items-center gap-2 pt-1">
+                                      <span className="material-symbols-outlined text-[16px] text-slate-400">mail</span>
+                                      <a href={`mailto:${apt.manager.email}`} className="text-purple-600 hover:text-purple-800 truncate">{apt.manager.email}</a>
+                                    </div>
+                                    {apt.manager.phone && (
+                                      <div className="text-sm text-slate-600 flex items-center gap-2 pt-1">
+                                        <span className="material-symbols-outlined text-[16px] text-slate-400">phone</span>
+                                        <a href={`tel:${apt.manager.phone}`} className="text-purple-600 hover:text-purple-800">{apt.manager.phone}</a>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center py-4 text-slate-400">
+                                    <span className="material-symbols-outlined text-3xl mb-2 opacity-50">no_accounts</span>
+                                    <p className="italic text-sm">Sin responsable asignado</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -931,6 +1220,19 @@ export const ControlPiso = () => {
                       ? selectedStay.apartment.building
                       : 'Sin torre'} - Depto {selectedStay.apartment.number} (Piso {selectedStay.apartment.floor})
                 </p>
+              </div>
+
+              {/* Estacionamiento */}
+              <div className="bg-slate-100 p-4 rounded-lg flex justify-between items-center border-l-4 border-blue-600 shadow-sm">
+                <div>
+                  <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Estacionamiento Asignado</h3>
+                  <p className="text-3xl font-black text-slate-900 tracking-tight">
+                    {selectedStay.effectiveParkingNumber || 'N/A'}
+                  </p>
+                </div>
+                <div className="bg-blue-600 p-3 rounded-full text-white shadow-inner">
+                  <span className="material-symbols-outlined text-3xl">local_parking</span>
+                </div>
               </div>
 
               {/* Responsable de Reserva */}
@@ -1173,11 +1475,10 @@ export const ControlPiso = () => {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Nombre *
+                            Nombre
                           </label>
                           <input
                             type="text"
-                            required
                             value={petitionFormData.guestFirstName || ''}
                             onChange={(e) => setPetitionFormData({ ...petitionFormData, guestFirstName: e.target.value })}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1186,11 +1487,10 @@ export const ControlPiso = () => {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Apellido *
+                            Apellido
                           </label>
                           <input
                             type="text"
-                            required
                             value={petitionFormData.guestLastName || ''}
                             onChange={(e) => setPetitionFormData({ ...petitionFormData, guestLastName: e.target.value })}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1231,11 +1531,10 @@ export const ControlPiso = () => {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Nombre Correcto *
+                            Nombre Correcto
                           </label>
                           <input
                             type="text"
-                            required
                             value={petitionFormData.correctFirstName || ''}
                             onChange={(e) => setPetitionFormData({ ...petitionFormData, correctFirstName: e.target.value })}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1244,11 +1543,10 @@ export const ControlPiso = () => {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Apellido Correcto *
+                            Apellido Correcto
                           </label>
                           <input
                             type="text"
-                            required
                             value={petitionFormData.correctLastName || ''}
                             onChange={(e) => setPetitionFormData({ ...petitionFormData, correctLastName: e.target.value })}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1478,8 +1776,10 @@ export const ControlPiso = () => {
                     <div className="font-medium text-gray-900">{selectedPetition.title}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Tipo</div>
-                    <div className="font-medium text-gray-900">{selectedPetition.type}</div>
+                    <div className="text-xs text-gray-500 mb-1">Dirigida a</div>
+                    <div className="font-medium text-gray-900">
+                      {selectedPetition.type === 'CANCEL_MOVEMENT' ? 'Administración' : `Propietario: ${getOwnerName(selectedPetition)}`}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Estado</div>

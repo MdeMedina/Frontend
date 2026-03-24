@@ -12,10 +12,10 @@ export type AuthResponse = {
     email: string;
     firstName: string;
     lastName: string;
-    role: 'ADMIN' | 'OWNER' | 'ASSIGNED_MANAGER' | 'CONCIERGE';
+    role: 'SUPERADMIN' | 'ADMIN' | 'OWNER' | 'ASSIGNED_MANAGER' | 'CONCIERGE';
     residenceIds?: string[];
     isMainAdmin?: Record<string, boolean>;
-    availableResidences?: { id: string; name: string }[];
+    availableResidences?: { id: string; name: string; buildings?: { id: string; name: string }[] }[];
   };
 };
 

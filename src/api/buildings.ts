@@ -22,6 +22,7 @@ export interface Building {
 
 export interface CreateBuildingDto {
   name: string;
+  residenceId?: string;
 }
 
 export interface UpdateBuildingDto {

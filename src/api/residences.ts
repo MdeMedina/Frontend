@@ -22,6 +22,14 @@ export type Residence = {
     createdAt?: string;
     isMain?: boolean;
   }[];
+  buildings?: {
+    id: string;
+    name: string;
+    isActive: boolean;
+    _count?: {
+      apartments: number;
+    };
+  }[];
 };
 
 export const residencesApi = {

@@ -107,6 +107,19 @@ apiClient.interceptors.request.use(
       }
     }
 
+    // Header de contexto de torre/edificio (Para todos los usuarios)
+    const storedManagedBuilding = localStorage.getItem('managedBuilding');
+    if (storedManagedBuilding && config.headers) {
+      try {
+        const managedBuilding = JSON.parse(storedManagedBuilding);
+        if (managedBuilding && managedBuilding.id) {
+          config.headers['x-building-id'] = managedBuilding.id;
+        }
+      } catch (e) {
+        // Ignorar error
+      }
+    }
+
     // Actualizar actividad en cada request
     updateActivity();
 

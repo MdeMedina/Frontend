@@ -8,7 +8,8 @@ import { formatPhoneNumber } from '../../utils/phone';
 import { PhoneInput } from '../../components/PhoneInput';
 import { SearchableSelect } from '../../components/SearchableSelect';
 import { Modal } from '../../components/Modal';
-import { Star, Plus, Search, Trash, ArrowLeft, X } from 'lucide-react';
+import { authApi } from '../../api/auth';
+import { Star, Plus, Search, Trash, ArrowLeft, X, RotateCcw, Trash2, Copy, Check } from 'lucide-react';
 import { handleRutInput } from '../../utils/rut';
 
 const card         = 'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-sm)]';
@@ -67,6 +68,11 @@ export default function Administrators() {
   const [isPhoneValid, setIsPhoneValid]       = useState(true);
   const [availableResidences, setAvailableResidences] = useState<{ id: string, name: string }[]>([]);
   const [selectedResidenceToAssign, setSelectedResidenceToAssign] = useState<string>('');
+  const [resetLink, setResetLink]               = useState<string | null>(null);
+  const [isResetLoading, setIsResetLoading]     = useState(false);
+  const [isDeleteLoading, setIsDeleteLoading]   = useState(false);
+  const [copied, setCopied]                     = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     stopImpersonation();
@@ -210,6 +216,8 @@ export default function Administrators() {
     setAdminFormData({ firstName: '', lastName: '', email: '', rut: '', phone: '+56', password: '', residenceId: '' });
     setIsPhoneValid(true);
     setError(null);
+    setResetLink(null);
+    setShowDeleteConfirm(false);
   };
 
   const handleCloseCreateModal = () => {
@@ -279,6 +287,42 @@ export default function Administrators() {
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al actualizar administrador');
     }
+  };
+
+  const handleResetPassword = async () => {
+    if (!editingAdmin) return;
+    try {
+      setIsResetLoading(true);
+      setError(null);
+      const res = await authApi.generateResetLink(editingAdmin.id);
+      setResetLink(res.setupLink);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al generar link de reestablecimiento');
+    } finally {
+      setIsResetLoading(false);
+    }
+  };
+
+  const handleDeleteAdmin = async () => {
+    if (!editingAdmin) return;
+    try {
+      setIsDeleteLoading(true);
+      await usersApi.delete(editingAdmin.id);
+      await fetchAdmins();
+      handleCloseEditModal();
+      showSuccess('Administrador eliminado correctamente');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al eliminar administrador');
+    } finally {
+      setIsDeleteLoading(false);
+      // setShowDeleteConfirm(false) ya se hace en handleCloseEditModal
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleManageResidences = (admin: AdminWithResidences) => {
@@ -527,6 +571,78 @@ export default function Administrators() {
           )}
 
           <form onSubmit={handleSubmitAdminEdit} className="space-y-4">
+            {!showDeleteConfirm ? (
+              <div className="flex gap-4 p-3 bg-[var(--color-background)] rounded-[var(--radius-sm)] border border-[var(--color-border)] mb-4 animate-in fade-in duration-200">
+                <button
+                  type="button"
+                  onClick={handleResetPassword}
+                  disabled={isResetLoading}
+                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 text-[10px] font-bold uppercase tracking-widest text-[var(--color-primary)] bg-[var(--color-surface)] border border-[var(--color-primary)] rounded-[var(--radius-sm)] hover:bg-[var(--color-primary-subtle)] transition-all disabled:opacity-50"
+                >
+                  <RotateCcw size={12} strokeWidth={2.5} />
+                  {isResetLoading ? 'Generando...' : 'Reestablecer'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isDeleteLoading}
+                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 text-[10px] font-bold uppercase tracking-widest text-[var(--color-danger)] bg-[var(--color-surface)] border border-[var(--color-danger)] rounded-[var(--radius-sm)] hover:bg-[var(--color-danger-subtle)] transition-all disabled:opacity-50"
+                >
+                  <Trash2 size={12} strokeWidth={2.5} />
+                  {isDeleteLoading ? 'Eliminando...' : 'Eliminar'}
+                </button>
+              </div>
+            ) : (
+              <div className="p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-[var(--radius-sm)] mb-4 animate-in zoom-in-95 duration-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Trash2 size={14} className="text-[var(--color-danger)]" />
+                  <p className="text-[11px] font-bold text-[var(--color-danger)] uppercase tracking-tight">Confirmar Eliminación</p>
+                </div>
+                <p className="text-[11px] text-[var(--color-text-muted)] mb-3 pr-2">
+                  ¿Está seguro de eliminar a <strong>{editingAdmin?.firstName} {editingAdmin?.lastName}</strong>? Esta acción no se puede deshacer.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 py-1.5 px-3 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-sm)] hover:bg-[var(--color-background)] transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteAdmin}
+                    className="flex-1 py-1.5 px-3 text-[10px] font-bold uppercase tracking-widest text-white bg-[var(--color-danger)] border border-[var(--color-danger)] rounded-[var(--radius-sm)] hover:opacity-90 transition-all"
+                  >
+                    {isDeleteLoading ? '...' : 'Confirmar'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {resetLink && !showDeleteConfirm && (
+              <div className="p-3 bg-[var(--color-action-subtle)] border border-[var(--color-action)] rounded-[var(--radius-sm)] animate-in fade-in slide-in-from-top-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-action-text)] mb-2">Link de Reestablecimiento:</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={resetLink}
+                    className="flex-1 text-xs border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(resetLink)}
+                    className="p-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-all"
+                    title="Copiar link"
+                  >
+                    {copied ? <Check size={14} className="text-[var(--color-action-text)]" /> : <Copy size={14} />}
+                  </button>
+                </div>
+                <p className="text-[9px] text-[var(--color-text-muted)] mt-2 italic">Copia este link y envíaselo al administrador para que configure su nueva contraseña.</p>
+              </div>
+            )}
+
             <div>
               <label className={label}>Nombre</label>
               <input type="text" value={adminFormData.firstName}

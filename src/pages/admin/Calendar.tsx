@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { Layout } from '../../components/Layout';
 import { staysApi, categoryLabels, categoryColors, getGuestFullName } from '../../api/stays';
 import type { Stay, Guest } from '../../api/stays';
@@ -50,6 +51,7 @@ const statusColors: Record<string, string> = {
 };
 
 export const AdminCalendar = () => {
+  const { currentBuilding } = useAuth();
   const [stays, setStays] = useState<Stay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -61,7 +63,10 @@ export const AdminCalendar = () => {
   const fetchStays = async () => {
     try {
       setLoading(true);
-      const response = await staysApi.getAll({ limit: 500 });
+      const response = await staysApi.getAll({ 
+        limit: 500,
+        buildingId: currentBuilding?.id 
+      });
       setStays(response.data);
       setError('');
     } catch (err: any) {
@@ -73,7 +78,7 @@ export const AdminCalendar = () => {
 
   useEffect(() => {
     fetchStays();
-  }, []);
+  }, [currentBuilding?.id]);
 
   // Generar eventos de calendario
   const events = useMemo(() => {
@@ -256,8 +261,7 @@ export const AdminCalendar = () => {
                     const dayEvents = date ? getEventsForDay(date) : [];
                     // Agrupar por categoría
                     const guestEvents = dayEvents.filter(e => e.stay.category === 'GUEST');
-                    const cleaningEvents = dayEvents.filter(e => e.stay.category === 'CLEANING_STAFF');
-                    const maintenanceEvents = dayEvents.filter(e => e.stay.category === 'MAINTENANCE_STAFF');
+                    const staffEvents = dayEvents.filter(e => e.stay.category === 'STAFF');
                     
                     const isSelected = selectedDay && date && 
                       selectedDay.getDate() === date.getDate() &&
@@ -290,16 +294,10 @@ export const AdminCalendar = () => {
                                   <span className="text-xs text-purple-700">{guestEvents.length}</span>
                                 </div>
                               )}
-                              {cleaningEvents.length > 0 && (
+                              {staffEvents.length > 0 && (
                                 <div className="flex items-center gap-1">
                                   <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                  <span className="text-xs text-blue-700">{cleaningEvents.length}</span>
-                                </div>
-                              )}
-                              {maintenanceEvents.length > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                                  <span className="text-xs text-orange-700">{maintenanceEvents.length}</span>
+                                  <span className="text-xs text-blue-700">{staffEvents.length}</span>
                                 </div>
                               )}
                             </div>
@@ -360,7 +358,7 @@ export const AdminCalendar = () => {
                                   🏢 Depto {event.stay.apartment.number}
                                 </div>
                                 <div className="text-gray-600">
-                                  {event.stay.apartment.building?.name || 'Sin torre'} - Piso {event.stay.apartment.floor}
+                                  {(typeof event.stay.apartment.building === 'object' ? event.stay.apartment.building?.name : null) || 'Sin torre'} - Piso {event.stay.apartment.floor}
                                 </div>
                                 <div className={`mt-1 text-xs font-medium ${colors.text}`}>
                                   {categoryLabels[event.stay.category]}
@@ -429,18 +427,15 @@ export const AdminCalendar = () => {
                           {monthDays.map((date, idx) => {
                             const dayEvents = date ? getEventsForDay(date) : [];
                             const hasGuest = dayEvents.some(e => e.stay.category === 'GUEST');
-                            const hasCleaning = dayEvents.some(e => e.stay.category === 'CLEANING_STAFF');
-                            const hasMaintenance = dayEvents.some(e => e.stay.category === 'MAINTENANCE_STAFF');
+                            const hasStaff = dayEvents.some(e => e.stay.category === 'STAFF');
                             
                             let bgColor = '';
-                            if (hasGuest && (hasCleaning || hasMaintenance)) {
-                              bgColor = 'bg-gradient-to-r from-purple-400 via-blue-400 to-orange-400 text-white';
+                            if (hasGuest && hasStaff) {
+                              bgColor = 'bg-gradient-to-r from-purple-400 to-blue-400 text-white';
                             } else if (hasGuest) {
                               bgColor = 'bg-purple-400 text-white';
-                            } else if (hasCleaning) {
+                            } else if (hasStaff) {
                               bgColor = 'bg-blue-400 text-white';
-                            } else if (hasMaintenance) {
-                              bgColor = 'bg-orange-400 text-white';
                             } else if (isToday(date)) {
                               bgColor = 'bg-indigo-600 text-white';
                             } else {
@@ -493,7 +488,7 @@ export const AdminCalendar = () => {
               <h3 className="font-semibold text-gray-800 mb-2">Departamento</h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div><span className="text-gray-500">Número:</span> <span className="font-medium">Depto {selectedStay?.apartment.number}</span></div>
-                <div><span className="text-gray-500">Edificio:</span> <span className="font-medium">{selectedStay?.apartment.building?.name || 'Sin torre'}</span></div>
+                <div><span className="text-gray-500">Edificio:</span> <span className="font-medium">{(typeof selectedStay?.apartment.building === 'object' ? selectedStay?.apartment.building?.name : null) || 'Sin torre'}</span></div>
                 <div><span className="text-gray-500">Piso:</span> <span className="font-medium">{selectedStay?.apartment.floor}</span></div>
               </div>
             </div>

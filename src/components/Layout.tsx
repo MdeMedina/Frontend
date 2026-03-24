@@ -15,13 +15,11 @@ type NavItem = { label: string; path: string; icon: React.ElementType };
 const NAV: Record<string, NavItem[]> = {
   SUPERADMIN: [
     { label: 'Inicio',          path: '/superadmin',                icon: Home      },
-    { label: 'Residencias',     path: '/superadmin/residences',     icon: Landmark  },
     { label: 'Administradores', path: '/superadmin/administrators', icon: Users     },
   ],
   ADMIN: [
     { label: 'Inicio',        path: '/admin',              icon: Home          },
     { label: 'Usuarios',      path: '/admin/users',        icon: Users         },
-    { label: 'Torres',        path: '/admin/buildings',    icon: Building2     },
     { label: 'Departamentos', path: '/admin/apartments',   icon: Building      },
     { label: 'Reservas',      path: '/admin/reservations', icon: CalendarDays  },
     { label: 'Peticiones',    path: '/admin/petitions',    icon: ClipboardList },
@@ -40,7 +38,8 @@ const NAV: Record<string, NavItem[]> = {
     { label: 'Inicio',        path: '/responsable',              icon: Home         },
     { label: 'Departamentos', path: '/responsable/apartments',   icon: Building     },
     { label: 'Reservas',      path: '/responsable/reservations', icon: CalendarDays },
-    { label: 'Calendario',    path: '/responsable/calendar',     icon: Calendar     },
+    { label: 'Peticiones',    path: '/responsable/petitions',    icon: ClipboardList },
+    { label: 'Calendario',    path: '/responsable/calendar',     icon: Calendar      },
   ],
   CONCIERGE: [],
 };
@@ -61,7 +60,7 @@ const btnActive  = 'text-[var(--color-primary)] after:absolute after:bottom-0 af
 const btnDefault = 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]';
 
 export const Layout = ({ children }: LayoutProps) => {
-  const { user, logout, impersonationMode, stopImpersonation, currentResidence } = useAuth();
+  const { user, logout, impersonationMode, stopImpersonation, currentResidence, currentBuilding, selectResidence, selectBuilding } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -84,17 +83,21 @@ export const Layout = ({ children }: LayoutProps) => {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <span className="flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-white/80">
               <Building2 size={14} strokeWidth={1.5} aria-hidden="true" />
-              {currentResidence?.name || 'Residencia Seleccionada'}
+              {currentBuilding?.name ? `${currentBuilding.name} (${currentResidence?.name})` : (currentResidence?.name || 'Torre Seleccionada')}
             </span>
             <button
               onClick={impersonationMode
                 ? () => { stopImpersonation(); navigate('/superadmin'); }
-                : () => navigate('/select-residence')}
+                : () => { 
+                    selectResidence(null); 
+                    selectBuilding(null); 
+                    navigate('/select-residence'); 
+                  }}
               className="bg-[var(--color-surface)] text-[var(--color-primary)]
                          px-3 py-1 rounded-[var(--radius-sm)]
                          text-xs font-semibold tracking-wide hover:opacity-90 transition-opacity"
             >
-              {impersonationMode ? 'Salir de la vista' : 'Cambiar Residencia'}
+              Cambiar Residencia
             </button>
           </div>
         </div>
@@ -153,7 +156,7 @@ export const Layout = ({ children }: LayoutProps) => {
             </div>
 
             <div className="flex items-center gap-3">
-              {user?.role !== 'SUPERADMIN' && <Notifications />}
+              {user?.role !== 'SUPERADMIN' && user?.role !== 'CONCIERGE' && <Notifications />}
 
               <button
                 onClick={() => navigate('/profile')}
