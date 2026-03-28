@@ -99,16 +99,57 @@ export const getGuestFullName = (stay: Stay): string => {
   return '-';
 };
 
-// Labels para categorías
-export const categoryLabels: Record<string, string> = {
-  GUEST: 'Huésped',
-  STAFF: 'Mantenimiento',
+// Labels para estados
+export const statusLabels: Record<string, string> = {
+  SCHEDULED: 'Programada',
+  CHECKED_IN: 'En Depto',
+  CHECKED_OUT: 'Finalizada',
+  CANCELLED: 'Cancelada',
 };
 
-// Colores para categorías en calendario
-export const categoryColors: Record<string, { bg: string; border: string; text: string }> = {
-  GUEST: { bg: 'bg-purple-50', border: 'border-purple-500', text: 'text-purple-800' },
-  STAFF: { bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-800' },
+// Configuración visual para categorías (Diseño Quirúrgico)
+export const categoryConfig: Record<string, { label: string; bg: string; text: string; dot: string; border: string }> = {
+  GUEST: { 
+    label: 'Huésped', 
+    bg: 'bg-emerald-50', 
+    text: 'text-emerald-800', 
+    dot: 'bg-emerald-500',
+    border: 'border-emerald-200/50'
+  },
+  STAFF: { 
+    label: 'Mantenimiento', 
+    bg: 'bg-sky-50', 
+    text: 'text-sky-800', 
+    dot: 'bg-sky-500',
+    border: 'border-sky-200/50'
+  },
+};
+
+// Aliases para compatibilidad con componentes existentes (Calendario, etc)
+export const categoryLabels: Record<string, string> = {
+  GUEST: categoryConfig.GUEST.label,
+  STAFF: categoryConfig.STAFF.label,
+};
+
+export const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
+  GUEST: { 
+    bg: categoryConfig.GUEST.bg, 
+    text: categoryConfig.GUEST.text, 
+    border: categoryConfig.GUEST.border 
+  },
+  STAFF: { 
+    bg: categoryConfig.STAFF.bg, 
+    text: categoryConfig.STAFF.text, 
+    border: categoryConfig.STAFF.border 
+  },
+};
+
+// Configuración visual para estados (Diseño Quirúrgico)
+export const statusConfig: Record<string, { label: string; bg: string; text: string; border: string }> = {
+  SCHEDULED: { label: 'Programada', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200/50' },
+  CHECKED_IN: { label: 'En Depto', bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200/50' },
+  CHECKED_OUT: { label: 'Finalizada', bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-200/50' },
+  CANCELLED: { label: 'Cancelada', bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200/50' },
 };
 
 export const staysApi = {

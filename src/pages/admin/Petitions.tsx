@@ -2,9 +2,18 @@ import { useState, useEffect } from 'react';
 import { Layout } from '../../components/Layout';
 import { petitionsApi, type Petition } from '../../api/petitions';
 import { useAuth } from '../../contexts/AuthContext';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { Modal } from '../../components/Modal';
+import { 
+  getInitials, 
+  getRecipientLabel, 
+  formatDate, 
+  formatRelativeTime, 
+  getTypeLabel, 
+  getTypeColor,
+  getStatusColor, 
+  getStatusLabel 
+} from './petitions.utils';
+import { Card, Field, DiffField } from './components/PetitionUI';
 
 export const AdminPetitions = () => {
   const { currentBuilding, impersonationMode } = useAuth();
@@ -28,6 +37,8 @@ export const AdminPetitions = () => {
   const [correctionStatus, setCorrectionStatus] = useState<'APPROVED' | 'REJECTED'>('APPROVED');
   const [correctionNotes, setCorrectionNotes] = useState('');
   const [isSubmittingCorrection, setIsSubmittingCorrection] = useState(false);
+
+  // --- LOGIC HELPERS ---
 
   const handleCorrectResolution = async () => {
     if (!selectedPetition || !correctionNotes.trim()) {
@@ -59,8 +70,6 @@ export const AdminPetitions = () => {
         limit: 100,
         ...(currentBuilding?.id ? { buildingId: currentBuilding.id } : {})
       });
-      // Remove filter to allow CONCIERGE petitions (like CANCEL_MOVEMENT)
-      // const filteredPetitions = response.data.filter(p => !p.user || p.user.role !== 'CONCIERGE'); 
       const filteredPetitions = response.data;
       setPetitions(filteredPetitions);
 
@@ -80,35 +89,25 @@ export const AdminPetitions = () => {
     fetchPetitions();
   }, [currentBuilding?.id]);
 
-  // Helper to determine if a petition belongs to "Generales" (Admin can't approve)
   const isAdminApprovalRestricted = (petition: Petition) => {
     return petition.user.role === 'CONCIERGE' && petition.type !== 'CANCEL_MOVEMENT';
   };
 
   const filteredItems = petitions.filter(p => {
     const isRestricted = isAdminApprovalRestricted(p);
-    
-    // Tab "Generales" shows ONLY restricted petitions (e.g. CONCIERGE)
     if (activeTab === 'general') return isRestricted;
-    
-    // For other tabs, exclude restricted petitions
     if (isRestricted) return false;
-    
-    // Filter by status for Pendientes/Resueltas
     if (activeTab === 'pending') return p.status === 'PENDING';
     if (activeTab === 'resolved') return p.status === 'APPROVED' || p.status === 'REJECTED';
-    
     return false;
   });
 
-  // Auto-select first petition when tab changes
   useEffect(() => {
     if (filteredItems.length > 0 && (!selectedPetition || !filteredItems.find(p => p.id === selectedPetition.id))) {
       setSelectedPetition(filteredItems[0]);
     } else if (filteredItems.length === 0) {
       setSelectedPetition(null);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, petitions]);
 
   const handleProcessReview = async () => {
@@ -131,8 +130,7 @@ export const AdminPetitions = () => {
         return;
       }
     } else {
-      // Approved
-      finalNote = reviewReason; // Optional for approval
+      finalNote = reviewReason;
     }
 
     try {
@@ -145,7 +143,6 @@ export const AdminPetitions = () => {
         limit: 100,
         ...(currentBuilding?.id ? { buildingId: currentBuilding.id } : {})
       });
-      // Remove filter here as well
       const filteredPetitions = response.data;
       setPetitions(filteredPetitions);
 
@@ -177,86 +174,6 @@ export const AdminPetitions = () => {
     setShowReviewModal(true);
   };
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
-  };
-
-  const getRecipientLabel = (petition: Petition) => {
-    if (petition.type === 'CANCEL_MOVEMENT') return 'Para: Administración';
-    const owner = petition.apartment?.owner || (petition.stay as any)?.apartment?.owner;
-    return owner ? `Para: ${owner.firstName} ${owner.lastName}` : 'Para: Propietario';
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      if (!dateString) return '';
-      // Create date object and adjust for timezone offset to display as UTC
-      const date = new Date(dateString);
-      const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-      const adjustedDate = new Date(date.getTime() + userTimezoneOffset);
-      return format(adjustedDate, "d 'de' MMM yyyy, HH:mm", { locale: es });
-    } catch {
-      return dateString;
-    }
-  };
-
-  const formatRelativeTime = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-
-      if (diffInMinutes < 60) return `${diffInMinutes} min`;
-      const diffInHours = Math.floor(diffInMinutes / 60);
-      if (diffInHours < 24) return `${diffInHours} h`;
-      return format(date, "d MMM", { locale: es });
-    } catch {
-      return '';
-    }
-  };
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'CREATE_MANAGER': return 'Asignar Responsable';
-      case 'CREATE_APARTMENT': return 'Crear Departamento';
-      case 'MODIFY_STAY': return 'Modificar Reserva';
-      case 'DELETE_APARTMENT': return 'Eliminar Departamento';
-      case 'CANCEL_MOVEMENT': return 'Cancelar Movimiento';
-      case 'MODIFY_GUEST_DATA': return 'Modificar Huésped';
-      case 'ASSIGN_PARKING': return 'Asignar Estacionamiento';
-      default: return 'Solicitud';
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'CREATE_MANAGER': return 'bg-purple-100 text-purple-700';
-      case 'CREATE_APARTMENT': return 'bg-emerald-100 text-emerald-700';
-      case 'MODIFY_STAY': return 'bg-blue-100 text-blue-700';
-      case 'DELETE_APARTMENT': return 'bg-red-100 text-red-700';
-      case 'CANCEL_MOVEMENT': return 'bg-red-100 text-red-700';
-      case 'MODIFY_GUEST_DATA': return 'bg-orange-100 text-orange-700';
-      case 'ASSIGN_PARKING': return 'bg-pink-100 text-pink-700';
-      default: return 'bg-amber-100 text-amber-700';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'APPROVED': return 'bg-green-100 text-green-700 border-green-200';
-      case 'REJECTED': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-amber-100 text-amber-700 border-amber-200';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'APPROVED': return 'APROBADA';
-      case 'REJECTED': return 'RECHAZADA';
-      default: return 'PENDIENTE';
-    }
-  };
-
   const isCorrectionAllowed = (petition: Petition) => {
     if (!petition.reviewedAt) return false;
     const reviewedDate = new Date(petition.reviewedAt);
@@ -265,28 +182,12 @@ export const AdminPetitions = () => {
     return diffInHours <= 24;
   };
 
+
+
   // --- RENDER HELPERS ---
 
   const renderPetitionDetails = (petition: Petition) => {
     const data = petition.requestedData || {};
-
-    // Common Card Wrapper
-    const Card = ({ title, icon, children, className }: any) => (
-      <div className={`bg-white  rounded-lg p-3 border border-slate-200  shadow-sm ${className}`}>
-        <div className="flex items-center gap-2 mb-2 border-b border-slate-100  pb-1.5">
-          <span className="material-symbols-outlined text-primary text-base">{icon}</span>
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{title}</h3>
-        </div>
-        {children}
-      </div>
-    );
-
-    const Field = ({ label, value }: any) => (
-      <div className="bg-slate-50  p-1.5 rounded border border-slate-100  text-center">
-        <p className="text-[8px] uppercase font-bold text-slate-400">{label}</p>
-        <p className="text-xs font-bold text-slate-800  truncate">{value || 'N/A'}</p>
-      </div>
-    );
 
     // 1. MANAGER PETITIONS
     if (['CREATE_MANAGER', 'MODIFY_MANAGER', 'DELETE_MANAGER'].includes(petition.type)) {
@@ -305,8 +206,8 @@ export const AdminPetitions = () => {
               {getInitials(name, '')}
             </div>
             <div className="min-w-0">
-              <h4 className="text-xs font-bold truncate text-slate-900 ">{name}</h4>
-              <p className="text-[10px] text-slate-500 truncate">{managerData.email || 'N/A'}</p>
+              <h4 className="text-[12px] font-bold truncate text-gray-900">{name}</h4>
+              <p className="text-[11px] font-medium text-gray-500 truncate">{managerData.email || 'N/A'}</p>
             </div>
           </div>
 
@@ -317,11 +218,11 @@ export const AdminPetitions = () => {
           </div>
 
           {petition.apartment && (
-            <div className="mt-2 border-t border-slate-100 pt-2">
-              <p className="text-[9px] text-slate-400 mb-1 font-bold uppercase">Asignar a:</p>
+            <div className="mt-3 border-t border-black/[0.03] pt-3">
+              <p className="text-[9px] text-gray-400 mb-2 font-bold uppercase tracking-widest">Asignar a:</p>
               <div className="flex gap-2">
-                <span className="text-xs font-mono bg-slate-100 px-1 rounded">Dept {petition.apartment.number}</span>
-                <span className="text-xs text-slate-500">
+                <span className="text-[11px] font-bold font-mono bg-gray-100 px-2 py-0.5 rounded-sm border border-black/[0.05] text-gray-900">DEPTO {petition.apartment.number}</span>
+                <span className="text-[11px] font-bold text-gray-800 uppercase tracking-tight">
                   {typeof petition.apartment.building === 'string' ? petition.apartment.building : (petition.apartment.building as any)?.name}
                 </span>
               </div>
@@ -337,46 +238,27 @@ export const AdminPetitions = () => {
       const buildingName = typeof aptData.building === 'string' ? aptData.building : aptData.building?.name || data.buildingName;
 
       if (petition.type === 'MODIFY_APARTMENT') {
-        const DiffField = ({ label, current, requested }: { label: string, current: any, requested: any }) => {
-          const isChanged = requested !== undefined && requested !== current && requested !== '' && requested !== 0;
-          return (
-            <div className={`p-2 rounded border ${isChanged ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100'}`}>
-              <p className="text-[8px] uppercase font-bold text-slate-400 mb-0.5">{label}</p>
-              <div className="flex items-center justify-between gap-2">
-                <span className={`text-xs ${isChanged ? 'text-slate-400 line-through' : 'font-bold text-slate-800'}`}>
-                  {current || 'N/A'}
-                </span>
-                {isChanged && (
-                  <>
-                    <span className="material-symbols-outlined text-[10px] text-amber-500">arrow_forward</span>
-                    <span className="text-xs font-bold text-amber-700">{requested}</span>
-                  </>
-                )}
-              </div>
-            </div>
-          );
-        };
-
         return (
           <Card title="Comparativa de Departamento" icon="compare_arrows" className="h-full border-amber-200 bg-amber-50/10">
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <DiffField label="Número" current={aptData.number} requested={data.number} />
-                <DiffField label="Piso" current={aptData.floor} requested={data.floor} />
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <DiffField label="Número" current={aptData.number} requested={data.number} formatDate={formatDate} />
+                <DiffField label="Piso" current={aptData.floor} requested={data.floor} formatDate={formatDate} />
               </div>
               <div className="grid grid-cols-1">
-                <DiffField label="Estacionamiento" current={(aptData as any).parkingNumber} requested={data.parkingNumber} />
+                <DiffField label="Estacionamiento" current={(aptData as any).parkingNumber} requested={data.parkingNumber} formatDate={formatDate} />
               </div>
               <div className="grid grid-cols-1">
                 <DiffField 
                   label="Descripción" 
                   current={aptData.description} 
                   requested={data.description !== undefined ? data.description : undefined} 
+                  formatDate={formatDate}
                 />
               </div>
-              <div className="p-2 bg-slate-100 rounded text-center">
-                <p className="text-[8px] uppercase font-bold text-slate-400">Torre (Fijo)</p>
-                <p className="text-xs font-bold text-slate-700">{buildingName}</p>
+              <div className="p-2.5 bg-gray-100/50 rounded-sm border border-black/[0.05] text-center">
+                <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-0.5">Torre (Fijo)</p>
+                <p className="text-[12px] font-bold text-gray-700">{buildingName}</p>
               </div>
             </div>
           </Card>
@@ -394,11 +276,9 @@ export const AdminPetitions = () => {
                 <Field label="Estacionamiento" value={(aptData as any).parkingNumber} />
               </div>
             )}
-            {(aptData as any).description && (
-              <div className="col-span-3 mt-2 text-[10px] text-slate-500 italic bg-gray-50 p-2 rounded border border-gray-100">
+              <div className="col-span-3 mt-2 text-[11px] text-gray-600 italic bg-gray-50 p-3 rounded-sm border border-black/[0.03]">
                 "{(aptData as any).description}"
               </div>
-            )}
           </div>
         </Card>
       );
@@ -410,29 +290,6 @@ export const AdminPetitions = () => {
       const apartment = stayData.apartment || (petition.apartment) || {};
       const building = apartment.building || {};
 
-      const DiffField = ({ label, current, requested, isDate = false }: { label: string, current: any, requested: any, isDate?: boolean }) => {
-        const currentVal = isDate ? current?.split('T')[0] : current;
-        const requestedVal = isDate ? requested?.split('T')[0] : requested;
-        const isChanged = requestedVal !== undefined && requestedVal !== currentVal && requestedVal !== '';
-        
-        return (
-          <div className={`p-2 rounded border ${isChanged ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100'}`}>
-            <p className="text-[8px] uppercase font-bold text-slate-400 mb-0.5">{label}</p>
-            <div className="flex items-center justify-between gap-2">
-              <span className={`text-xs ${isChanged ? 'text-slate-400 line-through' : 'font-bold text-slate-800'}`}>
-                {isDate ? formatDate(current) : (current || 'N/A')}
-              </span>
-              {isChanged && (
-                <>
-                  <span className="material-symbols-outlined text-[10px] text-amber-500">arrow_forward</span>
-                  <span className="text-xs font-bold text-amber-700">{isDate ? formatDate(requested) : requested}</span>
-                </>
-              )}
-            </div>
-          </div>
-        );
-      };
-
       const isModify = petition.type === 'MODIFY_STAY' || petition.type === 'MODIFY_GUEST_DATA';
 
       return (
@@ -442,23 +299,23 @@ export const AdminPetitions = () => {
               {!isModify ? (
                 <div className="grid grid-cols-2 gap-2">
                   <div className="col-span-2">
-                    <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Huésped</p>
-                    <p className="font-semibold text-sm">{stayData.guestFirstName} {stayData.guestLastName}</p>
-                    <p className="text-xs text-mono text-slate-500">{stayData.guestDocument || 'N/A'}</p>
+                    <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-1">Huésped</p>
+                    <p className="font-bold text-[13px] text-gray-900">{stayData.guestFirstName} {stayData.guestLastName}</p>
+                    <p className="text-[11px] font-mono text-gray-400">{stayData.guestDocument || 'N/A'}</p>
                   </div>
                   <Field label="Check-In" value={formatDate(stayData.scheduledCheckIn)} />
                   <Field label="Check-Out" value={formatDate(stayData.scheduledCheckOut)} />
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <DiffField label="Nombre" current={petition.stay?.guestFirstName} requested={data.guestFirstName} />
-                    <DiffField label="Apellido" current={petition.stay?.guestLastName} requested={data.guestLastName} />
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <DiffField label="Nombre" current={petition.stay?.guestFirstName} requested={data.guestFirstName} formatDate={formatDate} />
+                    <DiffField label="Apellido" current={petition.stay?.guestLastName} requested={data.guestLastName} formatDate={formatDate} />
                   </div>
-                  <DiffField label="Documento" current={petition.stay?.guestDocument} requested={data.guestDocument} />
-                  <div className="grid grid-cols-2 gap-2">
-                    <DiffField label="Check-In" current={petition.stay?.scheduledCheckIn} requested={data.scheduledCheckIn || data.newCheckIn} isDate />
-                    <DiffField label="Check-Out" current={petition.stay?.scheduledCheckOut} requested={data.scheduledCheckOut || data.newCheckOut} isDate />
+                  <DiffField label="Documento" current={petition.stay?.guestDocument} requested={data.guestDocument} formatDate={formatDate} />
+                  <div className="grid grid-cols-2 gap-3">
+                    <DiffField label="Check-In" current={petition.stay?.scheduledCheckIn} requested={data.scheduledCheckIn || data.newCheckIn} isDate formatDate={formatDate} />
+                    <DiffField label="Check-Out" current={petition.stay?.scheduledCheckOut} requested={data.scheduledCheckOut || data.newCheckOut} isDate formatDate={formatDate} />
                   </div>
                 </div>
               )}
@@ -471,12 +328,12 @@ export const AdminPetitions = () => {
 
           <Card title="Departamento" icon="apartment" className="h-full">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-50 p-2 rounded-lg text-blue-600 font-bold text-xl">
+              <div className="bg-gray-100 p-2.5 rounded-sm text-gray-900 border border-black/[0.05] font-bold text-xl">
                 {apartment.number || 'N/A'}
               </div>
               <div>
-                <p className="text-xs text-slate-500 font-medium">Torre/Edificio</p>
-                <p className="font-bold text-slate-800">{building.name || 'N/A'}</p>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Torre / Edificio</p>
+                <p className="font-bold text-[12px] text-gray-900">{building.name || 'N/A'}</p>
               </div>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
@@ -507,35 +364,35 @@ export const AdminPetitions = () => {
         <Card title="Asignación de Estacionamiento" icon="local_parking" className="h-full border-pink-200 bg-pink-50/10">
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              <div className="col-span-2 bg-white p-3 rounded-lg border border-pink-100 flex items-center justify-between shadow-sm">
+              <div className="col-span-2 bg-white p-3 rounded-sm border border-pink-100 flex items-center justify-between shadow-sm">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">N° Estacionamiento</p>
-                  <p className="text-2xl font-black text-pink-700 tracking-tight">{data.parkingNumber || assignment?.parkingNumber || 'N/A'}</p>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">N° Estacionamiento</p>
+                  <p className="text-2xl font-bold text-pink-700 tracking-tight">{data.parkingNumber || assignment?.parkingNumber || 'N/A'}</p>
                 </div>
                 <div className="bg-pink-100 p-2 rounded-full text-pink-600">
                   <span className="material-symbols-outlined text-3xl">local_parking</span>
                 </div>
               </div>
 
-              <div className="p-2 bg-slate-50 rounded border border-slate-100">
-                <p className="text-[8px] uppercase font-bold text-slate-400 mb-0.5">Propiedad Origen</p>
-                <p className="text-xs font-bold text-slate-800">{sourceNum}</p>
+              <div className="p-2.5 bg-gray-50/50 rounded-sm border border-black/[0.03]">
+                <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-0.5">Propiedad Origen</p>
+                <p className="text-[12px] font-bold text-gray-900">{sourceNum}</p>
               </div>
 
-              <div className="p-2 bg-pink-50 rounded border border-pink-200">
-                <p className="text-[8px] uppercase font-bold text-pink-400 mb-0.5">Beneficiario (Destino)</p>
-                <p className="text-xs font-bold text-pink-700">{targetNum}</p>
+              <div className="p-2.5 bg-pink-50/50 rounded-sm border border-pink-200">
+                <p className="text-[10px] uppercase font-bold text-pink-400 tracking-wider mb-0.5">Beneficiario (Destino)</p>
+                <p className="text-[12px] font-bold text-pink-700">{targetNum}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mt-1 bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-              <div className="text-center border-r border-slate-100">
-                <p className="text-[8px] uppercase font-bold text-slate-400 mb-0.5">Vigencia Desde</p>
-                <p className="text-xs font-bold text-slate-800">{formatDate(data.startDate || assignment?.startDate).split(',')[0]}</p>
+            <div className="grid grid-cols-2 gap-2 mt-1 bg-white p-3 rounded-sm border border-gray-100 shadow-sm">
+              <div className="text-center border-r border-black/[0.03]">
+                <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-0.5">Vigencia Desde</p>
+                <p className="text-[11px] font-bold text-gray-900">{formatDate(data.startDate || assignment?.startDate).split(',')[0]}</p>
               </div>
               <div className="text-center">
-                <p className="text-[8px] uppercase font-bold text-slate-400 mb-0.5">Vigencia Hasta</p>
-                <p className="text-xs font-bold text-slate-800">{formatDate(data.endDate || assignment?.endDate).split(',')[0]}</p>
+                <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-0.5">Vigencia Hasta</p>
+                <p className="text-[11px] font-bold text-gray-900">{formatDate(data.endDate || assignment?.endDate).split(',')[0]}</p>
               </div>
             </div>
           </div>
@@ -550,13 +407,13 @@ export const AdminPetitions = () => {
 
       return (
         <Card title="Datos de la Reserva" icon="hotel" className="h-full">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-sm bg-gray-100 border border-black/[0.05] flex items-center justify-center text-gray-900 font-bold text-sm">
               {getInitials(stay.guestFirstName || '', '')}
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900">{stay.guestFirstName} {stay.guestLastName}</h4>
-              <p className="text-[9px] text-slate-500">ID: {stay.guestDocument || 'N/A'}</p>
+              <h4 className="text-[12px] font-bold text-gray-900">{stay.guestFirstName} {stay.guestLastName}</h4>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">ID: {stay.guestDocument || 'N/A'}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-1.5 mb-2">
@@ -566,20 +423,20 @@ export const AdminPetitions = () => {
 
           {data && (data.newCheckIn || data.newCheckOut) && (
             <div className="bg-amber-50 border border-amber-100 p-1.5 rounded">
-              <p className="text-[9px] font-bold text-amber-700 uppercase mb-1 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[10px]">edit</span> Cambios
+              <p className="text-[10px] font-bold text-amber-600 uppercase mb-2 flex items-center gap-1 tracking-wider">
+                <span className="material-symbols-outlined text-[12px]">edit</span> Cambios Realizados
               </p>
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-2 gap-3">
                 {data.newCheckIn && (
                   <div>
-                    <p className="text-[8px] text-amber-600">Nuevo Check-in</p>
-                    <p className="text-[10px] font-bold text-slate-800">{formatDate(data.newCheckIn).split(',')[0]}</p>
+                    <p className="text-[10px] font-bold text-amber-500/70 uppercase tracking-wider">Nuevo Check-in</p>
+                    <p className="text-[11px] font-bold text-gray-900">{formatDate(data.newCheckIn).split(',')[0]}</p>
                   </div>
                 )}
                 {data.newCheckOut && (
                   <div>
-                    <p className="text-[8px] text-amber-600">Nuevo Check-out</p>
-                    <p className="text-[10px] font-bold text-slate-800">{formatDate(data.newCheckOut).split(',')[0]}</p>
+                    <p className="text-[10px] font-bold text-amber-500/70 uppercase tracking-wider">Nuevo Check-out</p>
+                    <p className="text-[11px] font-bold text-gray-900">{formatDate(data.newCheckOut).split(',')[0]}</p>
                   </div>
                 )}
               </div>
@@ -594,42 +451,58 @@ export const AdminPetitions = () => {
 
   return (
     <Layout>
-      <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-white  font-sans text-slate-900 ">
+      <style>{`
+        @keyframes fadeInScale {
+          from { opacity: 0; transform: scale(0.98); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes slideInRight {
+          from { opacity: 0; transform: translateX(10px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-fade-in-scale {
+          animation: fadeInScale 0.2s ease-out forwards;
+        }
+        .animate-slide-in-right {
+          animation: slideInRight 0.25s cubic-bezier(0, 0, 0.2, 1) forwards;
+        }
+      `}</style>
+      <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-white  font-sans text-gray-900 ">
 
         {/* SIDEBAR */}
-        <aside className="w-[300px] border-r border-slate-200  bg-white  flex flex-col shrink-0">
-          <div className="p-3 border-b border-slate-200  bg-slate-50/50 ">
+        <aside className="w-[300px] border-r border-gray-200  bg-white  flex flex-col shrink-0">
+          <div className="p-3 border-b border-gray-200  bg-gray-50/50 ">
             <div className="flex justify-between items-center mb-3">
-              <h2 className="font-bold text-xs">Solicitudes</h2>
+              <h2 className="font-bold text-xs uppercase tracking-wider text-gray-500">Solicitudes</h2>
               {petitions.length > 0 && (
-                <span className="bg-primary/10 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                  {petitions.length} total
+                <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  {petitions.length} TOTAL
                 </span>
               )}
             </div>
 
             {/* Tabs */}
-            <div className="flex bg-slate-200  p-0.5 rounded-lg">
+            <div className="flex bg-gray-200  p-0.5 rounded-sm">
               <button
                 onClick={() => setActiveTab('pending')}
-                className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${
-                  activeTab === 'pending' ? 'bg-white shadow text-primary' : 'text-slate-500 hover:text-slate-700'
+                className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all uppercase tracking-wider ${
+                  activeTab === 'pending' ? 'bg-white shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 Pendientes
               </button>
               <button
                 onClick={() => setActiveTab('resolved')}
-                className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${
-                  activeTab === 'resolved' ? 'bg-white shadow text-primary' : 'text-slate-500 hover:text-slate-700'
+                className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all uppercase tracking-wider ${
+                  activeTab === 'resolved' ? 'bg-white shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 Resueltas
               </button>
               <button
                 onClick={() => setActiveTab('general')}
-                className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${
-                  activeTab === 'general' ? 'bg-white shadow text-primary' : 'text-slate-500 hover:text-slate-700'
+                className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all uppercase tracking-wider ${
+                  activeTab === 'general' ? 'bg-white shadow-sm text-primary' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 Generales
@@ -641,7 +514,7 @@ export const AdminPetitions = () => {
             {loading ? (
               <div className="flex justify-center p-4"><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div></div>
             ) : filteredItems.length === 0 ? (
-              <div className="text-center p-4 text-xs text-slate-400">
+              <div className="text-center p-4 text-xs text-gray-400">
                 No hay solicitudes {activeTab === 'pending' ? 'pendientes' : activeTab === 'resolved' ? 'resueltas' : 'generales'}.
               </div>
             ) : (
@@ -649,26 +522,28 @@ export const AdminPetitions = () => {
                 <div
                   key={petition.id}
                   onClick={() => setSelectedPetition(petition)}
-                  className={`p-2.5 rounded-lg cursor-pointer transition-all border ${selectedPetition?.id === petition.id
-                    ? 'border-primary/30 bg-primary/5'
-                    : 'border-transparent hover:bg-slate-50'
+                  className={`p-2.5 rounded-sm cursor-pointer transition-all duration-200 border-l-2 active:scale-[0.98] ${selectedPetition?.id === petition.id
+                    ? 'border-l-primary bg-primary/[0.03] border-y-primary/10 border-r-primary/10'
+                    : 'border-l-transparent border-y-transparent border-r-transparent hover:bg-gray-50/80 hover:border-l-gray-200'
                     }`}
                 >
-                  <div className="flex justify-between items-start mb-0.5">
-                    <span className={`text-[8px] uppercase font-bold tracking-wider px-1 py-0.5 rounded ${
-                      petition.type === 'CANCEL_MOVEMENT' 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : 'bg-purple-100 text-purple-700'
-                    }`}>
-                      {getRecipientLabel(petition)}
-                    </span>
-                    <span className="text-[9px] text-slate-500">{formatRelativeTime(petition.createdAt)}</span>
+                  <div className="flex justify-between items-start mb-0.5 pointer-events-none">
+                    {activeTab === 'general' && (
+                      <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-sm border border-black/[0.05] ${
+                        petition.type === 'CANCEL_MOVEMENT' 
+                          ? 'bg-blue-50 text-blue-700' 
+                          : 'bg-purple-50 text-purple-700'
+                      }`}>
+                        {getRecipientLabel(petition)}
+                      </span>
+                    )}
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{formatRelativeTime(petition.createdAt)}</span>
                   </div>
-                  <h3 className="text-[13px] font-semibold text-slate-800  truncate mt-1">
+                  <h3 className={`text-[13px] font-bold text-gray-950 truncate mt-1 tracking-tight ${selectedPetition?.id === petition.id ? 'text-primary' : ''}`}>
                     {petition.title}
                   </h3>
                   <div className="flex items-center gap-1.5 mt-1.5">
-                    <div className="w-4 h-4 rounded-full bg-slate-200  flex items-center justify-center text-[8px] font-bold">
+                    <div className="w-5 h-5 rounded-sm bg-gray-100 border border-black/10 flex items-center justify-center text-[10px] font-bold text-gray-900">
                       {(() => {
                         const owner = petition.apartment?.owner || (petition.stay as any)?.apartment?.owner;
                         // For CANCEL_MOVEMENT, always show the petitioner (concierge) as the primary name
@@ -676,7 +551,7 @@ export const AdminPetitions = () => {
                         return getInitials(displayUser.firstName, displayUser.lastName);
                       })()}
                     </div>
-                    <p className="text-[11px] text-slate-600  truncate">
+                    <p className="text-[11px] text-gray-600  truncate">
                       {(() => {
                         const owner = petition.apartment?.owner || (petition.stay as any)?.apartment?.owner;
                         // For CANCEL_MOVEMENT, priority is the petitioner (concierge)
@@ -685,16 +560,16 @@ export const AdminPetitions = () => {
                         return (
                           <span>
                             {displayUser.firstName} {displayUser.lastName}
-                            {aptNum && <span className="text-slate-400 ml-1">(Dpto {aptNum})</span>}
+                            {aptNum && <span className="text-gray-400 ml-1">(Dpto {aptNum})</span>}
                           </span>
                         );
                       })()}
                     </p>
                     {petition.status !== 'PENDING' && (
-                      <span className={`ml-auto text-[8px] font-bold px-1.5 py-0.5 rounded border ${getStatusColor(petition.status)} flex items-center gap-1`}>
+                      <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-sm border ${getStatusColor(petition.status)} flex items-center gap-1 uppercase tracking-wider`}>
                         {getStatusLabel(petition.status)}
                         {petition.isCorrected && (
-                          <span className="material-symbols-outlined text-[10px] text-amber-500" title="Corregida">edit_square</span>
+                          <span className="material-symbols-outlined text-[12px] text-amber-500" title="Corregida">edit_square</span>
                         )}
                       </span>
                     )}
@@ -706,21 +581,21 @@ export const AdminPetitions = () => {
         </aside>
 
         {/* MAIN CONTENT */}
-        <section className="flex-1 flex flex-col bg-slate-50  overflow-hidden relative">
+        <section className="flex-1 flex flex-col bg-gray-50  overflow-hidden relative">
           {selectedPetition ? (
             <>
               {/* HEADER */}
-              <div className="bg-white  px-5 py-3 border-b border-slate-200  flex items-center justify-between shrink-0">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-slate-900  leading-none">
+              <div className="bg-white  px-5 py-3 border-b border-gray-200  flex items-center justify-between shrink-0">
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-[18px] font-bold text-gray-950 leading-none tracking-tight">
                       {selectedPetition.title}
                     </h2>
-                    <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded-full border ${getStatusColor(selectedPetition.status)}`}>
+                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-sm border uppercase tracking-widest ${getStatusColor(selectedPetition.status)}`}>
                       {getStatusLabel(selectedPetition.status)}
                     </span>
                   </div>
-                  <p className="text-slate-500  text-[10px]">
+                  <p className="text-gray-500 text-[11px] font-medium tracking-tight">
                     Solicitada el {formatDate(selectedPetition.createdAt)} • ID: #{selectedPetition.id.substring(0, 8)}
                   </p>
                 </div>
@@ -730,16 +605,17 @@ export const AdminPetitions = () => {
               <div className="flex-1 p-3 flex flex-col gap-3 min-h-0 overflow-y-auto">
 
                 {/* GRID: REQUESTER & CONTEXT */}
-                <div className="grid grid-cols-2 gap-3 shrink-0">
+                <div key={`details-${selectedPetition.id}`} className="animate-slide-in-right flex flex-col gap-3">
+                  <div className="grid grid-cols-2 gap-3 shrink-0">
 
                   {/* Requester Card */}
-                  <div className="bg-white  rounded-lg p-3 border border-slate-200  shadow-sm">
-                    <div className="flex items-center gap-2 mb-2 border-b border-slate-100  pb-1.5">
+                  <div className="bg-white  rounded-sm p-3 border border-gray-200  shadow-sm">
+                    <div className="flex items-center gap-2 mb-3 border-b border-black/[0.03] pb-2">
                       <span className="material-symbols-outlined text-primary text-base">account_circle</span>
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Solicitante</h3>
+                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Solicitante</h3>
                     </div>
                     <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200">
+                      <div className="w-12 h-12 rounded-sm bg-gray-100 border border-black/10 flex items-center justify-center text-gray-900 font-bold text-sm">
                         {getInitials(selectedPetition.user.firstName, selectedPetition.user.lastName)}
                       </div>
                       <div className="min-w-0">
@@ -752,28 +628,30 @@ export const AdminPetitions = () => {
                           const roleLabel = showOwnerContext ? 'Propietario' : ((displayUser as any).role === 'CONCIERGE' ? 'Conserje' : 'Solicitante');
 
                           return (
-                            <>
-                              <h4 className="text-[13px] font-bold truncate">{displayUser.firstName} {displayUser.lastName}</h4>
-                              <span className={`text-[9px] px-1 rounded border mr-2 ${(displayUser as any).role === 'CONCIERGE' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
-                                {roleLabel}
-                              </span>
-                              <div className="flex flex-col gap-1 mt-0.5">
-                                <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                                  <span className="material-symbols-outlined text-[12px]">mail</span>
+                            <div className="flex flex-col gap-1.5 min-w-0">
+                              <h4 className="text-[14px] font-bold text-gray-950 tracking-tight leading-none truncate">{displayUser.firstName} {displayUser.lastName}</h4>
+                              <div className="flex items-baseline gap-2">
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm border uppercase tracking-widest ${(displayUser as any).role === 'CONCIERGE' ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-gray-950 text-white border-transparent shadow-sm'}`}>
+                                  {roleLabel}
+                                </span>
+                              </div>
+                              <div className="flex flex-col gap-1 mt-1">
+                                <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium">
+                                  <span className="material-symbols-outlined text-[14px]">mail</span>
                                   <span className="truncate">{displayUser.email}</span>
                                 </div>
                                 {/* Display Apartment Number if available here too for context */}
                                 {(selectedPetition.apartment || (selectedPetition.stay as any)?.apartment) && (
-                                  <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                                    <span className="material-symbols-outlined text-[12px]">apartment</span>
-                                    <span className="truncate font-medium">
-                                      Dpto {(selectedPetition.apartment?.number || (selectedPetition.stay as any)?.apartment?.number)}
-                                      {selectedPetition.apartment?.building && ` - ${typeof selectedPetition.apartment.building === 'string' ? selectedPetition.apartment.building : (selectedPetition.apartment.building as any).name}`}
+                                  <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium">
+                                    <span className="material-symbols-outlined text-[14px]">apartment</span>
+                                    <span className="truncate">
+                                      DEPTO {(selectedPetition.apartment?.number || (selectedPetition.stay as any)?.apartment?.number)}
+                                      {selectedPetition.apartment?.building && ` • ${typeof selectedPetition.apartment.building === 'string' ? selectedPetition.apartment.building : (selectedPetition.apartment.building as any).name}`}
                                     </span>
                                   </div>
                                 )}
                               </div>
-                            </>
+                            </div>
                           );
                         })()}
                       </div>
@@ -781,8 +659,10 @@ export const AdminPetitions = () => {
                   </div>
 
                   {/* Detail Card (Dynamic based on type) */}
-                  {renderPetitionDetails(selectedPetition)}
-
+                  <div className="animate-fade-in-scale">
+                    {renderPetitionDetails(selectedPetition)}
+                  </div>
+                  </div>
                 </div>
 
                 {/* DESCRIPTION CARD */}
@@ -791,13 +671,13 @@ export const AdminPetitions = () => {
                   !selectedPetition.reason.startsWith('Solicito actualizar los datos') &&
                   !selectedPetition.reason.startsWith('Modificación de datos') &&
                   selectedPetition.reason !== 'Sin descripción adicional' && (
-                    <div className="flex flex-col bg-white  rounded-lg border border-slate-200  shadow-sm overflow-hidden shrink-0">
-                      <div className="px-3 py-1.5 border-b border-slate-100  flex items-center gap-2">
+                    <div className="flex flex-col bg-white  rounded-sm border border-black/[0.05] shadow-sm overflow-hidden shrink-0">
+                      <div className="px-4 py-2 border-b border-black/[0.03] flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary text-base">chat_bubble</span>
-                        <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Descripción de la Solicitud</h3>
+                        <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Descripción de la Solicitud</h3>
                       </div>
                       <div className="p-3 bg-blue-50/20 ">
-                        <p className="text-slate-700  leading-snug text-[13px] italic">
+                        <p className="text-gray-700  leading-snug text-[13px] italic">
                           "{selectedPetition.reason}"
                         </p>
                       </div>
@@ -806,10 +686,10 @@ export const AdminPetitions = () => {
 
                 {/* ATTACHED DOCUMENTS CARD */}
                 {(selectedPetition.requestedData as any)?.rutDocumentUrl && (
-                  <div className="flex flex-col bg-white  rounded-lg border border-slate-200  shadow-sm overflow-hidden shrink-0 mt-3">
-                    <div className="px-3 py-1.5 border-b border-slate-100  flex items-center gap-2">
+                  <div className="flex flex-col bg-white rounded-sm border border-black/[0.05] shadow-sm overflow-hidden shrink-0 mt-3">
+                    <div className="px-4 py-2 border-b border-black/[0.03] flex items-center gap-2">
                       <span className="material-symbols-outlined text-primary text-base">attach_file</span>
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Documentos Adjuntos</h3>
+                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Documentos Adjuntos</h3>
                     </div>
                     <div className="p-3">
                       <button
@@ -830,25 +710,25 @@ export const AdminPetitions = () => {
 
               {/* FIXED ACTION BAR */}
               {!impersonationMode && selectedPetition.status === 'PENDING' && (
-                <div className="bg-slate-100 border-t border-slate-200 p-8 flex flex-col sm:flex-row items-center justify-center gap-6 shrink-0">
+                <div className="bg-gray-100 border-t border-gray-200 p-8 flex flex-col sm:flex-row items-center justify-center gap-6 shrink-0">
                   {selectedPetition.user.role === 'CONCIERGE' && selectedPetition.type !== 'CANCEL_MOVEMENT' ? (
-                    <div className="flex-1 text-center text-xs text-slate-500 italic bg-white/50 py-3 rounded-lg border border-slate-200/50 max-w-md">
+                    <div className="flex-1 text-center text-xs text-gray-500 italic bg-white/50 py-3 rounded-sm border border-gray-200/50 max-w-md">
                       Esta petición debe ser revisada por el Propietario.
                     </div>
                   ) : (
                     <>
                       <button
                         onClick={openRejectModal}
-                        className="w-full sm:w-[240px] py-4 px-6 text-[13px] font-black uppercase tracking-widest rounded-xl border-2 border-red-500/20 bg-white text-red-600 shadow-sm hover:bg-red-50 hover:border-red-500/40 transition-all flex items-center justify-center gap-2 group ring-offset-2 focus:ring-2 focus:ring-red-500/20"
+                        className="w-full sm:w-[200px] py-4 px-6 text-[11px] font-bold uppercase tracking-widest rounded-sm border border-red-200 bg-red-50 text-red-700 shadow-sm hover:bg-red-100 transition-all flex items-center justify-center gap-2 group"
                       >
-                        <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">cancel</span>
+                        <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform font-bold">cancel</span>
                         Rechazar
                       </button>
                       <button
                         onClick={openApproveModal}
-                        className="w-full sm:w-[240px] py-4 px-6 text-[13px] font-black uppercase tracking-widest rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group ring-offset-2 focus:ring-2 focus:ring-blue-500/50"
+                        className="w-full sm:w-[200px] py-4 px-6 text-[11px] font-bold uppercase tracking-widest rounded-sm bg-gray-950 text-white shadow-xl shadow-black/20 hover:bg-black hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 group"
                       >
-                        <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">check_circle</span>
+                        <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform font-bold">check_circle</span>
                         Aprobar
                       </button>
                     </>
@@ -858,13 +738,14 @@ export const AdminPetitions = () => {
 
               {/* READ ONLY ACTION BAR FOR PROCESSED PETITIONS */}
               {selectedPetition.status !== 'PENDING' && (
-                <div className="bg-slate-50 border-t border-slate-200 p-3 flex flex-col items-center gap-2">
-                  <div className="text-[11px] text-slate-500">
+                <div className="bg-gray-50 border-t border-gray-200 p-3 flex flex-col items-center gap-2">
+                  <div className="text-[11px] text-gray-500">
                     Esta solicitud fue {selectedPetition.status === 'APPROVED' ? 'aprobada' : 'rechazada'} el {formatDate(selectedPetition.reviewedAt || '')}.
                   </div>
                   {selectedPetition.adminNotes && (
-                    <div className="text-[11px] font-medium bg-white p-2 rounded border border-slate-200 text-left max-w-lg">
-                      Nota: {selectedPetition.adminNotes}
+                    <div className="text-[11px] font-bold bg-white p-3 rounded-sm border border-black/[0.05] text-left max-w-lg shadow-sm">
+                      <span className="text-gray-400 uppercase text-[10px] block mb-1">Nota Administrativa:</span>
+                      {selectedPetition.adminNotes}
                     </div>
                   )}
                   {selectedPetition.isCorrected && (
@@ -882,7 +763,7 @@ export const AdminPetitions = () => {
                         setCorrectionNotes('');
                         setShowCorrectionModal(true);
                       }}
-                      className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-600 hover:text-blue-600 font-bold transition-colors"
+                      className="mt-1 flex items-center gap-1.5 text-[11px] text-gray-600 hover:text-blue-600 font-bold transition-colors"
                     >
                       <span className="material-symbols-outlined text-sm">edit_square</span>
                       Editar Resolución
@@ -893,8 +774,8 @@ export const AdminPetitions = () => {
 
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-slate-400 flex-col gap-2">
-              <span className="material-symbols-outlined text-4xl text-slate-300">inbox</span>
+            <div className="flex-1 flex items-center justify-center text-gray-400 flex-col gap-2">
+              <span className="material-symbols-outlined text-4xl text-gray-300">inbox</span>
               <p className="text-sm">Selecciona una solicitud</p>
             </div>
           )}
@@ -910,7 +791,7 @@ export const AdminPetitions = () => {
         width="max-w-lg"
       >
         <div className="p-1">
-          <p className="text-sm text-slate-600  mb-6">
+          <p className="text-sm text-gray-600  mb-6">
             {reviewAction === 'APPROVED'
               ? '¿Estás seguro de que deseas aprobar esta solicitud? Se aplicarán los cambios correspondientes.'
               : 'Por favor, seleccione el motivo del rechazo para informar al solicitante. Esta acción no se puede deshacer.'
@@ -927,9 +808,9 @@ export const AdminPetitions = () => {
               ].map((option) => (
                 <label
                   key={option.id}
-                  className={`group flex items-center p-3 border rounded-lg cursor-pointer transition-all ${rejectionReasonEnum === option.id
+                  className={`group flex items-center p-3 border rounded-sm cursor-pointer transition-all ${rejectionReasonEnum === option.id
                     ? 'border-primary bg-primary/5'
-                    : 'border-slate-200  hover:border-primary/50'
+                    : 'border-gray-200  hover:border-primary/50'
                     }`}
                 >
                   <input
@@ -937,9 +818,9 @@ export const AdminPetitions = () => {
                     name="rejection_reason"
                     checked={rejectionReasonEnum === option.id}
                     onChange={() => setRejectionReasonEnum(option.id)}
-                    className="w-4 h-4 text-primary border-slate-300 focus:ring-primary"
+                    className="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
                   />
-                  <span className="ml-3 text-sm font-medium text-slate-700 ">
+                  <span className="ml-3 text-sm font-medium text-gray-700 ">
                     {option.label}
                   </span>
                 </label>
@@ -948,12 +829,12 @@ export const AdminPetitions = () => {
           )}
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 " htmlFor="comments">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2 block" htmlFor="comments">
               {reviewAction === 'APPROVED' ? 'Notas (Opcional)' : 'Comentarios adicionales (Opcional)'}
             </label>
             <textarea
               id="comments"
-              className="w-full px-4 py-3 rounded-lg border border-slate-200  bg-white  text-slate-800  placeholder-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none text-sm"
+              className="w-full px-4 py-3 rounded-sm border border-gray-200  bg-white  text-gray-800  placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none text-sm"
               placeholder={reviewAction === 'APPROVED' ? "Opcional..." : "Escriba detalles adicionales aquí..."}
               rows={3}
               value={reviewReason}
@@ -964,18 +845,18 @@ export const AdminPetitions = () => {
           <div className="mt-6 flex justify-end items-center gap-3">
             <button
               onClick={() => setShowReviewModal(false)}
-              className="px-5 py-2.5 text-sm font-medium text-slate-600  hover:bg-slate-200  rounded-lg transition-colors"
+              className="px-5 py-2.5 text-sm font-medium text-gray-600  hover:bg-gray-200  rounded-sm transition-colors"
             >
               Volver
             </button>
             <button
               onClick={handleProcessReview}
-              className={`px-6 py-2.5 text-sm font-semibold text-white rounded-lg shadow-sm transition-all ${reviewAction === 'REJECTED'
-                ? 'bg-red-600 hover:bg-red-700 hover:shadow-md'
-                : 'bg-blue-600 hover:bg-blue-700 hover:shadow-md'
+              className={`px-6 py-2.5 text-[11px] font-bold uppercase tracking-wider text-white rounded-sm shadow-lg transition-all ${reviewAction === 'REJECTED'
+                ? 'bg-red-600 hover:bg-red-700 shadow-red-500/10'
+                : 'bg-gray-900 hover:bg-black shadow-black/10'
                 }`}
             >
-              {reviewAction === 'APPROVED' ? 'Aprobar' : 'Rechazar'}
+              {reviewAction === 'APPROVED' ? 'Confirmar Aprobación' : 'Confirmar Rechazo'}
             </button>
           </div>
         </div>
@@ -988,7 +869,7 @@ export const AdminPetitions = () => {
         width="max-w-lg"
       >
         <div className="p-1">
-          <p className="text-sm text-slate-600 mb-6">
+          <p className="text-sm text-gray-600 mb-6">
             Estás editando la resolución de una petición ya procesada. 
             <span className="block mt-2 font-bold text-amber-600">
               ⚠️ Si cambias de Aprobado a Rechazado, el sistema intentará revertir los cambios automáticos (como fechas o estacionamientos).
@@ -996,14 +877,14 @@ export const AdminPetitions = () => {
           </p>
 
           <div className="mb-6">
-            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Nuevo Estado</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Nuevo Estado</label>
             <div className="flex gap-4">
               <button
                 onClick={() => setCorrectionStatus('APPROVED')}
-                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-sm border-2 transition-all ${
                   correctionStatus === 'APPROVED' 
                     ? 'border-green-600 bg-green-50 text-green-700' 
-                    : 'border-slate-100 bg-white text-slate-400 opacity-50'
+                    : 'border-gray-100 bg-white text-gray-400 opacity-50'
                 }`}
               >
                 <span className="material-symbols-outlined">check_circle</span>
@@ -1011,10 +892,10 @@ export const AdminPetitions = () => {
               </button>
               <button
                 onClick={() => setCorrectionStatus('REJECTED')}
-                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-sm border-2 transition-all ${
                   correctionStatus === 'REJECTED' 
                     ? 'border-red-600 bg-red-50 text-red-700' 
-                    : 'border-slate-100 bg-white text-slate-400 opacity-50'
+                    : 'border-gray-100 bg-white text-gray-400 opacity-50'
                 }`}
               >
                 <span className="material-symbols-outlined">cancel</span>
@@ -1024,26 +905,26 @@ export const AdminPetitions = () => {
           </div>
 
           <div className="mb-6">
-            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Motivo de la Corrección</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Motivo de la Corrección</label>
             <textarea
               value={correctionNotes}
               onChange={(e) => setCorrectionNotes(e.target.value)}
               placeholder="Explica brevemente por qué se está realizando esta corrección..."
-              className="w-full p-3 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-32"
+              className="w-full p-3 text-sm border border-gray-200 rounded-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none h-32"
             />
           </div>
 
           <div className="flex justify-end gap-3 mt-8">
             <button
               onClick={() => setShowCorrectionModal(false)}
-              className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition"
+              className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-700 transition"
             >
               Cancelar
             </button>
             <button
               onClick={handleCorrectResolution}
               disabled={isSubmittingCorrection || !correctionNotes.trim()}
-              className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition shadow-lg shadow-blue-500/20"
+              className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-sm hover:bg-blue-700 disabled:opacity-50 transition shadow-lg shadow-blue-500/20"
             >
               {isSubmittingCorrection ? 'Guardando...' : 'Guardar Corrección'}
             </button>
@@ -1058,7 +939,7 @@ export const AdminPetitions = () => {
         title="Vista Previa del Documento"
         width="max-w-4xl"
       >
-        <div className="flex justify-center items-center p-4 bg-gray-50 rounded-lg min-h-[300px]">
+        <div className="flex justify-center items-center p-4 bg-gray-50 rounded-sm min-h-[300px]">
           {previewUrl && (
             previewUrl.toLowerCase().endsWith('.pdf') ? (
               <iframe
