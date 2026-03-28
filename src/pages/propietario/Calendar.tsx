@@ -1,54 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Layout } from '../../components/Layout';
 import { useAuth } from '../../contexts/AuthContext';
-import apiClient from '../../api/client';
+import { staysApi, categoryLabels, categoryColors, getGuestFullName, categoryConfig } from '../../api/stays';
+import type { Stay, Guest } from '../../api/stays';
 import { Modal } from '../../components/Modal';
-
-type Stay = {
-  id: string;
-  apartmentId: string;
-  apartment: {
-    id: string;
-    number: string;
-    floor: number;
-    building: string;
-  };
-  category: 'GUEST' | 'STAFF';
-  status: 'SCHEDULED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED';
-  scheduledCheckIn: string;
-  scheduledCheckOut: string;
-  actualCheckIn?: string;
-  actualCheckOut?: string;
-  guestFirstName?: string;
-  guestLastName?: string;
-  guestDocument?: string;
-  guests?: { firstName: string; lastName: string; document: string }[];
-  notes?: string;
-  isLocked: boolean;
-};
-
-const categoryColors = {
-  GUEST: 'bg-blue-500 hover:bg-blue-600',
-  STAFF: 'bg-amber-500 hover:bg-amber-600',
-};
+import { ReservationDetailsModal } from '../../components/reservations/ReservationDetailsModal';
 
 // Colores para eventos de check-in y check-out de huéspedes
 const eventColors = {
-  checkIn: 'bg-green-500 hover:bg-green-600',  // Verde para check-in
-  checkOut: 'bg-red-500 hover:bg-red-600',      // Rojo para check-out
-  staff: 'bg-amber-500 hover:bg-amber-600',
-};
-
-const categoryLabels = {
-  GUEST: 'Huésped',
-  STAFF: 'Mantenimiento',
-};
-
-const statusLabels = {
-  SCHEDULED: 'Programada',
-  CHECKED_IN: 'Check-In',
-  CHECKED_OUT: 'Check-Out',
-  CANCELLED: 'Cancelada',
+  checkIn: 'bg-emerald-500 hover:bg-emerald-600',
+  checkOut: 'bg-rose-500 hover:bg-rose-600',
+  staff: 'bg-sky-500 hover:bg-sky-600',
 };
 
 const getDaysInMonth = (year: number, month: number) => {

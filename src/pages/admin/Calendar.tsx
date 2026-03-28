@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Layout } from '../../components/Layout';
-import { staysApi, categoryLabels, categoryColors, getGuestFullName } from '../../api/stays';
+import { staysApi, categoryLabels, categoryColors, getGuestFullName, categoryConfig, statusLabels, statusConfig } from '../../api/stays';
 import type { Stay, Guest } from '../../api/stays';
 import { Modal } from '../../components/Modal';
+import { ReservationDetailsModal } from '../../components/reservations/ReservationDetailsModal';
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -36,19 +37,6 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const statusLabels: Record<string, string> = {
-  SCHEDULED: 'Programada',
-  CHECKED_IN: 'Check-In Realizado',
-  CHECKED_OUT: 'Check-Out Realizado',
-  CANCELLED: 'Cancelada',
-};
-
-const statusColors: Record<string, string> = {
-  SCHEDULED: 'bg-blue-100 text-blue-800',
-  CHECKED_IN: 'bg-green-100 text-green-800',
-  CHECKED_OUT: 'bg-gray-100 text-gray-800',
-  CANCELLED: 'bg-red-100 text-red-800',
-};
 
 export const AdminCalendar = () => {
   const { currentBuilding } = useAuth();
@@ -163,103 +151,105 @@ export const AdminCalendar = () => {
 
   return (
     <Layout>
-      <div className="p-6">
+      <div className="p-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6">
+          {/* Header Quirúrgico */}
+          <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Calendario de Estadías</h1>
-              <p className="text-gray-600 mt-1 flex items-center gap-4">
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 bg-purple-500 rounded"></span> Huéspedes
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 bg-blue-500 rounded"></span> Limpieza
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 bg-orange-500 rounded"></span> Mantenimiento
-                </span>
+              <h1 className="text-3xl font-bold text-gray-900">Calendario Operativo</h1>
+              <p className="text-gray-600 mt-1">
+                Visualización de flujos, check-ins y mantenimiento
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 bg-gray-50 p-1 rounded-sm border border-black/[0.05]">
               <button
                 onClick={() => setViewMode('month')}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`px-4 py-2 rounded-sm text-[9px] font-bold uppercase tracking-[0.2em] transition-all ${
                   viewMode === 'month'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-gray-900 text-white shadow-lg shadow-black/10'
+                    : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
-                📅 Mes
+                Grilla Mensual
               </button>
               <button
                 onClick={() => setViewMode('year')}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`px-4 py-2 rounded-sm text-[9px] font-bold uppercase tracking-[0.2em] transition-all ${
                   viewMode === 'year'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-gray-900 text-white shadow-lg shadow-black/10'
+                    : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
-                📆 Año
-              </button>
-              <button
-                onClick={goToToday}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-              >
-                Hoy
+                Vista Anual
               </button>
             </div>
           </div>
 
           {error && (
-            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-              {error}
-              <button onClick={() => setError('')} className="float-right font-bold">×</button>
+            <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold uppercase tracking-wider rounded-sm shadow-sm animate-in fade-in slide-in-from-top-1 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-lg">error_outline</span>
+                {error}
+              </div>
+              <button onClick={() => setError('')} className="hover:text-rose-900 transition-colors px-2">
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
             </div>
           )}
 
           {loading ? (
-            <div className="flex justify-center items-center h-96">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <div className="flex flex-col justify-center items-center h-80 gap-4 bg-white/50 rounded-sm border border-black/[0.03]">
+              <div className="relative w-12 h-12">
+                <div className="absolute inset-0 rounded-full border-2 border-primary/10"></div>
+                <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+              </div>
+              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em] animate-pulse">Sincronizando Terminal...</p>
             </div>
           ) : viewMode === 'month' ? (
             /* Vista Mensual */
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Calendario */}
-              <div className="lg:col-span-2 bg-white rounded-lg shadow-md overflow-hidden">
-                {/* Navegación */}
-                <div className="bg-indigo-600 text-white px-6 py-4 flex justify-between items-center">
+              <div className="lg:col-span-3 bg-white rounded-sm border border-black/[0.05] shadow-sm overflow-hidden animate-in fade-in duration-700">
+                {/* Navegación de Grilla */}
+                <div className="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
                   <button
                     onClick={() => navigateMonth(-1)}
-                    className="hover:bg-indigo-700 p-2 rounded transition"
+                    className="hover:bg-black p-2 rounded-sm transition-all border border-white/10 active:scale-95"
                   >
-                    ←
+                    <span className="material-symbols-outlined text-sm">chevron_left</span>
                   </button>
-                  <h2 className="text-xl font-bold">
-                    {MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}
-                  </h2>
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-[12px] font-bold uppercase tracking-[0.4em]">
+                      {MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}
+                    </h2>
+                    <button 
+                      onClick={goToToday}
+                      className="text-[8px] font-bold bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-sm border border-white/5 transition-all uppercase tracking-widest"
+                    >
+                      Hoy
+                    </button>
+                  </div>
                   <button
                     onClick={() => navigateMonth(1)}
-                    className="hover:bg-indigo-700 p-2 rounded transition"
+                    className="hover:bg-black p-2 rounded-sm transition-all border border-white/10 active:scale-95"
                   >
-                    →
+                    <span className="material-symbols-outlined text-sm">chevron_right</span>
                   </button>
                 </div>
 
                 {/* Días de la semana */}
-                <div className="grid grid-cols-7 bg-gray-100 border-b">
+                <div className="grid grid-cols-7 bg-gray-50/50 border-b border-black/[0.03]">
                   {DAY_NAMES.map(day => (
-                    <div key={day} className="px-2 py-3 text-center text-sm font-medium text-gray-600">
+                    <div key={day} className="px-2 py-3 text-center text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] font-mono">
                       {day}
                     </div>
                   ))}
                 </div>
 
-                {/* Días del mes */}
-                <div className="grid grid-cols-7">
+                {/* Grilla de Días */}
+                <div className="grid grid-cols-7 divide-x divide-y divide-black/[0.03]">
                   {currentMonthDays.map((date, index) => {
                     const dayEvents = date ? getEventsForDay(date) : [];
-                    // Agrupar por categoría
                     const guestEvents = dayEvents.filter(e => e.stay.category === 'GUEST');
                     const staffEvents = dayEvents.filter(e => e.stay.category === 'STAFF');
                     
@@ -272,32 +262,39 @@ export const AdminCalendar = () => {
                       <div
                         key={index}
                         onClick={() => date && setSelectedDay(date)}
-                        className={`min-h-[100px] p-2 border-b border-r cursor-pointer transition ${
-                          !date ? 'bg-gray-50' : 
-                          isSelected ? 'bg-indigo-50 ring-2 ring-indigo-500' :
-                          'hover:bg-gray-50'
+                        className={`min-h-[120px] p-2 cursor-pointer transition-all duration-300 relative group ${
+                          !date ? 'bg-gray-50/30' : 
+                          isSelected ? 'bg-primary/[0.02] ring-1 ring-inset ring-primary/20' :
+                          'hover:bg-gray-50/50'
                         }`}
                       >
                         {date && (
                           <>
-                            <div className={`text-sm font-medium mb-1 ${
-                              isToday(date) 
-                                ? 'bg-indigo-600 text-white rounded-full w-7 h-7 flex items-center justify-center'
-                                : 'text-gray-700'
-                            }`}>
-                              {date.getDate()}
+                            <div className="flex justify-between items-start mb-2">
+                              <span className={`text-[10px] font-bold font-mono transition-colors ${
+                                isToday(date) 
+                                  ? 'bg-primary text-white px-2 py-0.5 rounded-sm shadow-sm'
+                                  : isSelected ? 'text-primary' : 'text-gray-400 group-hover:text-gray-900'
+                              }`}>
+                                {String(date.getDate()).padStart(2, '0')}
+                              </span>
+                              {dayEvents.length > 0 && (
+                                <span className="text-[8px] font-bold text-gray-300 font-mono">
+                                  {dayEvents.length} OP
+                                </span>
+                              )}
                             </div>
                             <div className="space-y-1">
                               {guestEvents.length > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                                  <span className="text-xs text-purple-700">{guestEvents.length}</span>
+                                <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-emerald-50 rounded-sm border border-emerald-500/10 scale-95 origin-left">
+                                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                  <span className="text-[8px] font-bold text-emerald-700 uppercase tracking-tighter">Huésped x{guestEvents.length}</span>
                                 </div>
                               )}
                               {staffEvents.length > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                  <span className="text-xs text-blue-700">{staffEvents.length}</span>
+                                <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-sky-50 rounded-sm border border-sky-500/10 scale-95 origin-left">
+                                  <span className="w-1.5 h-1.5 bg-sky-500 rounded-full"></span>
+                                  <span className="text-[8px] font-bold text-sky-700 uppercase tracking-tighter">Staff x{staffEvents.length}</span>
                                 </div>
                               )}
                             </div>
@@ -309,68 +306,88 @@ export const AdminCalendar = () => {
                 </div>
               </div>
 
-              {/* Panel de detalles del día */}
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="bg-gray-800 text-white px-4 py-3">
-                  <h3 className="font-bold">
-                    {selectedDay 
-                      ? `${selectedDay.getDate()} de ${MONTH_NAMES[selectedDay.getMonth()]}`
-                      : 'Selecciona un día'}
-                  </h3>
+              {/* Panel de Bitácora Diaria */}
+              <div className="bg-white rounded-sm border border-black/[0.05] shadow-sm flex flex-col h-[700px] animate-in slide-in-from-right-4 duration-700">
+                <div className="bg-gray-50 border-b border-black/[0.03] px-5 py-4 flex items-center gap-3">
+                  <span className="material-symbols-outlined text-lg text-gray-400">event_note</span>
+                  <div className="flex-1">
+                    <h3 className="text-[10px] font-bold text-gray-900 uppercase tracking-[0.2em] leading-none mb-1">
+                      Bitácora Diaria
+                    </h3>
+                    <p className="text-[9px] font-bold text-primary uppercase font-mono tracking-widest">
+                      {selectedDay 
+                        ? `${selectedDay.getDate()} ${MONTH_NAMES[selectedDay.getMonth()].substring(0, 3)} ${selectedDay.getFullYear()}`
+                        : 'SELECCIONAR FECHA'}
+                    </p>
+                  </div>
                 </div>
-                <div className="p-4 max-h-[600px] overflow-y-auto">
+                
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                   {!selectedDay ? (
-                    <p className="text-gray-500 text-center py-8">
-                      Haz clic en un día para ver los detalles
-                    </p>
+                    <div className="h-full flex flex-col items-center justify-center gap-4 opacity-30 px-6 text-center">
+                      <span className="material-symbols-outlined text-4xl">touch_app</span>
+                      <p className="text-[9px] font-bold text-gray-900 uppercase tracking-[0.3em]">
+                        Interacción requerida con la grilla
+                      </p>
+                    </div>
                   ) : selectedDayEvents.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">
-                      Sin eventos para este día
-                    </p>
+                    <div className="h-full flex flex-col items-center justify-center gap-4 opacity-20">
+                      <span className="material-symbols-outlined text-4xl">calendar_today</span>
+                      <p className="text-[9px] font-bold text-gray-900 uppercase tracking-[0.3em]">
+                        Sin eventos registrados
+                      </p>
+                    </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {selectedDayEvents
                         .sort((a, b) => a.date.getTime() - b.date.getTime())
                         .map((event, idx) => {
-                          const colors = categoryColors[event.stay.category];
+                          const config = categoryConfig[event.stay.category];
                           return (
                             <div
                               key={idx}
                               onClick={() => setSelectedStay(event.stay)}
-                              className={`p-3 rounded-lg border-l-4 cursor-pointer hover:shadow-md transition ${colors.bg} ${colors.border}`}
+                              className={`p-4 rounded-sm border border-black/[0.03] cursor-pointer hover:shadow-md transition-all active:scale-[0.98] relative overflow-hidden group ${config.bg} ${config.border}`}
                             >
-                              <div className="flex items-center justify-between mb-2">
-                                <span className={`px-2 py-0.5 text-xs rounded-full ${
+                              <div className="flex items-center justify-between mb-3">
+                                <span className={`px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest rounded-sm border border-black/[0.03] ${
                                   event.type === 'check-in'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-red-100 text-red-800'
+                                    ? 'bg-emerald-100/50 text-emerald-700'
+                                    : 'bg-rose-100/50 text-rose-700'
                                 }`}>
-                                  {event.type === 'check-in' ? '● Check-In' : '● Check-Out'}
+                                  {event.type === 'check-in' ? '● IN' : '● OUT'}
                                 </span>
-                                <span className="text-sm font-medium">
+                                <span className="text-[10px] font-bold font-mono text-gray-600">
                                   {formatTime(event.type === 'check-in' 
                                     ? event.stay.scheduledCheckIn 
                                     : event.stay.scheduledCheckOut)}
                                 </span>
                               </div>
-                              <div className="text-sm">
-                                <div className="font-medium text-gray-900">
-                                  🏢 Depto {event.stay.apartment.number}
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[12px] font-bold text-gray-900 tracking-tight">
+                                    Unidad {event.stay.apartment.number}
+                                  </span>
+                                  <span className="text-[9px] font-bold text-gray-300 font-mono bg-black/[0.03] px-1.5 py-0.5 rounded-sm">
+                                    PISO {event.stay.apartment.floor}
+                                  </span>
                                 </div>
-                                <div className="text-gray-600">
-                                  {(typeof event.stay.apartment.building === 'object' ? event.stay.apartment.building?.name : null) || 'Sin torre'} - Piso {event.stay.apartment.floor}
-                                </div>
-                                <div className={`mt-1 text-xs font-medium ${colors.text}`}>
-                                  {categoryLabels[event.stay.category]}
-                                </div>
+                                
                                 {event.stay.category === 'GUEST' && (event.stay.guestFirstName || event.stay.guestLastName) && (
-                                  <div className="text-gray-600 mt-1">
-                                    👤 {getGuestFullName(event.stay)}
+                                  <div className="text-[10px] text-gray-600 font-medium flex items-center gap-2 truncate">
+                                    <span className="material-symbols-outlined text-sm opacity-40">person</span>
+                                    {getGuestFullName(event.stay)}
                                   </div>
                                 )}
+                                
+                                <div className={`text-[8px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 ${config.text}`}>
+                                  <span className={`w-1 h-1 rounded-full ${config.dot}`}></span>
+                                  {config.label}
+                                </div>
                               </div>
-                              <div className="text-xs text-indigo-600 mt-2 text-right">
-                                Clic para ver detalles →
+                              
+                              <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-30 transition-opacity">
+                                <span className="material-symbols-outlined text-sm">visibility</span>
                               </div>
                             </div>
                           );
@@ -381,46 +398,50 @@ export const AdminCalendar = () => {
               </div>
             </div>
           ) : (
-            /* Vista Anual */
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="bg-indigo-600 text-white px-6 py-4 flex justify-between items-center">
+            /* Vista Anual Quirúrgica */
+            <div className="bg-white rounded-sm border border-black/[0.05] shadow-sm overflow-hidden animate-in fade-in duration-700">
+              <div className="bg-gray-900 text-white px-8 py-6 flex justify-between items-center">
                 <button
                   onClick={() => navigateYear(-1)}
-                  className="hover:bg-indigo-700 p-2 rounded transition"
+                  className="hover:bg-black px-4 py-2 rounded-sm transition-all border border-white/10 text-[9px] font-bold uppercase tracking-widest active:scale-95"
                 >
-                  ← Año anterior
+                  Regresión Anual
                 </button>
-                <h2 className="text-2xl font-bold">
-                  {currentDate.getFullYear()}
-                </h2>
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.5em] mb-1">PROGRAMA DE OPERACIONES</span>
+                  <h2 className="text-3xl font-bold tracking-[0.2em] font-mono">
+                    {currentDate.getFullYear()}
+                  </h2>
+                </div>
                 <button
                   onClick={() => navigateYear(1)}
-                  className="hover:bg-indigo-700 p-2 rounded transition"
+                  className="hover:bg-black px-4 py-2 rounded-sm transition-all border border-white/10 text-[9px] font-bold uppercase tracking-widest active:scale-95"
                 >
-                  Año siguiente →
+                  Avance Anual
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 p-8 bg-gray-50/30">
                 {MONTH_NAMES.map((monthName, monthIndex) => {
                   const monthDays = getDaysInMonth(currentDate.getFullYear(), monthIndex);
                   
                   return (
                     <div
                       key={monthIndex}
-                      className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition"
+                      className="bg-white border border-black/[0.05] rounded-sm overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
                       onClick={() => {
                         setCurrentDate(new Date(currentDate.getFullYear(), monthIndex, 1));
                         setViewMode('month');
                       }}
                     >
-                      <div className="bg-gray-100 px-3 py-2 text-center font-medium text-gray-800">
-                        {monthName}
+                      <div className="bg-gray-50 px-4 py-3 border-b border-black/[0.03] flex justify-between items-center group-hover:bg-gray-900 group-hover:text-white transition-colors">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{monthName}</span>
+                        <span className="text-[9px] font-bold opacity-30 group-hover:opacity-50 font-mono">{monthIndex + 1}</span>
                       </div>
-                      <div className="p-2">
+                      <div className="p-3">
                         <div className="grid grid-cols-7 gap-1">
                           {DAY_NAMES.map(d => (
-                            <div key={d} className="text-center text-[10px] text-gray-400">
+                            <div key={d} className="text-center text-[7px] font-bold text-gray-300 uppercase font-mono">
                               {d[0]}
                             </div>
                           ))}
@@ -431,21 +452,21 @@ export const AdminCalendar = () => {
                             
                             let bgColor = '';
                             if (hasGuest && hasStaff) {
-                              bgColor = 'bg-gradient-to-r from-purple-400 to-blue-400 text-white';
+                              bgColor = 'bg-primary text-white';
                             } else if (hasGuest) {
-                              bgColor = 'bg-purple-400 text-white';
+                              bgColor = 'bg-emerald-400 text-white';
                             } else if (hasStaff) {
-                              bgColor = 'bg-blue-400 text-white';
+                              bgColor = 'bg-sky-400 text-white';
                             } else if (isToday(date)) {
-                              bgColor = 'bg-indigo-600 text-white';
+                              bgColor = 'border border-primary text-primary font-bold';
                             } else {
-                              bgColor = 'text-gray-600';
+                              bgColor = 'text-gray-300 hover:text-gray-900 hover:bg-gray-50';
                             }
                             
                             return (
                               <div
                                 key={idx}
-                                className={`text-center text-[10px] h-5 flex items-center justify-center rounded ${bgColor}`}
+                                className={`text-center text-[8px] h-5 flex items-center justify-center rounded-xs transition-colors font-mono ${bgColor} ${!date ? 'opacity-0' : ''}`}
                               >
                                 {date?.getDate()}
                               </div>
@@ -462,129 +483,17 @@ export const AdminCalendar = () => {
         </div>
       </div>
 
-      {/* Modal de detalles de la reserva */}
+      {/* Modal de detalles de la reserva Quirúrgico */}
       <Modal
         isOpen={!!selectedStay}
         onClose={() => setSelectedStay(null)}
-        title="Detalles de la Reserva"
+        title="Expediente de Calendario"
         width="max-w-2xl"
       >
-        <div className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
-            {/* Tipo de entrada y estado */}
-            <div className="flex items-center gap-3">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${selectedStay && categoryColors[selectedStay.category].bg} ${selectedStay && categoryColors[selectedStay.category].text}`}>
-                {selectedStay && categoryLabels[selectedStay.category]}
-              </span>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${selectedStay && statusColors[selectedStay.status]}`}>
-                {selectedStay && statusLabels[selectedStay.status]}
-              </span>
-              {selectedStay?.isLocked && (
-                <span className="text-yellow-600 text-sm">🔒 Registro bloqueado</span>
-              )}
-            </div>
-
-            {/* Info del departamento */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-800 mb-2">Departamento</h3>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><span className="text-gray-500">Número:</span> <span className="font-medium">Depto {selectedStay?.apartment.number}</span></div>
-                <div><span className="text-gray-500">Edificio:</span> <span className="font-medium">{(typeof selectedStay?.apartment.building === 'object' ? selectedStay?.apartment.building?.name : null) || 'Sin torre'}</span></div>
-                <div><span className="text-gray-500">Piso:</span> <span className="font-medium">{selectedStay?.apartment.floor}</span></div>
-              </div>
-            </div>
-
-            {/* Fechas */}
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-800 mb-2">Fechas y Horarios</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <div className="text-gray-500">Check-In programado:</div>
-                  <div className="font-medium text-green-700">{selectedStay && formatDate(selectedStay.scheduledCheckIn)}</div>
-                  {selectedStay?.actualCheckIn && (
-                    <>
-                      <div className="text-gray-500 mt-2">Check-In realizado:</div>
-                      <div className="font-medium">{formatDate(selectedStay.actualCheckIn)}</div>
-                    </>
-                  )}
-                </div>
-                <div>
-                  <div className="text-gray-500">Check-Out programado:</div>
-                  <div className="font-medium text-red-700">{selectedStay && formatDate(selectedStay.scheduledCheckOut)}</div>
-                  {selectedStay?.actualCheckOut && (
-                    <>
-                      <div className="text-gray-500 mt-2">Check-Out realizado:</div>
-                      <div className="font-medium">{formatDate(selectedStay.actualCheckOut)}</div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Huésped principal (solo para GUEST) */}
-            {selectedStay?.category === 'GUEST' && (selectedStay.guestFirstName || selectedStay.guestLastName) && (
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-800 mb-2">Huésped Principal</h3>
-                <div className="text-sm space-y-1">
-                  <div>
-                    <span className="text-gray-500">Nombre:</span>{' '}
-                    <span className="font-medium">{selectedStay.guestFirstName} {selectedStay.guestLastName}</span>
-                  </div>
-                  {selectedStay.guestDocument && (
-                    <div>
-                      <span className="text-gray-500">Documento:</span>{' '}
-                      <span className="font-medium font-mono">{selectedStay.guestDocument}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Huéspedes adicionales */}
-            {selectedStay?.guests && Array.isArray(selectedStay.guests) && selectedStay.guests.length > 0 && (
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-800 mb-2">
-                  Huéspedes Adicionales ({selectedStay.guests.length})
-                </h3>
-                <div className="space-y-2">
-                  {selectedStay.guests.map((guest: Guest, idx: number) => (
-                    <div key={idx} className="bg-white p-2 rounded border border-purple-200 text-sm flex justify-between">
-                      <span className="font-medium">{guest.firstName} {guest.lastName}</span>
-                      {guest.document && (
-                        <span className="text-gray-500 font-mono">{guest.document}</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Total de personas */}
-            {selectedStay?.category === 'GUEST' && (
-              <div className="bg-indigo-50 p-3 rounded-lg flex items-center justify-between">
-                <span className="text-gray-700 font-medium">Total de personas:</span>
-                <span className="text-xl font-bold text-indigo-700">
-                  {selectedStay && getTotalGuests(selectedStay)}
-                </span>
-              </div>
-            )}
-
-            {/* Notas */}
-            {selectedStay?.notes && (
-              <div className="bg-yellow-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-800 mb-2">Notas</h3>
-                <p className="text-sm text-gray-700">{selectedStay.notes}</p>
-              </div>
-            )}
-        </div>
-
-        <div className="mt-6 flex justify-end">
-            <button
-            onClick={() => setSelectedStay(null)}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-            >
-            Cerrar
-            </button>
-        </div>
+        <ReservationDetailsModal 
+          stay={selectedStay} 
+          onClose={() => setSelectedStay(null)}
+        />
       </Modal>
     </Layout>
   );
