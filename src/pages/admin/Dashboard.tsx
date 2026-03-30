@@ -4,58 +4,52 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Layout } from '../../components/Layout';
 import { apartmentsApi } from '../../api/apartments';
 import { Modal } from '../../components/Modal';
-import { 
-  Users, 
-  Building2, 
-  CalendarDays, 
-  ClipboardCheck, 
-  CalendarRange, 
-  FileStack,
-  Upload,
-  ArrowRight
-} from 'lucide-react';
 
 interface MenuItem {
   title: string;
   description: string;
   link?: string;
-  icon: React.ReactNode;
-  color: string;
+  icon: string;
   action?: () => void;
 }
-
-const cardStyles = 'group bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-sm)] hover:border-[var(--color-primary)] transition-all cursor-pointer overflow-hidden';
 
 const DashboardCard = ({ item, onClick, index }: { item: MenuItem; onClick: () => void; index: number }) => (
   <div 
     onClick={onClick} 
-    className={`${cardStyles} anim-${(index % 4) + 1}`}
+    className="group cursor-pointer bg-white border-2 border-black/[0.12] rounded-sm p-8 shadow-sm hover:shadow-2xl hover:border-black/30 hover:translate-x-1 transition-all duration-500 relative overflow-hidden active:scale-[0.97] animate-in fade-in slide-in-from-left-6 fill-mode-both border-l-[6px] border-l-black group-hover:border-l-blue-600"
+    style={{ animationDelay: `${index * 60}ms` }}
     role="button"
     tabIndex={0}
     onKeyDown={(e) => e.key === 'Enter' && onClick()}
     aria-label={`Acceder a ${item.title}`}
   >
-    <div className="h-1 bg-[var(--color-primary-subtle)] group-hover:bg-[var(--color-primary)] transition-colors" />
+    <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 -mr-16 -mt-16 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-colors duration-700"></div>
     
-    <div className="p-10">
-      <div className={`w-14 h-14 rounded-[var(--radius-sm)] bg-[var(--color-background)] flex items-center justify-center mb-6 
-                       border border-[var(--color-border)] group-hover:border-[var(--color-primary)] 
-                       group-hover:scale-110 transition-all duration-300 ${item.color}`}>
-        {item.icon}
+    <div className="relative z-10 flex flex-col h-full">
+      <div className="flex items-start justify-between mb-10">
+        <div className="h-14 w-14 rounded-sm bg-gray-950 flex items-center justify-center text-white shadow-2xl shadow-black/40 group-hover:scale-110 group-hover:bg-blue-600 transition-all duration-500 border-2 border-white/10">
+          <span className="material-symbols-outlined text-[32px] font-bold">{item.icon}</span>
+        </div>
+        <span className="material-symbols-outlined text-gray-200 text-2xl group-hover:text-blue-600 group-hover:translate-x-2 transition-all duration-700 opacity-20 group-hover:opacity-100">
+          arrow_forward
+        </span>
       </div>
       
-      <div className="space-y-2">
-        <h3 className="text-xl font-bold text-[var(--color-text-primary)] tracking-tight group-hover:text-[var(--color-primary)] transition-colors">
+      <div className="flex-1">
+        <h3 className="text-[18px] font-bold text-gray-950 tracking-tight group-hover:text-blue-600 transition-colors mb-2 leading-none uppercase">
           {item.title}
         </h3>
-        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed line-clamp-2">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-loose mb-4">
+          ADMIN_MODULE_0{index + 1}
+        </p>
+        <p className="text-[13px] font-medium text-gray-600 leading-relaxed max-w-[220px] group-hover:text-gray-900 transition-colors">
           {item.description}
         </p>
       </div>
       
-      <div className="mt-8 flex items-center text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)] transition-colors">
-        Acceder al módulo
-        <div className="ml-2 w-4 h-px bg-[var(--color-border)] group-hover:w-8 group-hover:bg-[var(--color-primary)] transition-all" />
+      <div className="mt-10 pt-6 border-t border-black/[0.06] flex items-center justify-between">
+        <span className="text-[10px] font-black text-gray-950 uppercase tracking-[0.25em] opacity-40 group-hover:opacity-100 transition-opacity">Iniciar Protocolo</span>
+        <span className="h-[2px] w-12 bg-gray-100 group-hover:w-20 group-hover:bg-blue-600 transition-all duration-700"></span>
       </div>
     </div>
   </div>
@@ -138,43 +132,37 @@ export const AdminDashboard = () => {
       title: 'Usuarios',
       description: 'Gestión integral de usuarios y perfiles',
       link: '/admin/users',
-      icon: <Users size={24} />,
-      color: 'text-[var(--color-primary)]',
+      icon: 'group',
     },
     {
       title: 'Departamentos',
       description: 'Administración de unidades habitacionales',
       link: '/admin/apartments',
-      icon: <Building2 size={24} />,
-      color: 'text-[var(--color-info)]',
+      icon: 'apartment',
     },
     {
       title: 'Reservas',
       description: 'Control de check-ins, check-outs y estadías',
       link: '/admin/reservations',
-      icon: <CalendarDays size={24} />,
-      color: 'text-[var(--color-action-text)]',
+      icon: 'calendar_month',
     },
     {
       title: 'Peticiones',
       description: 'Autorización de solicitudes y cambios',
       link: '/admin/petitions',
-      icon: <ClipboardCheck size={24} />,
-      color: 'text-[var(--color-warning)]',
+      icon: 'rule',
     },
     {
       title: 'Calendario',
       description: 'Vista holística de ocupación y eventos',
       link: '/admin/calendar',
-      icon: <CalendarRange size={24} />,
-      color: 'text-[var(--color-primary)]',
+      icon: 'event_note',
     },
     {
       title: 'Registros',
       description: 'Auditoría completa de acciones del sistema',
       link: '/admin/audit',
-      icon: <FileStack size={24} />,
-      color: 'text-[var(--color-text-muted)]',
+      icon: 'history_edu',
     },
   ];
 
@@ -186,188 +174,213 @@ export const AdminDashboard = () => {
     }
   };
 
-
-
-
-
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-12 flex flex-col md:flex-row md:items-start justify-between gap-6">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[var(--color-primary)] mb-2">
-              Administración Central
-            </p>
-            <h1 className="dashboard-hero-title font-bold tracking-tight text-[var(--color-text-primary)] leading-none">
-              Panel de Control
-            </h1>
-            <p className="text-sm text-[var(--color-text-secondary)] mt-4 max-w-2xl">
-              Bienvenido, <span className="font-semibold text-[var(--color-text-primary)]">{user?.firstName} {user?.lastName}</span>. 
-              Gestiona los de departamentos, usuarios y operaciones críticas desde esta central de mando.
-            </p>
-
-            {/* Torre Activa Indicator - Interactive Chip */}
-            {(currentBuilding || currentResidence) && (
-              <div className="mt-4">
-                <button 
-                  onClick={() => {
-                    if (impersonationMode && currentResidence) {
-                      navigate(`/superadmin/residences/${currentResidence.id}`);
-                    } else {
-                      navigate('/select-residence');
-                    }
-                  }}
-                  title="Clic para cambiar de torre"
-                  className="group/chip inline-flex items-center gap-2.5 bg-[var(--color-primary-subtle)] border border-[var(--color-primary)]/20 px-4 py-2.5 rounded-[var(--radius-sm)] text-[13px] font-bold text-[var(--color-primary)] uppercase tracking-wider shadow-sm transition-all hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)] active:scale-[0.98]"
-                >
-                  <Building2 size={16} strokeWidth={2.5} className="group-hover/chip:scale-110 transition-transform" />
-                  <span>
-                    {currentBuilding?.name ? `Torre: ${currentBuilding.name}` : 'Torre no seleccionada'} 
-                    {currentResidence?.name && <span className="opacity-60 ml-2 group-hover/chip:opacity-90">({currentResidence.name})</span>}
-                  </span>
-                </button>
+      <div className="flex-1 h-[calc(100vh-64px)] overflow-y-auto bg-gray-50/30 font-sans text-gray-900 animate-in fade-in duration-700">
+        <div className="max-w-7xl mx-auto p-12 animate-in slide-in-from-bottom-8 duration-1000 fill-mode-both">
+          
+          <div className="mb-14 flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 text-blue-600">
+                <span className="h-px w-8 bg-blue-600/40"></span>
+                <span className="text-[10px] font-black uppercase tracking-[0.4em]">Administración Central</span>
               </div>
-            )}
-          </div>
-
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="shrink-0 bg-[var(--color-action)] hover:bg-[var(--color-action-hover)] text-[var(--action-text)] px-5 py-2.5 rounded-[var(--radius-button)] font-bold tracking-wide uppercase text-xs transition-all flex items-center justify-center gap-2 shadow-sm border border-[var(--color-action)]/50 focus:outline-[var(--color-primary)]"
-          >
-            <Upload size={16} strokeWidth={2.5} />
-            Importar por Excel
-          </button>
-        </div>
-
-        {error && (
-          <div role="alert" className="flex items-center gap-3 border border-[var(--color-danger)] bg-[var(--color-danger-subtle)]
-                          rounded-[var(--radius-sm)] px-4 py-3 mb-8 text-[var(--color-danger)]">
-            <p className="text-sm font-medium">{error}</p>
-            <button onClick={() => setError('')} className="ml-auto text-lg leading-none" aria-label="Cerrar error">×</button>
-          </div>
-        )}
-
-        {success && (
-          <div role="alert" className="flex items-center gap-3 border border-[var(--color-action)] bg-[var(--color-action-subtle)]
-                          rounded-[var(--radius-sm)] px-4 py-3 mb-8 text-[var(--color-action)]">
-            <ClipboardCheck size={18} />
-            <p className="text-sm font-medium">{success}</p>
-            <button onClick={() => setSuccess('')} className="ml-auto text-lg leading-none" aria-label="Cerrar éxito">×</button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {menuItems.map((item, index) => (
-            <DashboardCard 
-              key={index} 
-              item={item} 
-              index={index}
-              onClick={() => handleNavigation(item)} 
-            />
-          ))}
-        </div>
-
-      </div>
-
-      <Modal
-        isOpen={showUploadModal}
-        onClose={closeUploadModal}
-        title="Importar Departamentos (Excel)"
-      >
-        {!uploadResult ? (
-          <form onSubmit={handleUploadExcel} className="space-y-4">
-            <div className="bg-[var(--color-info-subtle)] p-4 rounded-[var(--radius-sm)] text-sm text-[var(--color-info)] mb-4 border border-[var(--color-info)]/20">
-              <p>Sube un archivo Excel (.xlsx) con los departamentos.</p>
-              <p className="font-bold mt-1">
-                Aviso: La carga se aplicará automáticamente a la Torre activa: {currentBuilding?.name || 'Ninguna'}
+              <h1 className="text-3xl font-bold text-gray-950 leading-none">
+                Panel de Control
+              </h1>
+              <p className="text-[14px] font-medium text-gray-500 max-w-2xl pt-2">
+                Bienvenido al núcleo operativo, <span className="font-bold text-gray-950">{user?.firstName} {user?.lastName}</span>. 
+                Centro de gestión para departamentos, usuarios y protocolos institucionales.
               </p>
-              <button
-                type="button"
-                onClick={handleDownloadTemplate}
-                className="hover:underline font-bold mt-2 text-[var(--color-primary)] opacity-90 transition-opacity hover:opacity-100"
-              >
-                Descargar plantilla de ejemplo
-              </button>
+
+              {/* Torre Activa Indicator */}
+              {(currentBuilding || currentResidence) && (
+                <div className="pt-4">
+                  <button 
+                    onClick={() => {
+                      if (impersonationMode && currentResidence) {
+                        navigate(`/superadmin/residences/${currentResidence.id}`);
+                      } else {
+                        navigate('/select-residence');
+                      }
+                    }}
+                    className="group/chip inline-flex items-center gap-4 bg-white border-2 border-black tracking-tighter px-5 py-3 rounded-sm text-[13px] font-black text-gray-950 uppercase shadow-2xl shadow-black/5 hover:bg-gray-950 hover:text-white transition-all active:scale-[0.98]"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">domain</span>
+                    <span>
+                      {currentBuilding?.name ? `TORRE: ${currentBuilding.name}` : 'TORRE NO SELECCIONADA'} 
+                      {currentResidence?.name && <span className="opacity-40 ml-2 group-hover/chip:opacity-60">// {currentResidence.name}</span>}
+                    </span>
+                    <span className="material-symbols-outlined text-[16px] opacity-20 group-hover/chip:opacity-100 group-hover/chip:translate-x-1 transition-all">sync_alt</span>
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-[var(--color-text-primary)] mb-1">
-                Archivo Excel *
-              </label>
-              <input
-                type="file"
-                accept=".xlsx, .xls"
-                required
-                onChange={handleFileChange}
-                className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--color-primary)] file:mr-4 file:py-2 file:px-4 file:rounded-[var(--radius-full)] file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[var(--color-primary-subtle)] file:text-[var(--color-primary)] hover:file:bg-[var(--color-primary)] hover:file:text-white transition-all cursor-pointer"
+            <div className="flex flex-col items-end gap-6">
+              <div className="hidden md:flex bg-gray-950 text-white px-5 py-2 rounded-sm text-[10px] font-bold uppercase tracking-[0.25em] shadow-2xl shadow-black/20 items-center gap-3 border border-white/5">
+                <span className="h-1.5 w-1.5 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.8)]"></span>
+                Terminal_Root_Secure
+              </div>
+              
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="bg-white border-2 border-black text-gray-950 px-6 py-3 rounded-sm font-black uppercase tracking-[0.15em] text-[11px] transition-all flex items-center justify-center gap-3 shadow-2xl shadow-black/10 hover:bg-gray-950 hover:text-white active:scale-95 group"
+              >
+                <span className="material-symbols-outlined text-[20px]">upload_file</span>
+                Carga Masiva Excel
+                <span className="material-symbols-outlined text-[18px] opacity-20 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <div role="alert" className="flex items-center gap-4 border-2 border-red-600 bg-red-50 p-5 mb-10 animate-in shake duration-500">
+              <span className="material-symbols-outlined text-red-600 text-[24px]">error</span>
+              <p className="text-[13px] font-black text-red-600 uppercase tracking-tight">{error}</p>
+              <button onClick={() => setError('')} className="ml-auto text-red-600 font-bold text-xl">×</button>
+            </div>
+          )}
+
+          {success && (
+            <div role="alert" className="flex items-center gap-4 border-2 border-blue-600 bg-blue-50 p-5 mb-10 animate-in slide-in-from-top-4 duration-500">
+              <span className="material-symbols-outlined text-blue-600 text-[24px]">verified</span>
+              <p className="text-[13px] font-black text-blue-600 uppercase tracking-tight">{success}</p>
+              <button onClick={() => setSuccess('')} className="ml-auto text-blue-600 font-bold text-xl">×</button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {menuItems.map((item, index) => (
+              <DashboardCard 
+                key={index} 
+                item={item} 
+                index={index}
+                onClick={() => handleNavigation(item)} 
               />
-            </div>
+            ))}
+          </div>
 
-            <div className="flex gap-3 pt-4 border-t border-[var(--color-border)] mt-6">
-              <button
-                type="button"
-                onClick={closeUploadModal}
-                className="flex-1 px-4 py-2 border border-[var(--color-border)] rounded-[var(--radius-button)] text-[var(--color-text-secondary)] hover:bg-[var(--color-background-subtle)] font-bold uppercase text-xs tracking-wider transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={uploading || !uploadFile || !currentBuilding}
-                className="flex-1 px-4 py-2 bg-[var(--color-action)] text-[var(--action-text)] rounded-[var(--radius-button)] hover:bg-[var(--color-action-hover)] disabled:opacity-50 flex justify-center items-center gap-2 font-bold uppercase text-xs tracking-wider transition-colors"
-              >
-                {uploading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white/20 border-t-white"></div>
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    <Upload size={16} strokeWidth={3} />
-                    Cargar
-                  </>
+        </div>
+
+        <Modal
+          isOpen={showUploadModal}
+          onClose={closeUploadModal}
+          title="Protocolo de Carga Masiva (MS Excel)"
+        >
+          <div className="p-2">
+            {!uploadResult ? (
+              <form onSubmit={handleUploadExcel} className="space-y-8">
+                <div className="bg-gray-950 p-6 rounded-sm text-white shadow-2xl shadow-black/20 border-l-4 border-blue-600">
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="material-symbols-outlined text-blue-500 text-[28px]">info</span>
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-400">Instrucciones de Sistema</h3>
+                  </div>
+                  <p className="text-[13px] text-gray-300 font-medium leading-relaxed mb-6">
+                    El archivo .xlsx será procesado contra la base de datos de la torre activa: 
+                    <span className="text-white font-black block mt-2 text-[15px]">{currentBuilding?.name || 'ERROR: NO SELECCIONADA'}</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleDownloadTemplate}
+                    className="flex items-center gap-3 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-all border border-white/10"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">download</span>
+                    Descargar Plantilla Maestra
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[11px] font-black text-gray-950 uppercase tracking-[0.2em] block mb-2">
+                    Selección de Archivo de Datos
+                  </label>
+                  <div className="relative group">
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls"
+                      required
+                      onChange={handleFileChange}
+                      className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    />
+                    <div className="border-2 border-dashed border-black/[0.12] group-hover:border-black/30 group-hover:bg-gray-50 rounded-sm p-8 text-center transition-all">
+                      <span className="material-symbols-outlined text-[48px] text-gray-200 group-hover:text-blue-600 transition-colors mb-4 inline-block">cloud_upload</span>
+                      <p className="text-[13px] font-bold text-gray-400 group-hover:text-gray-900 transition-colors">
+                        {uploadFile ? uploadFile.name : 'Arrastra o selecciona el archivo Excel'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4 border-t border-black/[0.08]">
+                  <button
+                    type="button"
+                    onClick={closeUploadModal}
+                    className="flex-1 px-6 py-4 border-2 border-black rounded-sm text-gray-950 font-black uppercase text-[11px] tracking-[0.2em] transition-all hover:bg-gray-100 active:scale-95"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={uploading || !uploadFile || !currentBuilding}
+                    className="flex-1 px-6 py-4 bg-gray-950 text-white rounded-sm font-black uppercase text-[11px] tracking-[0.2em] transition-all hover:bg-blue-600 disabled:opacity-30 flex justify-center items-center gap-3 active:scale-95 shadow-2xl shadow-black/20"
+                  >
+                    {uploading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white/20 border-t-white"></div>
+                        PROCESANDO...
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
+                        EJECUTAR CARGA
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-8 py-4">
+                <div className="text-center">
+                  <div className={`mx-auto h-20 w-20 rounded-sm flex items-center justify-center mb-6 shadow-2xl ${uploadResult.success > 0 ? 'bg-blue-600 text-white' : 'bg-red-600 text-white'}`}>
+                    <span className="material-symbols-outlined text-[40px] font-black">{uploadResult.success > 0 ? 'check_circle' : 'warning'}</span>
+                  </div>
+                  <h3 className="text-2xl font-black text-gray-950 tracking-tighter uppercase">Proceso Finalizado</h3>
+                  <p className="text-[14px] text-gray-500 font-medium mt-3 leading-relaxed">
+                    Registros procesados: <span className="text-blue-600 font-black">{uploadResult.success}</span> exitosos.
+                    {uploadResult.failed > 0 && <span className="text-red-600 font-black"> // {uploadResult.failed} fallidos.</span>}
+                  </p>
+                </div>
+
+                {uploadResult.errors && uploadResult.errors.length > 0 && (
+                  <div className="bg-red-50 border-2 border-red-600/20 rounded-sm p-6 max-h-[300px] overflow-y-auto">
+                    <h4 className="text-[11px] font-black text-red-600 mb-4 tracking-[0.2em] uppercase flex items-center gap-2">
+                       <span className="material-symbols-outlined text-[18px]">list_alt</span>
+                       Log de Errores de Sistema:
+                    </h4>
+                    <div className="space-y-3">
+                      {uploadResult.errors.map((err: any, idx: number) => (
+                        <div key={idx} className="flex gap-4 items-start border-b border-red-600/10 pb-3 last:border-0 last:pb-0">
+                          <span className="font-black text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-sm shrink-0 mt-0.5">FILA {err.row}</span>
+                          <span className="text-[12px] font-medium text-red-900 leading-tight">{err.error}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <div className={`mx-auto h-12 w-12 rounded-full flex items-center justify-center mb-3 ${uploadResult.success > 0 ? 'bg-[var(--color-action-subtle)] text-[var(--color-action)]' : 'bg-[var(--color-danger-subtle)] text-[var(--color-danger)]'}`}>
-                <ClipboardCheck size={24} />
-              </div>
-              <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Proceso completado</h3>
-              <p className="text-[var(--color-text-secondary)] text-sm mt-2">
-                Se cargaron <span className="font-bold">{uploadResult.success}</span> departamentos correctamente.
-                {uploadResult.failed > 0 && ` Hubo ${uploadResult.failed} errores.`}
-              </p>
-            </div>
 
-            {uploadResult.errors && uploadResult.errors.length > 0 && (
-              <div className="bg-[var(--color-danger-subtle)] rounded-[var(--radius-sm)] p-4 max-h-60 overflow-y-auto border border-[var(--color-danger)]/20">
-                <h4 className="text-sm font-bold text-[var(--color-danger)] mb-2 tracking-wider uppercase">Errores encontrados:</h4>
-                <ul className="space-y-2 text-sm text-[var(--color-danger)]">
-                  {uploadResult.errors.map((err: any, idx: number) => (
-                    <li key={idx} className="flex gap-2 items-start">
-                      <span className="font-mono text-[10px] font-bold mt-0.5 px-1.5 py-0.5 rounded-[var(--radius-sm)] border border-[var(--color-danger)]/30 shrink-0">Fila {err.row}</span>
-                      <span>{err.error}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="flex justify-center pt-6 border-t border-black/[0.08]">
+                  <button
+                    onClick={closeUploadModal}
+                    className="w-full px-8 py-4 bg-gray-950 text-white rounded-sm font-black uppercase text-[11px] tracking-[0.2em] transition-all hover:bg-blue-600 active:scale-95 shadow-2xl shadow-black/20"
+                  >
+                    Finalizar Operación
+                  </button>
+                </div>
               </div>
             )}
-
-            <div className="flex justify-end pt-4 border-t border-[var(--color-border)] mt-6">
-              <button
-                onClick={closeUploadModal}
-                className="px-6 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-primary)] text-[var(--color-text-primary)] rounded-[var(--radius-button)] hover:text-[var(--color-primary)] font-bold uppercase text-xs tracking-wider transition-colors"
-              >
-                Cerrar
-              </button>
-            </div>
           </div>
-        )}
-      </Modal>
+        </Modal>
+      </div>
     </Layout>
   );
 };

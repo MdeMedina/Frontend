@@ -23,6 +23,11 @@ export type Notification = {
     id: string;
     name: string;
   };
+  buildingId?: string;
+  building?: {
+    id: string;
+    name: string;
+  };
   createdAt: string;
 };
 
@@ -33,20 +38,23 @@ export type NotificationNavigation = {
 };
 
 export const notificationsApi = {
-  getAll: async (limit?: number): Promise<Notification[]> => {
-    const response = await api.get('/notifications', {
-      params: limit ? { limit } : {},
-    });
+  getAll: async (limit?: number, buildingId?: string): Promise<Notification[]> => {
+    const params: any = limit ? { limit } : {};
+    if (buildingId) params.buildingId = buildingId;
+    
+    const response = await api.get('/notifications', { params });
     return response.data;
   },
 
-  getUnread: async (): Promise<Notification[]> => {
-    const response = await api.get('/notifications/unread');
+  getUnread: async (buildingId?: string): Promise<Notification[]> => {
+    const params = buildingId ? { buildingId } : {};
+    const response = await api.get('/notifications/unread', { params });
     return response.data;
   },
 
-  getUnreadCount: async (): Promise<number> => {
-    const response = await api.get('/notifications/unread/count');
+  getUnreadCount: async (buildingId?: string): Promise<number> => {
+    const params = buildingId ? { buildingId } : {};
+    const response = await api.get('/notifications/unread/count', { params });
     return response.data.count;
   },
 

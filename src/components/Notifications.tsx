@@ -6,7 +6,7 @@ import { io, Socket } from 'socket.io-client';
 import { getApiUrl } from '../api/client';
 
 export const Notifications = () => {
-  const { user } = useAuth();
+  const { user, currentBuilding } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -24,7 +24,7 @@ export const Notifications = () => {
       return;
     }
 
-    console.log('Notifications: Component mounted, loading notifications');
+    console.log('Notifications: Component mounted or building changed, loading notifications for building:', currentBuilding?.id);
     // Cargar notificaciones iniciales
     loadNotifications();
     loadUnreadCount();
@@ -49,30 +49,27 @@ export const Notifications = () => {
         console.log('[Notifications] WebSocket connected for notifications');
       });
 
-      socket.on('connect_error', (error) => {
-        console.error('[Notifications] WebSocket connection error:', error);
-      });
-
       socket.on('notification', (notification: Notification) => {
         console.log('[Notifications] New notification received:', notification);
+        
+        // FILTRADO POR TORRE: Si hay una torre seleccionada, ignorar notificaciones de otras torres
+        if (currentBuilding?.id && notification.buildingId && notification.buildingId !== currentBuilding.id) {
+          console.log(`[Notifications] Ignoring notification for building ${notification.buildingId} because context is building ${currentBuilding.id}`);
+          return;
+        }
+
         // Agregar nueva notificación al inicio de la lista
         setNotifications(prev => [notification, ...prev]);
+        
         // Incrementar contador de no leídas si no está leída
-        // El backend envía 'isRead' pero puede venir como 'read', verificar ambos
         const isUnread = !notification.isRead && !(notification as any).read;
         if (isUnread) {
-          setUnreadCount(prev => {
-            const newCount = prev + 1;
-            console.log('[Notifications] Unread count updated:', newCount);
-            return newCount;
-          });
+          setUnreadCount(prev => prev + 1);
           
-          // Mostrar popup/toast con la notificación
+          // Mostrar popup/toast
           setToastNotification(notification);
           setShowToast(true);
-          console.log('[Notifications] Toast should be visible now');
           
-          // Ocultar el toast después de 5 segundos
           if (toastTimeoutRef.current) {
             clearTimeout(toastTimeoutRef.current);
           }
@@ -87,20 +84,11 @@ export const Notifications = () => {
         console.log('[Notifications] WebSocket disconnected:', reason);
       });
 
-      socket.on('reconnect', (attemptNumber) => {
-        console.log(`[Notifications] WebSocket reconnected after ${attemptNumber} attempts`);
-      });
-
-      socket.on('reconnect_attempt', (attemptNumber) => {
-        console.log(`[Notifications] WebSocket reconnection attempt ${attemptNumber}`);
-      });
-
       socket.on('error', (error) => {
         console.error('[Notifications] WebSocket error:', error);
       });
     }
 
-    // Cerrar conexión al desmontar
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -109,7 +97,7 @@ export const Notifications = () => {
         clearTimeout(toastTimeoutRef.current);
       }
     };
-  }, [user]);
+  }, [user, currentBuilding?.id]);
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
@@ -131,7 +119,7 @@ export const Notifications = () => {
   const loadNotifications = async () => {
     try {
       setLoading(true);
-      const data = await notificationsApi.getAll(20);
+      const data = await notificationsApi.getAll(20, currentBuilding?.id);
       setNotifications(data);
     } catch (error) {
       console.error('Error loading notifications:', error);
@@ -142,9 +130,8 @@ export const Notifications = () => {
 
   const loadUnreadCount = async () => {
     try {
-      const count = await notificationsApi.getUnreadCount();
+      const count = await notificationsApi.getUnreadCount(currentBuilding?.id);
       setUnreadCount(count);
-      console.log('Unread count loaded:', count); // Debug
     } catch (error) {
       console.error('Error loading unread count:', error);
     }
