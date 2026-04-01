@@ -57,10 +57,10 @@ interface ApartmentCardProps {
   onRemoveManager: (a: Apartment) => void;
 }
 
-export const ApartmentCard = ({ 
-  apartment, isManager, onEdit, onAssignManager, onRemoveManager 
+export const ApartmentCard = ({
+  apartment, isManager, onEdit, onAssignManager, onRemoveManager
 }: ApartmentCardProps) => (
-  <div className={`bg-white border-2 rounded-sm overflow-hidden transition-all duration-500 hover:shadow-2xl hover:translate-y-[-4px] active:scale-[0.98] animate-in fade-in slide-in-from-bottom-6 fill-mode-both border-l-[6px] ${apartment.isActive ? 'border-2 border-black/[0.08] border-l-black group hover:border-l-blue-600' : 'border-black/[0.04] border-l-gray-400 opacity-60'}`}>
+  <div className={`bg-white border rounded-xl shadow-[var(--shadow-surgical)] overflow-hidden transition-all duration-500 hover:shadow-2xl hover:translate-y-[-4px] active:scale-[0.98] animate-in fade-in slide-in-from-bottom-6 fill-mode-both border-l-[6px] ${apartment.isActive ? 'border-black/[0.12] border-l-[#001640] group hover:border-[#001640]/30 hover:border-l-blue-600' : 'border-black/[0.04] border-l-gray-400 opacity-60'}`}>
     <div className="p-8">
       <div className="flex justify-between items-start mb-8">
         <div>
@@ -77,19 +77,12 @@ export const ApartmentCard = ({
         </div>
       </div>
 
-      {apartment.description && (
-        <p className="text-[13px] font-medium text-gray-600 leading-relaxed mb-8 italic border-l-2 border-black/[0.05] pl-4">
-          "{apartment.description}"
-        </p>
-      )}
 
       {/* Parking Protocol */}
-      <div className="space-y-3 mb-10">
-        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] block mb-2">Protocolo Estacionarios</label>
+      <div className="space-y-3 mb-4">
         {apartment.parkingNumber && (!apartment.sourceAssignments || apartment.sourceAssignments.length === 0) && (
           <div className="flex items-center gap-3 text-[13px] font-bold text-gray-950 bg-gray-50 p-3 border border-black/[0.03] rounded-sm">
-            <span className="material-symbols-outlined text-blue-600 text-[20px]">local_parking</span>
-            <span>Unidad: {apartment.parkingNumber}</span>
+            <span>Estacionamiento: {apartment.parkingNumber}</span>
           </div>
         )}
 
@@ -97,7 +90,7 @@ export const ApartmentCard = ({
           <div className="bg-gray-950 border-l-4 border-blue-600 rounded-sm p-4 text-white">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">
               <span className="material-symbols-outlined text-[16px]">swap_horiz</span>
-              Activo Prestado
+              Estacionamiento Prestado
             </div>
             <p className="text-[12px] font-medium leading-tight">
               Prestado a Depto {apartment.sourceAssignments[0].targetApartment.number}
@@ -109,7 +102,7 @@ export const ApartmentCard = ({
           <div className="bg-blue-600 border-l-4 border-gray-950 rounded-sm p-4 text-white">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/60 mb-2">
               <span className="material-symbols-outlined text-[16px]">add_circle</span>
-              Activo Recibido
+              Estacionamiento Recibido
             </div>
             <p className="text-[12px] font-medium leading-tight">
               Desde Depto {apartment.targetAssignments[0].sourceApartment.number}
@@ -119,10 +112,9 @@ export const ApartmentCard = ({
       </div>
 
       {/* Manager Protocol */}
-      <div className="border-t-2 border-black/[0.06] pt-8">
-        <div className="flex items-center justify-between mb-4">
+      <div className="mt-4">
+        <div className="flex items-center justify-between mb-2">
           <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em]">Responsable</label>
-          <span className="h-px flex-1 bg-black/[0.06] ml-4"></span>
         </div>
         {apartment.manager ? (
           <div className="flex items-center gap-4">
@@ -138,21 +130,14 @@ export const ApartmentCard = ({
           </div>
         ) : (
           <div className="flex items-center gap-3 text-gray-300 italic py-2">
-             <span className="material-symbols-outlined text-[20px]">person_off</span>
-             <span className="text-[12px] font-medium uppercase tracking-widest">Sin asignar</span>
+            <span className="material-symbols-outlined text-[20px]">person_off</span>
+            <span className="text-[12px] font-medium uppercase tracking-widest">Sin asignar</span>
           </div>
         )}
       </div>
 
       {!isManager && (
-        <div className="mt-10 flex flex-col gap-3">
-          <button
-            onClick={() => onEdit(apartment)}
-            disabled={!apartment.isActive}
-            className="w-full px-4 py-3 border-2 border-black rounded-sm text-gray-950 font-black uppercase text-[10px] tracking-[0.2em] transition-all hover:bg-gray-100 active:scale-95 disabled:opacity-30"
-          >
-            Modificar Estacionamiento
-          </button>
+        <div className="mt-4 flex flex-col gap-3">
           <div className="flex gap-3">
             <button
               onClick={() => onAssignManager(apartment)}

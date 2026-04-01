@@ -43,7 +43,7 @@ export const Modal: React.FC<ModalProps> = ({
       />
 
       {/* Modal Content */}
-      <div className={`relative w-full ${width} transform rounded-[var(--radius-sm)] bg-[var(--color-surface)] p-5 text-left shadow-lg
+      <div className={`relative w-full ${width} transform rounded-xl bg-[var(--color-surface)] p-5 text-left shadow-lg
                       transition-all border border-[var(--color-border)] flex flex-col max-h-[90vh]`}>
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
@@ -55,7 +55,7 @@ export const Modal: React.FC<ModalProps> = ({
             {showCloseButton && (
               <button
                 type="button"
-                className="rounded-[var(--radius-sm)] p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-border)]
+                className="rounded-lg p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-border)]
                            hover:text-[var(--color-text-primary)] focus:outline-none transition-colors"
                 onClick={onClose}
               >

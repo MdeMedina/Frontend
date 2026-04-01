@@ -36,7 +36,7 @@ export const PropietarioApartments = () => {
   const handleAssignSubmit = async () => {
     if (!selectedApartment) return;
     const selectedManager = availableManagers.find(m => m.id === selectedManagerId);
-    
+
     await submitPetition({
       type: selectedApartment.manager ? 'MODIFY_MANAGER' : 'CREATE_MANAGER',
       title: `${selectedApartment.manager ? 'Cambiar' : 'Asignar'} responsable del departamento ${selectedApartment.number}`,
@@ -91,8 +91,6 @@ export const PropietarioApartments = () => {
     <Layout>
       <div className="flex-1 h-[calc(100vh-64px)] overflow-y-auto bg-gray-50/30 font-sans text-gray-900 animate-in fade-in duration-700">
         <div className="max-w-7xl mx-auto p-12 animate-in slide-in-from-bottom-8 duration-1000 fill-mode-both">
-          
-          <ApartmentsHeader isManager={isManager} />
 
           {/* Messages */}
           {error && (
@@ -143,7 +141,7 @@ export const PropietarioApartments = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {apartments.map((apartment) => (
-                <ApartmentCard 
+                <ApartmentCard
                   key={apartment.id}
                   apartment={apartment}
                   isManager={isManager}
@@ -165,26 +163,10 @@ export const PropietarioApartments = () => {
           )}
 
           {/* Global Protocol Footer */}
-          <div className="mt-20 py-8 border-t-2 border-black/[0.1] flex flex-col md:flex-row justify-between items-center gap-8 opacity-40 group hover:opacity-100 transition-opacity">
-            <div className="flex gap-12">
-               <div className="space-y-1">
-                 <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-400">Security_Level</p>
-                 <p className="text-[11px] font-black uppercase tracking-widest text-gray-950">AES_256_GCM</p>
-               </div>
-               <div className="space-y-1 text-center md:text-left">
-                 <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-400">Sync_Protocol</p>
-                 <p className="text-[11px] font-black uppercase tracking-widest text-gray-950">Active_Link_SPS</p>
-               </div>
-            </div>
-            <div className="text-right">
-              <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-400 mb-1">Terminal_ID</p>
-              <p className="text-[11px] font-black uppercase tracking-tight text-gray-950">0x-PROPIETARIO-SYSC-042</p>
-            </div>
-          </div>
         </div>
       </div>
 
-      <AssignManagerModal 
+      <AssignManagerModal
         isOpen={showAssignModal}
         onClose={() => setShowAssignModal(false)}
         apartment={selectedApartment}
@@ -196,7 +178,7 @@ export const PropietarioApartments = () => {
         onSubmit={handleAssignSubmit}
       />
 
-      <EditApartmentModal 
+      <EditApartmentModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         apartment={selectedApartment}

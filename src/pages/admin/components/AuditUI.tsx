@@ -33,7 +33,7 @@ export const AuditStatCards: React.FC<AuditStatCardsProps> = ({ stats }) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
       {statItems.map((stat, i) => (
-        <div key={i} className={`bg-white rounded-sm border-2 border-black/[0.08] p-5 shadow-sm hover:shadow-xl hover:border-black/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative active:scale-95 cursor-default`}>
+        <div key={i} className={`bg-white rounded-xl border border-[var(--color-border)] p-5 shadow-[var(--shadow-surgical)] hover:shadow-xl hover:border-black/20 hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative active:scale-95 cursor-default`}>
           <div className={`absolute top-0 right-0 w-20 h-20 ${stat.bg} -mr-10 -mt-10 rounded-full blur-3xl ${stat.glow} transition-colors duration-500`}></div>
           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400 mb-1 relative z-10 select-none">{stat.label}</p>
           <div className="text-[24px] font-black text-gray-950 tracking-tighter leading-none relative z-10 group-hover:scale-105 transition-transform duration-300 origin-left">{stat.value}</div>
@@ -69,7 +69,7 @@ export const PetitionLogRow: React.FC<LogRowProps> = ({ log }) => {
     <div className="p-6 bg-white hover:bg-gray-50/40 transition-all duration-300 border-b border-black/[0.08] group relative hover:z-10 hover:shadow-2xl hover:shadow-black/[0.01]">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Petition Data (7/12) */}
-        <div className="lg:col-span-7 border-2 border-black/[0.06] rounded-sm p-5 bg-gray-50/40 shadow-sm group-hover:bg-white group-hover:border-black/[0.1] transition-all duration-500 relative overflow-hidden">
+        <div className="lg:col-span-7 border border-[var(--color-border)] rounded-xl p-5 bg-gray-50/40 shadow-[var(--shadow-surgical)] group-hover:bg-white group-hover:border-black/[0.1] transition-all duration-500 relative overflow-hidden">
           <div className="absolute top-3 right-3 h-8 w-8 rounded-full border border-black/[0.03] flex items-center justify-center opacity-10 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700">
             <span className="material-symbols-outlined text-base" aria-hidden="true">description</span>
           </div>
@@ -112,24 +112,24 @@ export const PetitionLogRow: React.FC<LogRowProps> = ({ log }) => {
         </div>
 
         {/* Right Column: Status/Admin Data (5/12) */}
-        <div className="lg:col-span-5 border-2 border-black/[0.08] rounded-sm p-5 bg-white shadow-md flex flex-col justify-center items-center text-center hover:shadow-xl hover:border-black/20 transition-all duration-500 border-l-4 border-l-black relative overflow-hidden group-hover:border-l-blue-600">
+        <div className="lg:col-span-5 border border-[var(--color-border)] rounded-xl p-5 bg-white shadow-[var(--shadow-surgical)] flex flex-col justify-center items-center text-center hover:shadow-xl hover:border-black/20 transition-all duration-500 border-l-4 border-l-black relative overflow-hidden group-hover:border-l-[#001640]">
           <div className="absolute inset-0 bg-blue-50/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
           <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400 mb-5 w-full border-b border-black/[0.05] pb-2.5 relative z-10">Estado Operativo</h3>
 
-          <div className={`px-5 py-1.5 rounded-sm border-2 mb-5 ${statusColor} text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-black/[0.02] relative z-10 group-hover:scale-105 transition-transform duration-300`}>
+          <div className={`px-5 py-1.5 rounded-lg border mb-5 ${statusColor} text-[10px] font-bold uppercase tracking-[0.2em] shadow-md relative z-10 group-hover:scale-105 transition-transform duration-300`}>
             {statusLabel}
           </div>
 
           {status !== 'PENDING' ? (
             <div className="text-[11px] space-y-2 w-full relative z-10">
-              <div className="bg-gray-50 p-4 rounded-sm border border-black/[0.05] relative overflow-hidden group-hover:bg-white group-hover:shadow-inner transition-all duration-500">
+              <div className="bg-gray-50 p-4 rounded-xl border border-[var(--color-border)] relative overflow-hidden group-hover:bg-white group-hover:shadow-inner transition-all duration-500">
                 <span className="absolute bottom-1 right-2 text-[32px] opacity-[0.02] font-black uppercase pointer-events-none group-hover:opacity-[0.04] transition-all">ADMIN</span>
                 <p className="text-[8px] font-bold uppercase text-gray-400 tracking-[0.12em] mb-2.5">Resolución por</p>
                 <p className="font-bold text-gray-950 uppercase tracking-tighter text-[16px] leading-none mb-2">{reviewerName}</p>
                 <p className="text-[9px] font-bold text-white bg-gray-950 px-2.5 py-1 rounded-sm inline-block tracking-widest shadow-lg shadow-black/20">{formatAuditDate(reviewDate)}</p>
               </div>
               {details.adminNotes && (
-                <div className="mt-3 text-[10px] font-medium text-gray-600 bg-blue-50/20 p-3.5 rounded-sm border border-blue-100/20 italic leading-relaxed text-left border-l-2 border-l-blue-500 group-hover:bg-blue-50/40 transition-colors">
+                <div className="mt-3 text-[10px] font-medium text-gray-600 bg-blue-50/20 p-3.5 rounded-xl border border-blue-100/20 italic leading-relaxed text-left border-l-[3px] border-l-blue-500 group-hover:bg-blue-50/40 transition-colors">
                   "{details.adminNotes}"
                 </div>
               )}
@@ -155,11 +155,11 @@ export const StandardLogRow: React.FC<LogRowProps> = ({ log }) => {
         <div className="flex-1 min-w-0">
           {/* Tipo de acción y badge */}
           <div className="flex items-center gap-3.5 mb-3.5 flex-wrap">
-            <span className={`px-2.5 py-1 text-[9px] font-bold rounded-sm border-2 uppercase tracking-[0.15em] shadow-sm flex items-center gap-2 hover:scale-105 transition-transform duration-300 ${getActionColor(log.action)}`}>
+            <span className={`px-2.5 py-1 text-[9px] font-bold rounded-lg border uppercase tracking-[0.15em] shadow-sm flex items-center gap-2 hover:scale-105 transition-transform duration-300 ${getActionColor(log.action)}`}>
               <span className="material-symbols-outlined text-[14px]" aria-hidden="true">{getActionIcon(log.action)}</span>
               {getActionLabel(log.action)}
             </span>
-            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.12em] bg-white border-2 border-black/[0.06] px-2.5 py-1 rounded-sm hover:border-black/10 transition-colors">
+            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.12em] bg-white border border-[var(--color-border)] px-2.5 py-1 rounded-lg hover:border-black/10 transition-colors">
               {formatAuditDate(log.timestamp)}
             </span>
           </div>
@@ -171,7 +171,7 @@ export const StandardLogRow: React.FC<LogRowProps> = ({ log }) => {
 
           {/* Detalles para carga masiva */}
           {log.action === 'APARTMENT_BULK_IMPORT' && log.details?.stats && (
-            <div className="mb-5 bg-gray-950 p-5 rounded-sm border-l-2 border-l-blue-600 shadow-xl overflow-hidden relative group-hover:shadow-blue-500/5 transition-all duration-500">
+            <div className="mb-5 bg-[#001640] p-5 rounded-xl border-l-[3px] border-l-blue-400 shadow-[var(--shadow-surgical)] overflow-hidden relative group-hover:shadow-md transition-all duration-500">
               <div className="absolute top-0 right-0 w-28 h-28 bg-blue-500/5 -mr-14 -mt-14 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-1000"></div>
               <ul className="grid grid-cols-2 md:grid-cols-4 gap-5 relative z-10">
                 {[
@@ -190,8 +190,8 @@ export const StandardLogRow: React.FC<LogRowProps> = ({ log }) => {
           )}
 
           {/* Quién realizó la acción */}
-          <div className="flex items-center gap-3 text-[11px] bg-gray-50/50 p-2.5 rounded-sm border border-black/[0.05] inline-flex pr-5 hover:bg-white hover:border-black/10 transition-all duration-300">
-            <div className="h-9 w-9 rounded-sm bg-gray-950 border-2 border-black flex items-center justify-center text-white text-[11px] font-bold uppercase shadow-lg group-hover:scale-105 transition-transform duration-300">
+          <div className="flex items-center gap-3 text-[11px] bg-gray-50/50 p-2.5 rounded-xl border border-[var(--color-border)] inline-flex pr-5 hover:bg-white hover:border-black/10 transition-all duration-300">
+            <div className="h-9 w-9 rounded-full bg-[#001640] flex items-center justify-center text-white text-[11px] font-bold uppercase shadow-sm group-hover:scale-105 transition-transform duration-300">
               {log.performedByName.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
             </div>
             <div className="flex flex-col">

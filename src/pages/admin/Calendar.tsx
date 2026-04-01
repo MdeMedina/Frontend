@@ -51,9 +51,9 @@ export const AdminCalendar = () => {
   const fetchStays = async () => {
     try {
       setLoading(true);
-      const response = await staysApi.getAll({ 
+      const response = await staysApi.getAll({
         limit: 500,
-        buildingId: currentBuilding?.id 
+        buildingId: currentBuilding?.id
       });
       setStays(response.data);
       setError('');
@@ -88,7 +88,7 @@ export const AdminCalendar = () => {
 
   // Obtener eventos para un día específico
   const getEventsForDay = (date: Date) => {
-    return events.filter(event => 
+    return events.filter(event =>
       event.date.getFullYear() === date.getFullYear() &&
       event.date.getMonth() === date.getMonth() &&
       event.date.getDate() === date.getDate()
@@ -101,17 +101,17 @@ export const AdminCalendar = () => {
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDay = firstDay.getDay();
-    
+
     const days: (Date | null)[] = [];
-    
+
     for (let i = 0; i < startingDay; i++) {
       days.push(null);
     }
-    
+
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(new Date(year, month, i));
     }
-    
+
     return days;
   };
 
@@ -134,8 +134,8 @@ export const AdminCalendar = () => {
     if (!date) return false;
     const today = new Date();
     return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
   };
 
   const selectedDayEvents = selectedDay ? getEventsForDay(selectedDay) : [];
@@ -156,29 +156,23 @@ export const AdminCalendar = () => {
           {/* Header Quirúrgico */}
           <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Calendario Operativo</h1>
-              <p className="text-gray-600 mt-1">
-                Visualización de flujos, check-ins y mantenimiento
-              </p>
             </div>
-            <div className="flex gap-2 bg-gray-50 p-1 rounded-sm border border-black/[0.05]">
+            <div className="flex gap-2 bg-gray-50 p-1 rounded-xl border border-black/[0.05] shadow-sm">
               <button
                 onClick={() => setViewMode('month')}
-                className={`px-4 py-2 rounded-sm text-[9px] font-bold uppercase tracking-[0.2em] transition-all ${
-                  viewMode === 'month'
-                    ? 'bg-gray-900 text-white shadow-lg shadow-black/10'
+                className={`px-4 py-2 rounded-xl text-[9px] font-bold uppercase tracking-[0.2em] transition-all ${viewMode === 'month'
+                    ? 'bg-[#001640] text-white shadow-lg shadow-black/10'
                     : 'text-gray-400 hover:text-gray-600'
-                }`}
+                  }`}
               >
                 Grilla Mensual
               </button>
               <button
                 onClick={() => setViewMode('year')}
-                className={`px-4 py-2 rounded-sm text-[9px] font-bold uppercase tracking-[0.2em] transition-all ${
-                  viewMode === 'year'
-                    ? 'bg-gray-900 text-white shadow-lg shadow-black/10'
+                className={`px-4 py-2 rounded-xl text-[9px] font-bold uppercase tracking-[0.2em] transition-all ${viewMode === 'year'
+                    ? 'bg-[#001640] text-white shadow-lg shadow-black/10'
                     : 'text-gray-400 hover:text-gray-600'
-                }`}
+                  }`}
               >
                 Vista Anual
               </button>
@@ -186,7 +180,7 @@ export const AdminCalendar = () => {
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold uppercase tracking-wider rounded-sm shadow-sm animate-in fade-in slide-in-from-top-1 flex items-center justify-between">
+            <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold uppercase tracking-wider rounded-xl shadow-sm animate-in fade-in slide-in-from-top-1 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-lg">error_outline</span>
                 {error}
@@ -198,7 +192,7 @@ export const AdminCalendar = () => {
           )}
 
           {loading ? (
-            <div className="flex flex-col justify-center items-center h-80 gap-4 bg-white/50 rounded-sm border border-black/[0.03]">
+            <div className="flex flex-col justify-center items-center h-80 gap-4 bg-white shadow-[var(--shadow-surgical)] rounded-xl border border-[var(--color-border)]">
               <div className="relative w-12 h-12">
                 <div className="absolute inset-0 rounded-full border-2 border-primary/10"></div>
                 <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
@@ -209,12 +203,12 @@ export const AdminCalendar = () => {
             /* Vista Mensual */
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Calendario */}
-              <div className="lg:col-span-3 bg-white rounded-sm border border-black/[0.05] shadow-sm overflow-hidden animate-in fade-in duration-700">
+              <div className="lg:col-span-3 bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-surgical)] overflow-hidden animate-in fade-in duration-700">
                 {/* Navegación de Grilla */}
-                <div className="bg-gray-900 text-white px-6 py-4 flex justify-between items-center">
+                <div className="bg-[#001640] text-white px-6 py-5 flex justify-between items-center">
                   <button
                     onClick={() => navigateMonth(-1)}
-                    className="hover:bg-black p-2 rounded-sm transition-all border border-white/10 active:scale-95"
+                    className="hover:bg-black/40 p-2 rounded-xl transition-all border border-white/10 active:scale-95 shadow-sm"
                   >
                     <span className="material-symbols-outlined text-sm">chevron_left</span>
                   </button>
@@ -222,16 +216,16 @@ export const AdminCalendar = () => {
                     <h2 className="text-[12px] font-bold uppercase tracking-[0.4em]">
                       {MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}
                     </h2>
-                    <button 
+                    <button
                       onClick={goToToday}
-                      className="text-[8px] font-bold bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-sm border border-white/5 transition-all uppercase tracking-widest"
+                      className="text-[8px] font-bold bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl border border-white/5 transition-all uppercase tracking-widest shadow-sm"
                     >
                       Hoy
                     </button>
                   </div>
                   <button
                     onClick={() => navigateMonth(1)}
-                    className="hover:bg-black p-2 rounded-sm transition-all border border-white/10 active:scale-95"
+                    className="hover:bg-black/40 p-2 rounded-xl transition-all border border-white/10 active:scale-95 shadow-sm"
                   >
                     <span className="material-symbols-outlined text-sm">chevron_right</span>
                   </button>
@@ -252,8 +246,8 @@ export const AdminCalendar = () => {
                     const dayEvents = date ? getEventsForDay(date) : [];
                     const guestEvents = dayEvents.filter(e => e.stay.category === 'GUEST');
                     const staffEvents = dayEvents.filter(e => e.stay.category === 'STAFF');
-                    
-                    const isSelected = selectedDay && date && 
+
+                    const isSelected = selectedDay && date &&
                       selectedDay.getDate() === date.getDate() &&
                       selectedDay.getMonth() === date.getMonth() &&
                       selectedDay.getFullYear() === date.getFullYear();
@@ -262,20 +256,18 @@ export const AdminCalendar = () => {
                       <div
                         key={index}
                         onClick={() => date && setSelectedDay(date)}
-                        className={`min-h-[120px] p-2 cursor-pointer transition-all duration-300 relative group ${
-                          !date ? 'bg-gray-50/30' : 
-                          isSelected ? 'bg-primary/[0.02] ring-1 ring-inset ring-primary/20' :
-                          'hover:bg-gray-50/50'
-                        }`}
+                        className={`min-h-[120px] p-2 cursor-pointer transition-all duration-300 relative group ${!date ? 'bg-gray-50/30' :
+                            isSelected ? 'bg-primary/[0.02] ring-1 ring-inset ring-primary/20' :
+                              'hover:bg-gray-50/50'
+                          }`}
                       >
                         {date && (
                           <>
                             <div className="flex justify-between items-start mb-2">
-                              <span className={`text-[10px] font-bold font-mono transition-colors ${
-                                isToday(date) 
-                                  ? 'bg-primary text-white px-2 py-0.5 rounded-sm shadow-sm'
+                              <span className={`text-[10px] font-bold font-mono transition-colors ${isToday(date)
+                                  ? 'bg-primary text-white px-2 py-0.5 rounded-lg shadow-sm'
                                   : isSelected ? 'text-primary' : 'text-gray-400 group-hover:text-gray-900'
-                              }`}>
+                                }`}>
                                 {String(date.getDate()).padStart(2, '0')}
                               </span>
                               {dayEvents.length > 0 && (
@@ -307,7 +299,7 @@ export const AdminCalendar = () => {
               </div>
 
               {/* Panel de Bitácora Diaria */}
-              <div className="bg-white rounded-sm border border-black/[0.05] shadow-sm flex flex-col h-[700px] animate-in slide-in-from-right-4 duration-700">
+              <div className="bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-surgical)] flex flex-col h-[700px] animate-in slide-in-from-right-4 duration-700">
                 <div className="bg-gray-50 border-b border-black/[0.03] px-5 py-4 flex items-center gap-3">
                   <span className="material-symbols-outlined text-lg text-gray-400">event_note</span>
                   <div className="flex-1">
@@ -315,13 +307,13 @@ export const AdminCalendar = () => {
                       Bitácora Diaria
                     </h3>
                     <p className="text-[9px] font-bold text-primary uppercase font-mono tracking-widest">
-                      {selectedDay 
+                      {selectedDay
                         ? `${selectedDay.getDate()} ${MONTH_NAMES[selectedDay.getMonth()].substring(0, 3)} ${selectedDay.getFullYear()}`
                         : 'SELECCIONAR FECHA'}
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                   {!selectedDay ? (
                     <div className="h-full flex flex-col items-center justify-center gap-4 opacity-30 px-6 text-center">
@@ -347,19 +339,18 @@ export const AdminCalendar = () => {
                             <div
                               key={idx}
                               onClick={() => setSelectedStay(event.stay)}
-                              className={`p-4 rounded-sm border border-black/[0.03] cursor-pointer hover:shadow-md transition-all active:scale-[0.98] relative overflow-hidden group ${config.bg} ${config.border}`}
+                              className={`p-4 rounded-xl border border-black/[0.03] cursor-pointer hover:shadow-md transition-all active:scale-[0.98] relative overflow-hidden group ${config.bg} ${config.border}`}
                             >
                               <div className="flex items-center justify-between mb-3">
-                                <span className={`px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest rounded-sm border border-black/[0.03] ${
-                                  event.type === 'check-in'
+                                <span className={`px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest rounded-sm border border-black/[0.03] ${event.type === 'check-in'
                                     ? 'bg-emerald-100/50 text-emerald-700'
                                     : 'bg-rose-100/50 text-rose-700'
-                                }`}>
+                                  }`}>
                                   {event.type === 'check-in' ? '● IN' : '● OUT'}
                                 </span>
                                 <span className="text-[10px] font-bold font-mono text-gray-600">
-                                  {formatTime(event.type === 'check-in' 
-                                    ? event.stay.scheduledCheckIn 
+                                  {formatTime(event.type === 'check-in'
+                                    ? event.stay.scheduledCheckIn
                                     : event.stay.scheduledCheckOut)}
                                 </span>
                               </div>
@@ -372,20 +363,20 @@ export const AdminCalendar = () => {
                                     PISO {event.stay.apartment.floor}
                                   </span>
                                 </div>
-                                
+
                                 {event.stay.category === 'GUEST' && (event.stay.guestFirstName || event.stay.guestLastName) && (
                                   <div className="text-[10px] text-gray-600 font-medium flex items-center gap-2 truncate">
                                     <span className="material-symbols-outlined text-sm opacity-40">person</span>
                                     {getGuestFullName(event.stay)}
                                   </div>
                                 )}
-                                
+
                                 <div className={`text-[8px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 ${config.text}`}>
                                   <span className={`w-1 h-1 rounded-full ${config.dot}`}></span>
                                   {config.label}
                                 </div>
                               </div>
-                              
+
                               <div className="absolute top-0 right-0 p-1 opacity-0 group-hover:opacity-30 transition-opacity">
                                 <span className="material-symbols-outlined text-sm">visibility</span>
                               </div>
@@ -399,11 +390,11 @@ export const AdminCalendar = () => {
             </div>
           ) : (
             /* Vista Anual Quirúrgica */
-            <div className="bg-white rounded-sm border border-black/[0.05] shadow-sm overflow-hidden animate-in fade-in duration-700">
-              <div className="bg-gray-900 text-white px-8 py-6 flex justify-between items-center">
+            <div className="bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-surgical)] overflow-hidden animate-in fade-in duration-700">
+              <div className="bg-[#001640] text-white px-8 py-8 flex justify-between items-center">
                 <button
                   onClick={() => navigateYear(-1)}
-                  className="hover:bg-black px-4 py-2 rounded-sm transition-all border border-white/10 text-[9px] font-bold uppercase tracking-widest active:scale-95"
+                  className="hover:bg-black/40 px-6 py-2.5 rounded-xl transition-all border border-white/10 text-[9px] font-bold uppercase tracking-widest active:scale-95 shadow-sm"
                 >
                   Regresión Anual
                 </button>
@@ -415,7 +406,7 @@ export const AdminCalendar = () => {
                 </div>
                 <button
                   onClick={() => navigateYear(1)}
-                  className="hover:bg-black px-4 py-2 rounded-sm transition-all border border-white/10 text-[9px] font-bold uppercase tracking-widest active:scale-95"
+                  className="hover:bg-black/40 px-6 py-2.5 rounded-xl transition-all border border-white/10 text-[9px] font-bold uppercase tracking-widest active:scale-95 shadow-sm"
                 >
                   Avance Anual
                 </button>
@@ -424,19 +415,19 @@ export const AdminCalendar = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 p-8 bg-gray-50/30">
                 {MONTH_NAMES.map((monthName, monthIndex) => {
                   const monthDays = getDaysInMonth(currentDate.getFullYear(), monthIndex);
-                  
+
                   return (
                     <div
                       key={monthIndex}
-                      className="bg-white border border-black/[0.05] rounded-sm overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+                      className="bg-white border border-[var(--color-border)] rounded-xl overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
                       onClick={() => {
                         setCurrentDate(new Date(currentDate.getFullYear(), monthIndex, 1));
                         setViewMode('month');
                       }}
                     >
-                      <div className="bg-gray-50 px-4 py-3 border-b border-black/[0.03] flex justify-between items-center group-hover:bg-gray-900 group-hover:text-white transition-colors">
+                      <div className="bg-gray-50 px-4 py-3 border-b border-black/[0.03] flex justify-between items-center group-hover:bg-[#001640] group-hover:text-white transition-colors">
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{monthName}</span>
-                        <span className="text-[9px] font-bold opacity-30 group-hover:opacity-50 font-mono">{monthIndex + 1}</span>
+                        <span className="text-[9px] font-bold opacity-30 group-hover:opacity-100 font-mono transition-opacity">{monthIndex + 1}</span>
                       </div>
                       <div className="p-3">
                         <div className="grid grid-cols-7 gap-1">
@@ -449,7 +440,7 @@ export const AdminCalendar = () => {
                             const dayEvents = date ? getEventsForDay(date) : [];
                             const hasGuest = dayEvents.some(e => e.stay.category === 'GUEST');
                             const hasStaff = dayEvents.some(e => e.stay.category === 'STAFF');
-                            
+
                             let bgColor = '';
                             if (hasGuest && hasStaff) {
                               bgColor = 'bg-primary text-white';
@@ -462,7 +453,7 @@ export const AdminCalendar = () => {
                             } else {
                               bgColor = 'text-gray-300 hover:text-gray-900 hover:bg-gray-50';
                             }
-                            
+
                             return (
                               <div
                                 key={idx}
@@ -490,8 +481,8 @@ export const AdminCalendar = () => {
         title="Expediente de Calendario"
         width="max-w-2xl"
       >
-        <ReservationDetailsModal 
-          stay={selectedStay} 
+        <ReservationDetailsModal
+          stay={selectedStay}
           onClose={() => setSelectedStay(null)}
         />
       </Modal>

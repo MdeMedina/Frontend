@@ -15,17 +15,12 @@ export const PropietarioDashboard = () => {
 
   return (
     <Layout>
-      <div className="flex-1 h-[calc(100vh-64px)] overflow-y-auto bg-gray-50/30 font-sans text-gray-900 animate-in fade-in duration-700">
-        <div className="max-w-7xl mx-auto p-8 animate-in slide-in-from-bottom-6 duration-1000 delay-150 fill-mode-both">
-          
-          <DashboardHeader 
-            title={title} 
-            userName={`${user?.firstName} ${user?.lastName}`}
-          />
+      <div className="flex-1 h-[calc(100vh-64px)] overflow-y-auto bg-gray-50/30 font-sans text-gray-900">
+        <div className="max-w-7xl mx-auto p-8">
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {menuItems.map((item, idx) => (
-              <DashboardCard 
+              <DashboardCard
                 key={item.path}
                 item={item}
                 idx={idx}

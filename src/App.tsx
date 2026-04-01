@@ -20,7 +20,7 @@ import { AdminCalendar } from './pages/admin/Calendar';
 import { SuperAdminDashboard } from './pages/superadmin/Dashboard';
 // import Residences from './pages/superadmin/Residences'; (Removed)
 import Administrators from './pages/superadmin/Administrators';
-import ResidencePanel from './pages/superadmin/ResidencePanel';
+// import ResidencePanel from './pages/superadmin/ResidencePanel'; (Removed)
 // Propietario
 import { PropietarioDashboard } from './pages/propietario/Dashboard';
 import { PropietarioApartments } from './pages/propietario/Apartments';
@@ -137,14 +137,6 @@ function App() {
             }
           />
 
-          <Route
-            path="/superadmin/residences/:id"
-            element={
-              <ProtectedRoute allowedRoles={['SUPERADMIN']}>
-                <ResidencePanel />
-              </ProtectedRoute>
-            }
-          />
           <Route
             path="/superadmin/administrators"
             element={

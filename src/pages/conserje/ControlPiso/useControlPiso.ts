@@ -15,12 +15,12 @@ export type TabType = 'control' | 'petitions' | 'directory';
 
 export const useControlPiso = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, currentBuilding } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('control');
 
   // Core Data
   const [buildings, setBuildings] = useState<Building[]>([]);
-  const [selectedBuildingId, setSelectedBuildingId] = useState<string>('');
+  const [selectedBuildingId, setSelectedBuildingId] = useState<string>(currentBuilding?.id || '');
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [staysList, setStaysList] = useState<Stay[]>([]);
   const [petitions, setPetitions] = useState<Petition[]>([]);
@@ -71,7 +71,9 @@ export const useControlPiso = () => {
     try {
       const response = await buildingsApi.getAll(true);
       setBuildings(response.data);
-      if (response.data.length > 0 && !selectedBuildingId) {
+      if (currentBuilding?.id) {
+        setSelectedBuildingId(currentBuilding.id);
+      } else if (response.data.length > 0 && !selectedBuildingId) {
         setSelectedBuildingId(response.data[0].id);
       }
     } catch (err: any) {
@@ -177,6 +179,12 @@ export const useControlPiso = () => {
     loadBuildings();
     loadApartments();
   }, []);
+
+  useEffect(() => {
+    if (currentBuilding?.id) {
+      setSelectedBuildingId(currentBuilding.id);
+    }
+  }, [currentBuilding?.id]);
 
   useEffect(() => {
     if (selectedBuildingId) loadStays();

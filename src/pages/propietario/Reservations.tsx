@@ -201,31 +201,22 @@ export const PropietarioReservations = () => {
     <Layout>
       <div className="p-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header Quirúrgico */}
-          <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-black/[0.03] pb-8">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <div className="w-1.5 h-6 bg-primary rounded-full"></div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Gestión de Residencias</h1>
-              </div>
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider ml-4">
-                CONTROL DE ESTADÍAS Y SERVICIOS TÉCNICOS
-              </p>
-            </div>
+          {/* Header Quirúrgico - Botón alineado a la derecha sin título general */}
+          <div className="flex justify-end mb-6">
             <button
               onClick={() => {
                 resetForm();
                 setShowCreateModal(true);
               }}
-              className="px-6 py-3.5 bg-gray-900 text-white rounded-sm hover:bg-black active:scale-[0.98] transition-all text-[10px] font-bold uppercase tracking-wider shadow-xl shadow-black/10 flex items-center justify-center gap-2 group"
+              className="bg-[#001640] text-white px-8 py-3 rounded-xl hover:bg-[#002b7a] active:scale-[0.97] transition-all flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest shadow-[var(--shadow-surgical)] border border-[#001640]/20"
             >
-              <span className="material-symbols-outlined text-lg group-hover:rotate-90 transition-transform">add</span>
-              Emitir Nuevo Registro
+              <span className="material-symbols-outlined text-xl">add</span>
+              EMITIR NUEVO REGISTRO
             </button>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold uppercase tracking-wider rounded-sm shadow-sm animate-in fade-in slide-in-from-top-1 flex items-center justify-between">
+            <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold uppercase tracking-wider rounded-xl shadow-sm animate-in fade-in slide-in-from-top-1 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-lg">error_outline</span>
                 {error}
@@ -245,7 +236,7 @@ export const PropietarioReservations = () => {
           />
 
           {loading ? (
-            <div className="flex flex-col justify-center items-center h-80 gap-4 bg-white/50 rounded-sm border border-black/[0.03]">
+            <div className="flex flex-col justify-center items-center h-80 gap-4 bg-white/50 rounded-xl border border-black/[0.03]">
               <div className="relative w-12 h-12">
                 <div className="absolute inset-0 rounded-full border-2 border-primary/10"></div>
                 <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
@@ -253,18 +244,18 @@ export const PropietarioReservations = () => {
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider animate-pulse">Sincronizando Terminal...</p>
             </div>
           ) : (
-            <div className="bg-white rounded-sm overflow-hidden border border-black/[0.05] shadow-sm animate-in fade-in duration-700">
+            <div className="bg-white rounded-xl overflow-hidden border border-[var(--color-border)] shadow-[var(--shadow-surgical)] animate-in fade-in duration-700">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-black/[0.05]">
-                  <thead className="bg-gray-50/80">
+                  <thead className="bg-[#001640]">
                     <tr>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Unidad</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Categoría</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Titular / Pax</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Check-In</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Check-Out</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Estado</th>
-                      <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Acciones</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider font-mono">Unidad</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider font-mono">Categoría</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider font-mono">Titular / Pax</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider font-mono">Check-In</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider font-mono">Check-Out</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider font-mono">Estado</th>
+                      <th className="px-4 py-4 text-right text-[10px] font-bold text-white uppercase tracking-wider font-mono">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-black/[0.02]">
@@ -272,9 +263,9 @@ export const PropietarioReservations = () => {
                       <tr>
                         <td colSpan={7} className="px-6 py-24 text-center">
                           <div className="flex flex-col items-center gap-4 opacity-40">
-                            <span className="material-symbols-outlined text-5xl">event_busy</span>
+                            <span className="material-symbols-outlined text-5xl">database_off</span>
                             <p className="text-[10px] font-bold text-gray-900 uppercase tracking-[0.3em]">
-                              Sin Operaciones Coincidentes
+                              Sin Registros en Terminal
                             </p>
                           </div>
                         </td>

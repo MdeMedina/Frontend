@@ -17,12 +17,12 @@ export const DirectoryAccordion = ({ apartment, isExpanded, onToggle }: Director
         className="w-full flex items-center justify-between p-4 focus:outline-none"
       >
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 flex items-center justify-center bg-slate-100 border border-slate-200 text-slate-900 rounded-lg font-black text-[11px] group-hover:scale-105 transition-transform">
+          <div className="w-12 h-12 flex items-center justify-center bg-slate-100 border border-slate-200 text-slate-900 rounded-lg font-black text-[13px] group-hover:scale-105 transition-transform">
             {apartment.number}
           </div>
           <div className="text-left">
-            <div className="text-[12px] font-black uppercase tracking-tighter text-slate-900 group-hover:tracking-[0.1em] transition-all">Unidad {apartment.number}</div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <div className="text-[14px] font-black uppercase tracking-tighter text-slate-900 group-hover:tracking-[0.1em] transition-all">Unidad {apartment.number}</div>
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 mt-0.5">
               Piso {apartment.floor} 
               <span className="w-1 h-1 rounded-full bg-slate-300"></span>
               {apartment.owner ? 'Propietario Registrado' : 'Sin Registro'}
@@ -43,22 +43,22 @@ export const DirectoryAccordion = ({ apartment, isExpanded, onToggle }: Director
               <div className="w-8 h-8 rounded bg-slate-900 text-white flex items-center justify-center shadow-lg">
                 <span className="material-symbols-outlined text-sm">person</span>
               </div>
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Propietario</h3>
+              <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Propietario</h3>
             </div>
             
             {apartment.owner ? (
               <div className="space-y-3">
-                <div className="text-[13px] font-black text-slate-900 border-b border-slate-50 pb-2">
+                <div className="text-[14px] font-black text-slate-900 border-b border-slate-50 pb-2">
                   {apartment.owner.firstName} {apartment.owner.lastName}
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <a href={`mailto:${apartment.owner.email}`} className="text-[11px] font-bold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
-                    <span className="material-symbols-outlined text-[14px]">mail</span>
+                  <a href={`mailto:${apartment.owner.email}`} className="text-[12px] font-bold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
+                    <span className="material-symbols-outlined text-[16px]">mail</span>
                     {apartment.owner.email}
                   </a>
                   {apartment.owner.phone && (
-                    <a href={`tel:${apartment.owner.phone}`} className="text-[11px] font-bold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
-                      <span className="material-symbols-outlined text-[14px]">phone</span>
+                    <a href={`tel:${apartment.owner.phone}`} className="text-[12px] font-bold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
+                      <span className="material-symbols-outlined text-[16px]">phone</span>
                       {apartment.owner.phone}
                     </a>
                   )}
@@ -66,7 +66,7 @@ export const DirectoryAccordion = ({ apartment, isExpanded, onToggle }: Director
               </div>
             ) : (
               <div className="py-4 text-center">
-                <p className="text-[10px] font-black text-slate-300 uppercase italic">Sin datos de propietario</p>
+                <p className="text-[11px] font-black text-slate-300 uppercase italic">Sin datos de propietario</p>
               </div>
             )}
           </div>
@@ -78,22 +78,22 @@ export const DirectoryAccordion = ({ apartment, isExpanded, onToggle }: Director
               <div className="w-8 h-8 rounded bg-slate-400 text-white flex items-center justify-center shadow-lg">
                 <span className="material-symbols-outlined text-sm">manage_accounts</span>
               </div>
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Responsable Asignado</h3>
+              <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Responsable Asignado</h3>
             </div>
             
             {apartment.manager ? (
               <div className="space-y-3">
-                <div className="text-[13px] font-black text-slate-900 border-b border-slate-50 pb-2">
+                <div className="text-[14px] font-black text-slate-900 border-b border-slate-50 pb-2">
                   {apartment.manager.firstName} {apartment.manager.lastName}
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <a href={`mailto:${apartment.manager.email}`} className="text-[11px] font-bold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
-                    <span className="material-symbols-outlined text-[14px]">mail</span>
+                  <a href={`mailto:${apartment.manager.email}`} className="text-[12px] font-bold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
+                    <span className="material-symbols-outlined text-[16px]">mail</span>
                     {apartment.manager.email}
                   </a>
                   {apartment.manager.phone && (
-                    <a href={`tel:${apartment.manager.phone}`} className="text-[11px] font-bold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
-                      <span className="material-symbols-outlined text-[14px]">phone</span>
+                    <a href={`tel:${apartment.manager.phone}`} className="text-[12px] font-bold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
+                      <span className="material-symbols-outlined text-[16px]">phone</span>
                       {apartment.manager.phone}
                     </a>
                   )}
@@ -101,7 +101,7 @@ export const DirectoryAccordion = ({ apartment, isExpanded, onToggle }: Director
               </div>
             ) : (
               <div className="py-4 text-center">
-                <p className="text-[10px] font-black text-slate-300 uppercase italic">Sin responsable asignado</p>
+                <p className="text-[11px] font-black text-slate-300 uppercase italic">Sin responsable asignado</p>
               </div>
             )}
           </div>

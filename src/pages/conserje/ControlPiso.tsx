@@ -76,7 +76,7 @@ export const ControlPiso = () => {
   const handleSubmitPetition = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPetitionOption) return setError('Selecciona un tipo');
-    
+
     try {
       const requestedData: any = {};
       if (petitionFormData.guestFirstName) requestedData.guestFirstName = petitionFormData.guestFirstName;
@@ -85,14 +85,14 @@ export const ControlPiso = () => {
       if (petitionFormData.apartmentId) requestedData.apartmentId = petitionFormData.apartmentId;
 
       await (async () => {
-         const data = {
-            ...newPetitionData,
-            stayId: selectedStay?.id || undefined,
-            apartmentId: petitionFormData.apartmentId || undefined,
-            requestedData: Object.keys(requestedData).length > 0 ? requestedData : undefined
-         };
-         const { petitionsApi } = await import('../../api/petitions');
-         await petitionsApi.create(data as any);
+        const data = {
+          ...newPetitionData,
+          stayId: selectedStay?.id || undefined,
+          apartmentId: petitionFormData.apartmentId || undefined,
+          requestedData: Object.keys(requestedData).length > 0 ? requestedData : undefined
+        };
+        const { petitionsApi } = await import('../../api/petitions');
+        await petitionsApi.create(data as any);
       })();
 
       setShowCreatePetitionModal(false);
@@ -109,14 +109,14 @@ export const ControlPiso = () => {
   return (
     <Layout>
       <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-slate-50 font-sans text-slate-900">
-        
+
         {/* UPPER NAVIGATION BAR */}
         <div className="bg-white border-b border-slate-200 px-6 shrink-0 z-10 flex justify-between items-center shadow-sm">
           <nav className="flex gap-8">
             {[
               { id: 'control', label: 'Control de Piso', icon: 'grid_view' },
-              { id: 'petitions', label: 'Historial', icon: 'history' },
-              { id: 'directory', label: 'Directorio', icon: 'contacts' },
+              { id: 'petitions', label: 'Peticiones', icon: 'history' },
+              { id: 'directory', label: 'Contactos', icon: 'contacts' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -130,17 +130,17 @@ export const ControlPiso = () => {
           </nav>
 
           <div className="flex items-center gap-4">
-              <Notifications />
-              <div className="h-4 w-[1px] bg-slate-200"></div>
-              <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-900 border border-slate-200 shadow-inner">
-                      <span className="material-symbols-outlined text-sm">shield_person</span>
-                  </div>
-                  <div className="flex flex-col">
-                      <span className="text-[9px] font-black text-slate-900 uppercase leading-none">Agente Autorizado</span>
-                      <span className="text-[10px] font-bold text-slate-400 truncate max-w-[120px]">{user?.email}</span>
-                  </div>
+            <Notifications />
+            <div className="h-4 w-[1px] bg-slate-200"></div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-900 border border-slate-200 shadow-inner">
+                <span className="material-symbols-outlined text-sm">shield_person</span>
               </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-slate-900 uppercase leading-none">Agente Autorizado</span>
+                <span className="text-[10px] font-bold text-slate-400 truncate max-w-[120px]">{user?.email}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -198,15 +198,6 @@ export const ControlPiso = () => {
               />
             )}
           </div>
-          
-          {/* Version Footer */}
-          <div className="mt-12 pt-8 border-t border-slate-200/50 flex justify-between items-center opacity-40">
-            <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400">Security Terminal v4.0.2</p>
-            <div className="flex gap-4">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                <span className="text-[9px] font-black uppercase text-slate-900">Sistema En Línea</span>
-            </div>
-          </div>
         </main>
       </div>
 
@@ -219,9 +210,9 @@ export const ControlPiso = () => {
         onCheckOut={handleCheckOut}
         movementType={selectedMovementType}
         onCreatePetition={(type) => {
-            handlePetitionOptionChange(type || 'OTHER');
-            setShowDetailModal(false);
-            setShowCreatePetitionModal(true);
+          handlePetitionOptionChange(type || 'OTHER');
+          setShowDetailModal(false);
+          setShowCreatePetitionModal(true);
         }}
       />
 

@@ -28,8 +28,7 @@ export const ReservationFilters = ({ filters, clearFilters, totalCount, filtered
     <div className="bg-white/80 backdrop-blur-sm rounded-sm shadow-sm p-5 mb-6 border border-black/[0.03] animate-in fade-in duration-500">
       <div className="flex justify-between items-center mb-5">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-sm text-gray-400">tune</span>
-          <h2 className="text-[10px] font-bold text-gray-900 uppercase tracking-wider">Parámetros de Filtrado</h2>
+
         </div>
         <button
           onClick={clearFilters}
@@ -39,7 +38,7 @@ export const ReservationFilters = ({ filters, clearFilters, totalCount, filtered
           Resetear
         </button>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
         {/* Filtro por departamento */}
         <div>
@@ -132,7 +131,7 @@ export const ReservationFilters = ({ filters, clearFilters, totalCount, filtered
 
       <div className="mt-5 pt-4 border-t border-black/[0.03] flex justify-between items-center">
         <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-          Sincronización: {filteredCount} / {totalCount} Registros
+          Mostrando {filteredCount} de {totalCount} Registros
         </div>
         <div className="flex gap-2">
           {filters.filterApartment || filters.filterStatus || filters.filterCategory ? (

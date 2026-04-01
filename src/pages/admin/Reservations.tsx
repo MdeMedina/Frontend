@@ -21,7 +21,7 @@ export const AdminReservations = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const staysRes = await staysApi.getAll({ 
+      const staysRes = await staysApi.getAll({
         limit: 500,
         ...(currentBuilding?.id ? { buildingId: currentBuilding.id } : {})
       });
@@ -42,25 +42,9 @@ export const AdminReservations = () => {
     <Layout>
       <div className="p-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header Quirúrgico */}
-          <div className="mb-6 flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Consola de Reservas</h1>
-              <p className="text-gray-600 mt-1">
-                Monitoreo de operaciones y estadías en tiempo real
-              </p>
-            </div>
-            <div className="bg-emerald-50/50 px-4 py-2 rounded-sm border border-emerald-500/10 flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Sistema Activo</span>
-            </div>
-          </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold uppercase tracking-wider rounded-sm shadow-sm animate-in fade-in slide-in-from-top-1 flex items-center justify-between">
+            <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold uppercase tracking-wider rounded-xl shadow-sm animate-in fade-in slide-in-from-top-1 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-lg">error_outline</span>
                 {error}
@@ -72,15 +56,15 @@ export const AdminReservations = () => {
           )}
 
           {/* Filtros Destilados */}
-          <ReservationFilters 
-            filters={filters} 
-            clearFilters={clearFilters} 
-            totalCount={totalCount} 
-            filteredCount={filteredCount} 
+          <ReservationFilters
+            filters={filters}
+            clearFilters={clearFilters}
+            totalCount={totalCount}
+            filteredCount={filteredCount}
           />
 
           {loading ? (
-            <div className="flex flex-col justify-center items-center h-80 gap-4 bg-white/50 rounded-sm border border-black/[0.03]">
+            <div className="flex flex-col justify-center items-center h-80 gap-4 bg-white/50 rounded-xl border border-black/[0.03]">
               <div className="relative w-12 h-12">
                 <div className="absolute inset-0 rounded-full border-2 border-primary/10"></div>
                 <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
@@ -88,18 +72,18 @@ export const AdminReservations = () => {
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider animate-pulse">Sincronizando Terminal...</p>
             </div>
           ) : (
-            <div className="bg-white rounded-sm overflow-hidden border border-black/[0.05] shadow-sm animate-in fade-in duration-700">
+            <div className="bg-white rounded-xl overflow-hidden border border-black/[0.05] shadow-[var(--shadow-surgical)] animate-in fade-in duration-700">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-black/[0.05]">
-                  <thead className="bg-gray-50/80">
+                  <thead className="bg-[#001640]">
                     <tr>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Unidad</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Categoría</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Titular / Pax</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Check-In</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Check-Out</th>
-                      <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Estado</th>
-                      <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider font-mono">Acciones</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider font-mono">Unidad</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider font-mono">Categoría</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider font-mono">Titular / Pax</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider font-mono">Check-In</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider font-mono">Check-Out</th>
+                      <th className="px-4 py-4 text-left text-[10px] font-bold text-white uppercase tracking-wider font-mono">Estado</th>
+                      <th className="px-4 py-4 text-right text-[10px] font-bold text-white uppercase tracking-wider font-mono">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-black/[0.02]">
@@ -116,10 +100,10 @@ export const AdminReservations = () => {
                       </tr>
                     ) : (
                       filteredStays.map((stay) => (
-                        <ReservationTableRow 
-                          key={stay.id} 
-                          stay={stay} 
-                          onDetail={setSelectedStay} 
+                        <ReservationTableRow
+                          key={stay.id}
+                          stay={stay}
+                          onDetail={setSelectedStay}
                         />
                       ))
                     )}
@@ -138,9 +122,9 @@ export const AdminReservations = () => {
         title="Expediente de Reserva"
         width="max-w-2xl"
       >
-        <ReservationDetailsModal 
-          stay={selectedStay} 
-          onClose={() => setSelectedStay(null)} 
+        <ReservationDetailsModal
+          stay={selectedStay}
+          onClose={() => setSelectedStay(null)}
         />
       </Modal>
     </Layout>

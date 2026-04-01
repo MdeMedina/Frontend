@@ -14,9 +14,9 @@ interface MenuItem {
 }
 
 const DashboardCard = ({ item, onClick, index }: { item: MenuItem; onClick: () => void; index: number }) => (
-  <div 
-    onClick={onClick} 
-    className="group cursor-pointer bg-white border-2 border-black/[0.12] rounded-sm p-8 shadow-sm hover:shadow-2xl hover:border-black/30 hover:translate-x-1 transition-all duration-500 relative overflow-hidden active:scale-[0.97] animate-in fade-in slide-in-from-left-6 fill-mode-both border-l-[6px] border-l-black group-hover:border-l-blue-600"
+  <div
+    onClick={onClick}
+    className="group cursor-pointer bg-white border border-black/[0.12] rounded-xl p-8 shadow-[var(--shadow-surgical)] hover:shadow-2xl hover:border-[#001640]/30 hover:translate-x-1 transition-all duration-500 relative overflow-hidden active:scale-[0.97] animate-in fade-in slide-in-from-left-6 fill-mode-both border-l-[6px] border-l-[#001640] group-hover:border-l-blue-600"
     style={{ animationDelay: `${index * 60}ms` }}
     role="button"
     tabIndex={0}
@@ -24,33 +24,24 @@ const DashboardCard = ({ item, onClick, index }: { item: MenuItem; onClick: () =
     aria-label={`Acceder a ${item.title}`}
   >
     <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 -mr-16 -mt-16 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-colors duration-700"></div>
-    
-    <div className="relative z-10 flex flex-col h-full">
-      <div className="flex items-start justify-between mb-10">
-        <div className="h-14 w-14 rounded-sm bg-gray-950 flex items-center justify-center text-white shadow-2xl shadow-black/40 group-hover:scale-110 group-hover:bg-blue-600 transition-all duration-500 border-2 border-white/10">
-          <span className="material-symbols-outlined text-[32px] font-bold">{item.icon}</span>
-        </div>
-        <span className="material-symbols-outlined text-gray-200 text-2xl group-hover:text-blue-600 group-hover:translate-x-2 transition-all duration-700 opacity-20 group-hover:opacity-100">
-          arrow_forward
-        </span>
+
+    <div className="relative z-10 flex items-center gap-6 h-full">
+      <div className="h-16 w-16 shrink-0 rounded-xl bg-[#001640] flex items-center justify-center text-white shadow-2xl shadow-[#001640]/20 group-hover:scale-110 group-hover:bg-blue-600 transition-all duration-500 border border-white/10">
+        <span className="material-symbols-outlined text-[32px] font-bold">{item.icon}</span>
       </div>
-      
-      <div className="flex-1">
-        <h3 className="text-[18px] font-bold text-gray-950 tracking-tight group-hover:text-blue-600 transition-colors mb-2 leading-none uppercase">
+
+      <div className="flex-1 pr-8">
+        <h3 className="text-[18px] font-bold text-gray-950 tracking-tight group-hover:text-blue-600 transition-colors mb-1.5 leading-none uppercase">
           {item.title}
         </h3>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-loose mb-4">
-          ADMIN_MODULE_0{index + 1}
-        </p>
-        <p className="text-[13px] font-medium text-gray-600 leading-relaxed max-w-[220px] group-hover:text-gray-900 transition-colors">
+        <p className="text-[13px] font-medium text-gray-600 leading-relaxed group-hover:text-gray-900 transition-colors">
           {item.description}
         </p>
       </div>
-      
-      <div className="mt-10 pt-6 border-t border-black/[0.06] flex items-center justify-between">
-        <span className="text-[10px] font-black text-gray-950 uppercase tracking-[0.25em] opacity-40 group-hover:opacity-100 transition-opacity">Iniciar Protocolo</span>
-        <span className="h-[2px] w-12 bg-gray-100 group-hover:w-20 group-hover:bg-blue-600 transition-all duration-700"></span>
-      </div>
+
+      <span className="absolute top-0 right-0 material-symbols-outlined text-gray-200 text-2xl group-hover:text-blue-600 group-hover:translate-x-2 transition-all duration-700 opacity-20 group-hover:opacity-100">
+        arrow_forward
+      </span>
     </div>
   </div>
 );
@@ -176,63 +167,10 @@ export const AdminDashboard = () => {
 
   return (
     <Layout>
-      <div className="flex-1 h-[calc(100vh-64px)] overflow-y-auto bg-gray-50/30 font-sans text-gray-900 animate-in fade-in duration-700">
-        <div className="max-w-7xl mx-auto p-12 animate-in slide-in-from-bottom-8 duration-1000 fill-mode-both">
-          
-          <div className="mb-14 flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3 text-blue-600">
-                <span className="h-px w-8 bg-blue-600/40"></span>
-                <span className="text-[10px] font-black uppercase tracking-[0.4em]">Administración Central</span>
-              </div>
-              <h1 className="text-3xl font-bold text-gray-950 leading-none">
-                Panel de Control
-              </h1>
-              <p className="text-[14px] font-medium text-gray-500 max-w-2xl pt-2">
-                Bienvenido al núcleo operativo, <span className="font-bold text-gray-950">{user?.firstName} {user?.lastName}</span>. 
-                Centro de gestión para departamentos, usuarios y protocolos institucionales.
-              </p>
+      <div className="flex-1 h-[calc(100vh-64px)] overflow-y-auto bg-gray-50/30 font-sans text-gray-900">
+        <div className="max-w-7xl mx-auto p-12">
 
-              {/* Torre Activa Indicator */}
-              {(currentBuilding || currentResidence) && (
-                <div className="pt-4">
-                  <button 
-                    onClick={() => {
-                      if (impersonationMode && currentResidence) {
-                        navigate(`/superadmin/residences/${currentResidence.id}`);
-                      } else {
-                        navigate('/select-residence');
-                      }
-                    }}
-                    className="group/chip inline-flex items-center gap-4 bg-white border-2 border-black tracking-tighter px-5 py-3 rounded-sm text-[13px] font-black text-gray-950 uppercase shadow-2xl shadow-black/5 hover:bg-gray-950 hover:text-white transition-all active:scale-[0.98]"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">domain</span>
-                    <span>
-                      {currentBuilding?.name ? `TORRE: ${currentBuilding.name}` : 'TORRE NO SELECCIONADA'} 
-                      {currentResidence?.name && <span className="opacity-40 ml-2 group-hover/chip:opacity-60">// {currentResidence.name}</span>}
-                    </span>
-                    <span className="material-symbols-outlined text-[16px] opacity-20 group-hover/chip:opacity-100 group-hover/chip:translate-x-1 transition-all">sync_alt</span>
-                  </button>
-                </div>
-              )}
-            </div>
 
-            <div className="flex flex-col items-end gap-6">
-              <div className="hidden md:flex bg-gray-950 text-white px-5 py-2 rounded-sm text-[10px] font-bold uppercase tracking-[0.25em] shadow-2xl shadow-black/20 items-center gap-3 border border-white/5">
-                <span className="h-1.5 w-1.5 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.8)]"></span>
-                Terminal_Root_Secure
-              </div>
-              
-              <button
-                onClick={() => setShowUploadModal(true)}
-                className="bg-white border-2 border-black text-gray-950 px-6 py-3 rounded-sm font-black uppercase tracking-[0.15em] text-[11px] transition-all flex items-center justify-center gap-3 shadow-2xl shadow-black/10 hover:bg-gray-950 hover:text-white active:scale-95 group"
-              >
-                <span className="material-symbols-outlined text-[20px]">upload_file</span>
-                Carga Masiva Excel
-                <span className="material-symbols-outlined text-[18px] opacity-20 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-              </button>
-            </div>
-          </div>
 
           {error && (
             <div role="alert" className="flex items-center gap-4 border-2 border-red-600 bg-red-50 p-5 mb-10 animate-in shake duration-500">
@@ -252,15 +190,28 @@ export const AdminDashboard = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {menuItems.map((item, index) => (
-              <DashboardCard 
-                key={index} 
-                item={item} 
+              <DashboardCard
+                key={index}
+                item={item}
                 index={index}
-                onClick={() => handleNavigation(item)} 
+                onClick={() => handleNavigation(item)}
               />
             ))}
           </div>
+          <div className="mt-14 flex flex-col md:flex-row md:items-end justify-between gap-8">
 
+            <div className="flex flex-col items-end gap-6">
+
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="bg-white border-2 border-[#001640] text-[#001640] px-6 py-3 rounded-xl font-black uppercase tracking-[0.15em] text-[11px] transition-all flex items-center justify-center gap-3 shadow-[var(--shadow-surgical)] hover:bg-[#001640] hover:text-white active:scale-95 group"
+              >
+                <span className="material-symbols-outlined text-[20px]">upload_file</span>
+                Carga Masiva Excel
+                <span className="material-symbols-outlined text-[18px] opacity-20 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <Modal
@@ -271,13 +222,13 @@ export const AdminDashboard = () => {
           <div className="p-2">
             {!uploadResult ? (
               <form onSubmit={handleUploadExcel} className="space-y-8">
-                <div className="bg-gray-950 p-6 rounded-sm text-white shadow-2xl shadow-black/20 border-l-4 border-blue-600">
+                <div className="bg-[#001640] p-6 rounded-xl text-white shadow-[0_20px_50px_rgba(0,22,64,0.3)] border-l-4 border-blue-600">
                   <div className="flex items-center gap-4 mb-4">
                     <span className="material-symbols-outlined text-blue-500 text-[28px]">info</span>
                     <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-400">Instrucciones de Sistema</h3>
                   </div>
                   <p className="text-[13px] text-gray-300 font-medium leading-relaxed mb-6">
-                    El archivo .xlsx será procesado contra la base de datos de la torre activa: 
+                    El archivo .xlsx será procesado contra la base de datos de la torre activa:
                     <span className="text-white font-black block mt-2 text-[15px]">{currentBuilding?.name || 'ERROR: NO SELECCIONADA'}</span>
                   </p>
                   <button
@@ -302,9 +253,9 @@ export const AdminDashboard = () => {
                       onChange={handleFileChange}
                       className="absolute inset-0 opacity-0 cursor-pointer z-10"
                     />
-                    <div className="border-2 border-dashed border-black/[0.12] group-hover:border-black/30 group-hover:bg-gray-50 rounded-sm p-8 text-center transition-all">
+                    <div className="border-2 border-dashed border-[#001640]/[0.12] group-hover:border-[#001640]/30 group-hover:bg-[#001640]/[0.02] rounded-xl p-8 text-center transition-all">
                       <span className="material-symbols-outlined text-[48px] text-gray-200 group-hover:text-blue-600 transition-colors mb-4 inline-block">cloud_upload</span>
-                      <p className="text-[13px] font-bold text-gray-400 group-hover:text-gray-900 transition-colors">
+                      <p className="text-[13px] font-bold text-gray-400 group-hover:text-[#001640] transition-colors">
                         {uploadFile ? uploadFile.name : 'Arrastra o selecciona el archivo Excel'}
                       </p>
                     </div>
@@ -322,7 +273,7 @@ export const AdminDashboard = () => {
                   <button
                     type="submit"
                     disabled={uploading || !uploadFile || !currentBuilding}
-                    className="flex-1 px-6 py-4 bg-gray-950 text-white rounded-sm font-black uppercase text-[11px] tracking-[0.2em] transition-all hover:bg-blue-600 disabled:opacity-30 flex justify-center items-center gap-3 active:scale-95 shadow-2xl shadow-black/20"
+                    className="flex-1 px-6 py-4 bg-[#001640] text-white rounded-xl font-black uppercase text-[11px] tracking-[0.2em] transition-all hover:bg-blue-600 disabled:opacity-30 flex justify-center items-center gap-3 active:scale-95 shadow-[0_20px_50px_rgba(0,22,64,0.3)]"
                   >
                     {uploading ? (
                       <>
@@ -354,8 +305,8 @@ export const AdminDashboard = () => {
                 {uploadResult.errors && uploadResult.errors.length > 0 && (
                   <div className="bg-red-50 border-2 border-red-600/20 rounded-sm p-6 max-h-[300px] overflow-y-auto">
                     <h4 className="text-[11px] font-black text-red-600 mb-4 tracking-[0.2em] uppercase flex items-center gap-2">
-                       <span className="material-symbols-outlined text-[18px]">list_alt</span>
-                       Log de Errores de Sistema:
+                      <span className="material-symbols-outlined text-[18px]">list_alt</span>
+                      Log de Errores de Sistema:
                     </h4>
                     <div className="space-y-3">
                       {uploadResult.errors.map((err: any, idx: number) => (
@@ -371,7 +322,7 @@ export const AdminDashboard = () => {
                 <div className="flex justify-center pt-6 border-t border-black/[0.08]">
                   <button
                     onClick={closeUploadModal}
-                    className="w-full px-8 py-4 bg-gray-950 text-white rounded-sm font-black uppercase text-[11px] tracking-[0.2em] transition-all hover:bg-blue-600 active:scale-95 shadow-2xl shadow-black/20"
+                    className="w-full px-8 py-4 bg-[#001640] text-white rounded-xl font-black uppercase text-[11px] tracking-[0.2em] transition-all hover:bg-blue-600 active:scale-95 shadow-[0_20px_50px_rgba(0,22,64,0.3)]"
                   >
                     Finalizar Operación
                   </button>

@@ -12,21 +12,19 @@ import { authApi } from '../../api/auth';
 import { Star, Plus, Search, Trash, ArrowLeft, X, RotateCcw, Trash2, Copy, Check } from 'lucide-react';
 import { handleRutInput } from '../../utils/rut';
 
-const card         = 'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-sm)]';
-const input        = 'w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-3 py-2 text-sm text-[var(--color-text-primary)] bg-[var(--color-surface)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]';
-const label        = 'block text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1';
-const btnPrimary   = 'px-4 py-2 bg-primary text-white text-sm font-semibold rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity';
-const btnSecondary = 'px-4 py-2 bg-[var(--color-background)] border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)] rounded-[var(--radius-sm)] hover:bg-[var(--color-border)] transition-colors';
-const tdCell       = 'px-6 py-4 whitespace-nowrap text-sm text-[var(--color-text-muted)]';
+const card = 'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-[var(--shadow-surgical)]';
+const input = 'w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text-primary)] bg-[var(--color-surface)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]';
+const label = 'block text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1';
+const btnPrimary = 'px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity';
+const btnSecondary = 'px-4 py-2 bg-[var(--color-background)] border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-border)] transition-colors';
+const tdCell = 'px-6 py-4 whitespace-nowrap text-sm text-[var(--color-text-muted)]';
 
 const SkeletonRow = () => (
   <tr className="animate-pulse">
     <td className="px-6 py-4"><div className="h-4 bg-[var(--color-border)] rounded w-24 mb-1"></div><div className="h-3 bg-[var(--color-border)] rounded w-16"></div></td>
     <td className="px-6 py-4 text-sm"><div className="h-4 bg-[var(--color-border)] rounded w-32"></div></td>
     <td className="px-6 py-4 text-sm"><div className="h-4 bg-[var(--color-border)] rounded w-20"></div></td>
-    <td className="px-6 py-4 text-sm"><div className="h-4 bg-[var(--color-border)] rounded w-24"></div></td>
     <td className="px-6 py-4 text-sm"><div className="h-4 bg-[var(--color-border)] rounded w-12"></div></td>
-    <td className="px-6 py-4 text-sm"><div className="h-4 bg-[var(--color-border)] rounded w-28"></div></td>
     <td className="px-6 py-4 text-sm"><div className="flex gap-2"><div className="h-4 bg-[var(--color-border)] rounded w-8"></div><div className="h-4 bg-[var(--color-border)] rounded w-12"></div></div></td>
   </tr>
 );
@@ -51,28 +49,26 @@ type AdminWithResidences = {
 export default function Administrators() {
   const navigate = useNavigate();
   const { stopImpersonation } = useAuth();
-  const [admins, setAdmins]                   = useState<AdminWithResidences[]>([]);
-  const [loading, setLoading]                 = useState(true);
-  const [error, setError]                     = useState<string | null>(null);
-  const [successMessage, setSuccessMessage]   = useState('');
-  const [searchTerm, setSearchTerm]           = useState('');
-  const [confirmDialog, setConfirmDialog]     = useState<{ message: string; onConfirm: () => Promise<void> } | null>(null);
-  const [confirmLoading, setConfirmLoading]   = useState(false);
+  const [admins, setAdmins] = useState<AdminWithResidences[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState<{ message: string; onConfirm: () => Promise<void> } | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   // Modals
-  const [showEditModal, setShowEditModal]     = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showResidencesModal, setShowResidencesModal] = useState(false);
-  const [editingAdmin, setEditingAdmin]       = useState<AdminWithResidences | null>(null);
-  const [adminFormData, setAdminFormData]     = useState({ firstName: '', lastName: '', email: '', rut: '', phone: '+56', password: '', residenceId: '' });
-  const [isPhoneValid, setIsPhoneValid]       = useState(true);
+  const [editingAdmin, setEditingAdmin] = useState<AdminWithResidences | null>(null);
+  const [adminFormData, setAdminFormData] = useState({ firstName: '', lastName: '', email: '', rut: '', phone: '+56', password: '', residenceId: '' });
+  const [isPhoneValid, setIsPhoneValid] = useState(true);
   const [availableResidences, setAvailableResidences] = useState<{ id: string, name: string }[]>([]);
   const [selectedResidenceToAssign, setSelectedResidenceToAssign] = useState<string>('');
-  const [resetLink, setResetLink]               = useState<string | null>(null);
-  const [isResetLoading, setIsResetLoading]     = useState(false);
-  const [isDeleteLoading, setIsDeleteLoading]   = useState(false);
-  const [copied, setCopied]                     = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [resetLink, setResetLink] = useState<string | null>(null);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     stopImpersonation();
@@ -217,7 +213,6 @@ export default function Administrators() {
     setIsPhoneValid(true);
     setError(null);
     setResetLink(null);
-    setShowDeleteConfirm(false);
   };
 
   const handleCloseCreateModal = () => {
@@ -289,35 +284,6 @@ export default function Administrators() {
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!editingAdmin) return;
-    try {
-      setIsResetLoading(true);
-      setError(null);
-      const res = await authApi.generateResetLink(editingAdmin.id);
-      setResetLink(res.setupLink);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al generar link de reestablecimiento');
-    } finally {
-      setIsResetLoading(false);
-    }
-  };
-
-  const handleDeleteAdmin = async () => {
-    if (!editingAdmin) return;
-    try {
-      setIsDeleteLoading(true);
-      await usersApi.delete(editingAdmin.id);
-      await fetchAdmins();
-      handleCloseEditModal();
-      showSuccess('Administrador eliminado correctamente');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al eliminar administrador');
-    } finally {
-      setIsDeleteLoading(false);
-      // setShowDeleteConfirm(false) ya se hace en handleCloseEditModal
-    }
-  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -369,16 +335,26 @@ export default function Administrators() {
     );
   };
 
+  const handleSetMainResidence = async (residenceId: string) => {
+    if (!editingAdmin) return;
+    try {
+      setError(null);
+      await residencesApi.setMainAdmin(residenceId, editingAdmin.id);
+      await fetchAdmins();
+      await refreshAdminInModal(editingAdmin.id);
+      showSuccess('Residencia principal actualizada correctamente');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al actualizar residencia principal');
+    }
+  };
+
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="mb-10">
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[var(--color-primary)] mb-2">
-            Super Administrador
-          </p>
           <div className="flex items-end justify-between gap-4">
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={() => navigate('/superadmin')}
                 className={`${btnSecondary} flex items-center gap-2 pr-5`}
                 aria-label="Volver al panel principal"
@@ -386,9 +362,6 @@ export default function Administrators() {
                 <ArrowLeft size={14} strokeWidth={2} />
                 Volver
               </button>
-              <h1 className="dashboard-hero-title font-bold tracking-tight text-[var(--color-text-primary)] leading-none" aria-current="page">
-                Administradores
-              </h1>
             </div>
             <button onClick={() => setShowCreateModal(true)}
               className={`${btnPrimary} flex items-center gap-2 shrink-0`}
@@ -401,7 +374,7 @@ export default function Administrators() {
 
         {error && (
           <div role="alert" className="flex items-center gap-3 border border-[var(--color-danger)] bg-[var(--color-danger-subtle)]
-                          rounded-[var(--radius-sm)] px-4 py-3 mb-6">
+                          rounded-lg px-4 py-3 mb-6">
             <p className="text-sm text-[var(--color-danger)]">{error}</p>
             <button onClick={() => setError(null)}
               className="ml-auto text-xs font-semibold text-[var(--color-danger)] hover:opacity-70 transition-opacity">
@@ -411,14 +384,14 @@ export default function Administrators() {
         )}
         {successMessage && (
           <div role="status" className="border border-[var(--color-action)] bg-[var(--color-action-subtle)]
-                          rounded-[var(--radius-sm)] px-4 py-3 mb-6">
+                          rounded-lg px-4 py-3 mb-6">
             <p className="text-sm text-[var(--color-action)]">{successMessage}</p>
           </div>
         )}
         {confirmDialog && (
           <div role="alertdialog"
-               className="border-2 border-[var(--color-primary)] bg-[var(--color-surface)]
-                          rounded-[var(--radius-sm)] px-5 py-4 mb-6 flex items-center gap-4">
+            className="border-2 border-[var(--color-primary)] bg-[var(--color-surface)]
+                          rounded-lg px-5 py-4 mb-6 flex items-center gap-4">
             <p className="text-sm font-medium text-[var(--color-text-primary)] flex-1">{confirmDialog.message}</p>
             <div className="flex gap-2 shrink-0">
               <button onClick={() => setConfirmDialog(null)} className={btnSecondary} disabled={confirmLoading}>
@@ -426,7 +399,7 @@ export default function Administrators() {
               </button>
               <button onClick={runConfirm} disabled={confirmLoading}
                 className="px-4 py-2 bg-[var(--color-danger)] text-white text-sm font-semibold
-                           rounded-[var(--radius-sm)] hover:opacity-90 motion-safe:transition-opacity disabled:opacity-50">
+                           rounded-lg hover:opacity-90 motion-safe:transition-opacity disabled:opacity-50">
                 {confirmLoading ? 'Procesando…' : 'Confirmar'}
               </button>
             </div>
@@ -450,30 +423,12 @@ export default function Administrators() {
             />
           </div>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          {[
-            { label: 'Total Administradores', value: loading ? '…' : admins.length, color: 'text-[var(--color-text-primary)]', desc: 'Cuentas registradas' },
-            { label: 'Administradores Activos', value: loading ? '…' : admins.filter(a => a.isActive).length, color: 'text-[var(--color-action-text)]', desc: 'Con acceso al sistema' },
-            { label: 'Administradores Inactivos', value: loading ? '…' : admins.filter(a => !a.isActive).length, color: 'text-[var(--color-danger)]', desc: 'Sin residencias asignadas' },
-          ].map((stat) => (
-            <div key={stat.label} className={`${card} p-5 relative overflow-hidden group hover:border-[var(--color-primary)] transition-colors`}>
-              <div className="absolute top-0 left-0 w-1 h-full bg-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <p className="text-[10px] text-[var(--color-text-muted)] font-bold uppercase tracking-widest mb-1">{stat.label}</p>
-              <div className="flex items-baseline gap-2">
-                <p className={`text-3xl font-bold ${stat.color} leading-none tabular-nums tracking-tight`}>{stat.value}</p>
-                <p className="text-[11px] text-[var(--color-text-muted)] font-medium">{stat.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
         <div className={`${card} overflow-x-auto`}>
           <table className="min-w-full divide-y divide-[var(--color-border)]">
-            <thead className="bg-[var(--color-background)]">
+            <thead className="bg-[#001640]">
               <tr>
-                {['Administrador', 'Email', 'RUT', 'Residencias', 'Estado', 'Acceso', 'Acciones'].map(col => (
-                  <th key={col} className="px-6 py-3 text-left text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-widest bg-[var(--color-background)]">
+                {['Administrador', 'Email', 'RUT', 'Estado', 'Acciones'].map(col => (
+                  <th key={col} className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-widest">
                     {col}
                   </th>
                 ))}
@@ -496,59 +451,65 @@ export default function Administrators() {
                   </td>
                   <td className={tdCell}>{admin.email}</td>
                   <td className={tdCell}>{admin.rut || '-'}</td>
-                  <td className="px-6 py-4">
-                    {admin.residences && admin.residences.length > 0 ? (
-                      <div className="space-y-1">
-                        <div className="text-xs font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
-                          {admin.residences.length} {admin.residences.length === 1 ? 'residencia' : 'residencias'}
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {admin.residences.slice(0, 3).map((residence) => (
-                            <span key={residence.id}
-                                  className="px-2 py-0.5 text-[10px] font-bold rounded-[var(--radius-sm)]
-                                             bg-[var(--color-primary-subtle)] text-[var(--color-primary)]
-                                             border border-[var(--color-border)] flex items-center gap-1">
-                              {residence.name}
-                              {residence.isMain && <Star size={8} strokeWidth={3} className="text-[var(--color-warning)] fill-[var(--color-warning)]" aria-label="Principal" />}
-                            </span>
-                          ))}
-                          {admin.residences.length > 3 && (
-                            <span className="px-2 py-0.5 text-[10px] items-center text-[var(--color-text-muted)] bg-[var(--color-background)]
-                                             rounded-[var(--radius-sm)] border border-[var(--color-border)]">
-                              +{admin.residences.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-[var(--color-danger)] uppercase tracking-tighter">Sin residencias</span>
-                        <span className="text-[10px] text-[var(--color-text-muted)] font-medium">Cuenta inactiva</span>
-                      </div>
-                    )}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-0.5 text-xs font-semibold rounded-[var(--radius-sm)]
+                    <span className={`px-2 py-0.5 text-xs font-semibold rounded-lg
                       ${admin.isActive
                         ? 'bg-[var(--color-action-subtle)] text-[var(--color-action-text)]'
                         : 'bg-[var(--color-danger-subtle)] text-[var(--color-danger)]'}`}>
                       {admin.isActive ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
-                  <td className={tdCell}>
-                    {admin.lastLogin ? new Date(admin.lastLogin).toLocaleString('es-ES') : 'Nunca'}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center gap-4">
                       <button onClick={() => handleEditAdmin(admin)}
-                        className="text-xs font-bold text-[var(--color-primary)] uppercase tracking-tight
+                        className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-widest
                                    hover:underline underline-offset-4 decoration-2 transition-all">
-                        PerfiL
+                        Perfil
                       </button>
                       <button onClick={() => handleManageResidences(admin)}
-                        className="text-xs font-bold text-[var(--color-primary)] uppercase tracking-tight
+                        className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-widest
                                    hover:underline underline-offset-4 decoration-2 transition-all">
                         Residencias ({admin.residences.length})
+                      </button>
+                      <button onClick={async () => {
+                        setEditingAdmin(admin);
+                        // Trigger password reset for THIS admin
+                        try {
+                          setError(null);
+                          const res = await authApi.generateResetLink(admin.id);
+                          setResetLink(res.setupLink);
+                          // We probably want to show the link somewhere, maybe a toast or keep the modal?
+                          // The user didn't specify, but I'll keep the modal functionality for the link.
+                          setShowEditModal(true);
+                        } catch (err: any) {
+                          setError(err.response?.data?.message || 'Error al generar link');
+                        }
+                      }}
+                        className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-widest
+                                   hover:underline underline-offset-4 decoration-2 transition-all">
+                        Reestablecer
+                      </button>
+                      <button onClick={() => {
+                        setEditingAdmin(admin);
+                        showConfirm(
+                          `¿Está seguro de eliminar a ${admin.firstName} ${admin.lastName}? Esta acción no se puede deshacer.`,
+                          async () => {
+                            try {
+                              setIsDeleteLoading(true);
+                              await usersApi.delete(admin.id);
+                              await fetchAdmins();
+                              showSuccess('Administrador eliminado correctamente');
+                            } catch (err: any) {
+                              setError(err.response?.data?.message || 'Error al eliminar');
+                            } finally {
+                              setIsDeleteLoading(false);
+                            }
+                          }
+                        );
+                      }}
+                        className="text-[10px] font-black text-[var(--color-danger)] uppercase tracking-widest
+                                   hover:underline underline-offset-4 decoration-2 transition-all">
+                        Eliminar
                       </button>
                     </div>
                   </td>
@@ -565,75 +526,27 @@ export default function Administrators() {
         >
           {error && (
             <div role="alert" className="border border-[var(--color-danger)] bg-[var(--color-danger-subtle)]
-                            rounded-[var(--radius-sm)] px-4 py-3 mb-4 text-sm text-[var(--color-danger)]">
+                            rounded-lg px-4 py-3 mb-4 text-sm text-[var(--color-danger)]">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmitAdminEdit} className="space-y-4">
-            {!showDeleteConfirm ? (
-              <div className="flex gap-4 p-3 bg-[var(--color-background)] rounded-[var(--radius-sm)] border border-[var(--color-border)] mb-4 animate-in fade-in duration-200">
-                <button
-                  type="button"
-                  onClick={handleResetPassword}
-                  disabled={isResetLoading}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 text-[10px] font-bold uppercase tracking-widest text-[var(--color-primary)] bg-[var(--color-surface)] border border-[var(--color-primary)] rounded-[var(--radius-sm)] hover:bg-[var(--color-primary-subtle)] transition-all disabled:opacity-50"
-                >
-                  <RotateCcw size={12} strokeWidth={2.5} />
-                  {isResetLoading ? 'Generando...' : 'Reestablecer'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  disabled={isDeleteLoading}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 text-[10px] font-bold uppercase tracking-widest text-[var(--color-danger)] bg-[var(--color-surface)] border border-[var(--color-danger)] rounded-[var(--radius-sm)] hover:bg-[var(--color-danger-subtle)] transition-all disabled:opacity-50"
-                >
-                  <Trash2 size={12} strokeWidth={2.5} />
-                  {isDeleteLoading ? 'Eliminando...' : 'Eliminar'}
-                </button>
-              </div>
-            ) : (
-              <div className="p-3 bg-[var(--color-danger-subtle)] border border-[var(--color-danger)] rounded-[var(--radius-sm)] mb-4 animate-in zoom-in-95 duration-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Trash2 size={14} className="text-[var(--color-danger)]" />
-                  <p className="text-[11px] font-bold text-[var(--color-danger)] uppercase tracking-tight">Confirmar Eliminación</p>
-                </div>
-                <p className="text-[11px] text-[var(--color-text-muted)] mb-3 pr-2">
-                  ¿Está seguro de eliminar a <strong>{editingAdmin?.firstName} {editingAdmin?.lastName}</strong>? Esta acción no se puede deshacer.
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="flex-1 py-1.5 px-3 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-sm)] hover:bg-[var(--color-background)] transition-all"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDeleteAdmin}
-                    className="flex-1 py-1.5 px-3 text-[10px] font-bold uppercase tracking-widest text-white bg-[var(--color-danger)] border border-[var(--color-danger)] rounded-[var(--radius-sm)] hover:opacity-90 transition-all"
-                  >
-                    {isDeleteLoading ? '...' : 'Confirmar'}
-                  </button>
-                </div>
-              </div>
-            )}
 
-            {resetLink && !showDeleteConfirm && (
-              <div className="p-3 bg-[var(--color-action-subtle)] border border-[var(--color-action)] rounded-[var(--radius-sm)] animate-in fade-in slide-in-from-top-2">
+            {resetLink && (
+              <div className="p-3 bg-[var(--color-action-subtle)] border border-[var(--color-action)] rounded-lg animate-in fade-in slide-in-from-top-2">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-action-text)] mb-2">Link de Reestablecimiento:</p>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     readOnly
                     value={resetLink}
-                    className="flex-1 text-xs border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--color-surface)] focus:outline-none"
+                    className="flex-1 text-xs border border-[var(--color-border)] rounded-lg px-2 py-1.5 bg-[var(--color-surface)] focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => copyToClipboard(resetLink)}
-                    className="p-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-all"
+                    className="p-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-all"
                     title="Copiar link"
                   >
                     {copied ? <Check size={14} className="text-[var(--color-action-text)]" /> : <Copy size={14} />}
@@ -697,7 +610,7 @@ export default function Administrators() {
         >
           {error && (
             <div role="alert" className="border border-[var(--color-danger)] bg-[var(--color-danger-subtle)]
-                            rounded-[var(--radius-sm)] px-4 py-3 mb-4 text-sm text-[var(--color-danger)]">
+                            rounded-lg px-4 py-3 mb-4 text-sm text-[var(--color-danger)]">
               {error}
             </div>
           )}
@@ -779,7 +692,7 @@ export default function Administrators() {
           <div className="max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
             {error && (
               <div role="alert" className="border border-[var(--color-danger)] bg-[var(--color-danger-subtle)]
-                              rounded-[var(--radius-sm)] px-4 py-3 mb-6 text-sm text-[var(--color-danger)]">
+                              rounded-lg px-4 py-3 mb-6 text-sm text-[var(--color-danger)]">
                 {error}
               </div>
             )}
@@ -809,9 +722,9 @@ export default function Administrators() {
               <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-widest mb-3">
                 Residencias Asignadas ({editingAdmin?.residences.length || 0})
               </div>
-              
+
               {editingAdmin?.residences.length === 0 && (
-                <div className="text-xs font-medium text-[var(--color-danger)] bg-[var(--color-danger-subtle)] p-3 rounded-[var(--radius-sm)] border border-[var(--color-danger)]">
+                <div className="text-xs font-medium text-[var(--color-danger)] bg-[var(--color-danger-subtle)] p-3 rounded-lg border border-[var(--color-danger)]">
                   Este administrador no tiene residencias asignadas. Su cuenta está inactiva.
                 </div>
               )}
@@ -826,15 +739,25 @@ export default function Administrators() {
                       <div className="flex items-center gap-3">
                         <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)]"></div>
                         <span className="text-sm font-semibold text-[var(--color-text-primary)]">{residence.name}</span>
-                        {residence.isMain && (
-                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-[var(--radius-sm)] bg-[var(--color-warning-subtle)] text-[var(--color-warning)] border border-[var(--color-warning)]">
+                        {residence.isMain ? (
+                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-lg bg-[var(--color-warning-subtle)] text-[var(--color-warning)] border border-[var(--color-warning)] flex items-center gap-1">
+                            <Star size={10} fill="currentColor" />
                             Principal
                           </span>
+                        ) : (
+                          <button
+                            onClick={() => handleSetMainResidence(residence.id)}
+                            className="px-2 py-0.5 text-[10px] font-bold rounded-lg bg-[var(--color-background)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[var(--color-warning)] hover:text-[var(--color-warning)] transition-all flex items-center gap-1"
+                            title="Marcar como residencia principal"
+                          >
+                            <RotateCcw size={10} />
+                            Marcar como Principal
+                          </button>
                         )}
                       </div>
                       <button
                         onClick={() => handleRemoveResidence(residence.id)}
-                        className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-subtle)] rounded-[var(--radius-sm)] transition-all"
+                        className="p-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-subtle)] rounded-lg transition-all"
                         aria-label={`Remover ${residence.name}`}
                       >
                         <Trash size={14} />
@@ -843,7 +766,7 @@ export default function Administrators() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-10 text-xs text-[var(--color-text-muted)] font-medium bg-[var(--color-background)] rounded-[var(--radius-sm)] border border-dashed border-[var(--color-border)]">
+                <div className="text-center py-10 text-xs text-[var(--color-text-muted)] font-medium bg-[var(--color-background)] rounded-lg border border-dashed border-[var(--color-border)]">
                   No hay residencias asignadas
                 </div>
               )}

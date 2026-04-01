@@ -30,16 +30,7 @@ const ApartmentFilters = ({
   uniqueBuildings, uniqueFloors,
   clearFilters, totalFiltered, totalApartments
 }: ApartmentFiltersProps) => (
-  <div className="bg-white rounded-[var(--radius-sm)] shadow-lg shadow-black/5 p-6 mb-6 border border-black/5 animate-in fade-in duration-500">
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xs font-bold text-gray-900 uppercase tracking-widest">Filtros de búsqueda</h2>
-      <button
-        onClick={clearFilters}
-        className="text-[10px] font-bold text-primary uppercase tracking-widest hover:underline"
-      >
-        Limpiar filtros
-      </button>
-    </div>
+  <div className="bg-white rounded-xl shadow-[var(--shadow-surgical)] p-6 mb-6 border border-black/5 animate-in fade-in duration-500">
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
@@ -51,8 +42,8 @@ const ApartmentFilters = ({
           value={filterNumber}
           onChange={(e) => setFilterNumber(e.target.value)}
           placeholder="Buscar por número..."
-          className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-4 py-2.5 
-                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm bg-white shadow-sm transition-all"
+          className="w-full border border-[var(--color-border)] rounded-xl px-4 py-2.5 
+                     focus:outline-none focus:ring-2 focus:ring-[#001640]/20 focus:border-[#001640] text-sm bg-white shadow-sm transition-all"
         />
       </div>
 
@@ -63,8 +54,8 @@ const ApartmentFilters = ({
         <select
           value={filterBuilding}
           onChange={(e) => setFilterBuilding(e.target.value)}
-          className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-4 py-2.5 
-                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary h-[46px]
+          className="w-full border border-[var(--color-border)] rounded-xl px-4 py-2.5 
+                     focus:outline-none focus:ring-2 focus:ring-[#001640]/20 focus:border-[#001640] h-[46px]
                      text-sm bg-white shadow-sm transition-all font-medium"
         >
           <option value="">Todas las torres</option>
@@ -81,8 +72,8 @@ const ApartmentFilters = ({
         <select
           value={filterFloor}
           onChange={(e) => setFilterFloor(e.target.value)}
-          className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-4 py-2.5 
-                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary h-[46px]
+          className="w-full border border-[var(--color-border)] rounded-xl px-4 py-2.5 
+                     focus:outline-none focus:ring-2 focus:ring-[#001640]/20 focus:border-[#001640] h-[46px]
                      text-sm bg-white shadow-sm transition-all font-medium"
         >
           <option value="">Todos los pisos</option>
@@ -128,7 +119,7 @@ const ApartmentTableRow = ({
     <td className="px-6 py-4 whitespace-nowrap">
       {apt.owner ? (
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-[var(--radius-sm)] bg-primary flex items-center justify-center text-white text-[11px] font-bold shadow-sm group-hover:scale-105 transition-transform">
+          <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center text-white text-[11px] font-bold shadow-sm group-hover:scale-105 transition-transform">
             {apt.owner.firstName[0]}{apt.owner.lastName[0]}
           </div>
           <div>
@@ -152,7 +143,7 @@ const ApartmentTableRow = ({
       <select
         value={apt.isActive ? 'active' : 'inactive'}
         onChange={(e) => handleStatusChange(apt, e.target.value === 'active')}
-        className={`px-3 py-1 text-[10px] uppercase font-bold tracking-widest rounded-md border border-black/5 cursor-pointer transition-all focus:ring-2 focus:ring-primary/20 ${apt.isActive
+        className={`px-3 py-1 text-[10px] uppercase font-bold tracking-widest rounded-lg border border-black/5 cursor-pointer transition-all focus:ring-2 focus:ring-[#001640]/20 ${apt.isActive
           ? 'bg-green-100 text-green-900'
           : 'bg-red-100 text-red-900'
           }`}
@@ -181,7 +172,7 @@ interface ApartmentDetailModalContentProps {
 
 const ApartmentDetailModalContent = ({ selectedApartment }: ApartmentDetailModalContentProps) => (
   <div className="space-y-6">
-    <div className="bg-[var(--color-primary)]/5 p-6 rounded-[var(--radius-sm)] text-center border border-[var(--color-primary)]/10">
+    <div className="bg-[#001640]/5 p-6 rounded-xl text-center border border-[#001640]/10">
       <div className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Departamento</div>
       <div className="text-4xl font-bold text-primary tracking-tighter">
         {selectedApartment?.number}
@@ -189,22 +180,22 @@ const ApartmentDetailModalContent = ({ selectedApartment }: ApartmentDetailModal
     </div>
 
     <div className="grid grid-cols-2 gap-4">
-      <div className="bg-gray-50 p-4 rounded-[var(--radius-sm)] border border-gray-100">
+      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
         <div className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest mb-1">Torre / Edificio</div>
         <div className="font-bold text-gray-900">{selectedApartment?.building?.name || 'Sin torre'}</div>
       </div>
-      <div className="bg-gray-50 p-4 rounded-[var(--radius-sm)] border border-gray-100">
+      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
         <div className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest mb-1">Piso</div>
         <div className="font-bold text-gray-900">Piso {selectedApartment?.floor}</div>
       </div>
     </div>
 
     {/* Propietario */}
-    <div className="bg-white p-5 rounded-[var(--radius-sm)] border border-black/5 shadow-sm">
+    <div className="bg-white p-5 rounded-xl border border-black/5 shadow-sm">
       <div className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest mb-4 border-b pb-2">Propietario Titular</div>
       {selectedApartment?.owner ? (
         <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-[var(--radius-sm)] bg-primary flex items-center justify-center text-white text-xl font-bold shadow-md">
+          <div className="h-14 w-14 rounded-xl bg-primary flex items-center justify-center text-white text-xl font-bold shadow-md">
             {selectedApartment.owner.firstName[0]}{selectedApartment.owner.lastName[0]}
           </div>
           <div>
@@ -224,10 +215,10 @@ const ApartmentDetailModalContent = ({ selectedApartment }: ApartmentDetailModal
 
     {/* Responsable Asignado */}
     {selectedApartment?.manager && (
-      <div className="bg-white p-5 rounded-[var(--radius-sm)] border border-black/5 shadow-sm">
+      <div className="bg-white p-5 rounded-xl border border-black/5 shadow-sm">
         <div className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest mb-4 border-b pb-2">Responsable Asignado</div>
         <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-[var(--radius-sm)] bg-[#7B1FA2] flex items-center justify-center text-white text-xl font-bold shadow-md">
+          <div className="h-14 w-14 rounded-xl bg-[#7B1FA2] flex items-center justify-center text-white text-xl font-bold shadow-md">
             {selectedApartment.manager.firstName[0]}{selectedApartment.manager.lastName[0]}
           </div>
           <div>
@@ -241,7 +232,7 @@ const ApartmentDetailModalContent = ({ selectedApartment }: ApartmentDetailModal
     )}
 
     {selectedApartment?.description && (
-      <div className="bg-gray-50 p-4 rounded-[var(--radius-sm)] border border-gray-100">
+      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
         <div className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest mb-2">Descripción</div>
         <div className="text-sm text-gray-900 font-medium leading-relaxed">{selectedApartment.description}</div>
       </div>
@@ -288,8 +279,8 @@ const CreateApartmentModalContent = ({
           required
           value={newApartmentData.number}
           onChange={(e) => setNewApartmentData({ ...newApartmentData, number: e.target.value })}
-          className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-4 py-2.5 
-                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm bg-white"
+          className="w-full border border-[var(--color-border)] rounded-xl px-4 py-2.5 
+                     focus:outline-none focus:ring-2 focus:ring-[#001640]/20 focus:border-[#001640] text-sm bg-white"
           placeholder="Ej: 101"
         />
       </div>
@@ -302,8 +293,8 @@ const CreateApartmentModalContent = ({
           required
           value={newApartmentData.floor}
           onChange={(e) => setNewApartmentData({ ...newApartmentData, floor: parseInt(e.target.value) || 0 })}
-          className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-4 py-2.5 
-                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm bg-white"
+          className="w-full border border-[var(--color-border)] rounded-xl px-4 py-2.5 
+                     focus:outline-none focus:ring-2 focus:ring-[#001640]/20 focus:border-[#001640] text-sm bg-white"
         />
       </div>
     </div>
@@ -324,8 +315,8 @@ const CreateApartmentModalContent = ({
             setNewApartmentData({ ...newApartmentData, ownerId: e.target.value });
           }
         }}
-        className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-4 py-2.5 
-                   focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm bg-white font-medium"
+        className="w-full border border-[var(--color-border)] rounded-xl px-4 py-2.5 
+                   focus:outline-none focus:ring-2 focus:ring-[#001640]/20 focus:border-[#001640] text-sm bg-white font-medium"
       >
         <option value="">Seleccionar...</option>
         <option value="NEW" className="font-bold text-primary italic">+ Crear nuevo propietario...</option>
@@ -338,7 +329,7 @@ const CreateApartmentModalContent = ({
     </div>
 
     {isCreatingOwner && (
-      <div className="bg-[var(--color-primary)]/5 p-5 rounded-[var(--radius-sm)] space-y-4 animate-in fade-in slide-in-from-top-2 border border-primary/10 shadow-inner">
+      <div className="bg-[#001640]/5 p-5 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2 border border-[#001640]/10 shadow-inner">
         <div className="flex justify-between items-center border-b border-primary/10 pb-2">
           <h3 className="text-[10px] font-bold text-primary uppercase tracking-widest">Datos del Nuevo Propietario</h3>
           <button
@@ -357,7 +348,7 @@ const CreateApartmentModalContent = ({
               required
               value={newOwnerData.firstName}
               onChange={(e) => setNewOwnerData({ ...newOwnerData, firstName: e.target.value })}
-              className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20"
+              className="w-full border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#001640]/20"
               placeholder="Ej: Juan"
             />
           </div>
@@ -368,7 +359,7 @@ const CreateApartmentModalContent = ({
               required
               value={newOwnerData.lastName}
               onChange={(e) => setNewOwnerData({ ...newOwnerData, lastName: e.target.value })}
-              className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20"
+              className="w-full border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#001640]/20"
               placeholder="Ej: Pérez"
             />
           </div>
@@ -380,7 +371,7 @@ const CreateApartmentModalContent = ({
             required
             value={newOwnerData.email}
             onChange={(e) => setNewOwnerData({ ...newOwnerData, email: e.target.value })}
-            className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20"
+            className="w-full border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#001640]/20"
             placeholder="ejemplo@correo.com"
           />
         </div>
@@ -395,8 +386,8 @@ const CreateApartmentModalContent = ({
         type="text"
         value={newApartmentData.parkingNumber || ''}
         onChange={(e) => setNewApartmentData({ ...newApartmentData, parkingNumber: e.target.value })}
-        className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-4 py-2.5 
-                   focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm bg-white"
+        className="w-full border border-[var(--color-border)] rounded-xl px-4 py-2.5 
+                   focus:outline-none focus:ring-2 focus:ring-[#001640]/20 focus:border-[#001640] text-sm bg-white"
         placeholder="Ej: E-15"
       />
     </div>
@@ -409,8 +400,8 @@ const CreateApartmentModalContent = ({
         value={newApartmentData.description || ''}
         onChange={(e) => setNewApartmentData({ ...newApartmentData, description: e.target.value })}
         rows={3}
-        className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-4 py-2.5 
-                   focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm bg-white resize-none"
+        className="w-full border border-[var(--color-border)] rounded-xl px-4 py-2.5 
+                   focus:outline-none focus:ring-2 focus:ring-[#001640]/20 focus:border-[#001640] text-sm bg-white resize-none"
       />
     </div>
 
@@ -418,16 +409,16 @@ const CreateApartmentModalContent = ({
       <button
         type="button"
         onClick={onCancel}
-        className="flex-1 px-4 py-3 border border-[var(--color-border)] rounded-[var(--radius-sm)] text-[11px] font-bold text-gray-500 uppercase tracking-widest hover:bg-gray-50 transition-colors"
+        className="flex-1 px-4 py-3 border border-[var(--color-border)] rounded-xl text-[11px] font-bold text-gray-500 uppercase tracking-widest hover:bg-gray-50 transition-colors"
       >
         CANCELAR
       </button>
       <button
         type="submit"
         disabled={submitting}
-        className="flex-1 px-4 py-3 bg-primary text-white rounded-[var(--radius-sm)] 
-                   hover:bg-primary/90 active:scale-[0.97] transition-all 
-                   text-[11px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20 border border-primary/20 disabled:opacity-50"
+        className="flex-1 px-4 py-3 bg-[#001640] text-white rounded-xl 
+                   hover:bg-[#002b7a] active:scale-[0.97] transition-all 
+                   text-[11px] font-bold uppercase tracking-widest shadow-[var(--shadow-surgical)] border border-[#001640]/20 disabled:opacity-50"
       >
         {submitting ? 'GUARDANDO...' : 'CREAR DEPARTAMENTO'}
       </button>
@@ -487,7 +478,7 @@ export const AdminApartments = () => {
   const fetchApartments = async () => {
     try {
       setLoading(true);
-      const response = await apartmentsApi.getAll({ 
+      const response = await apartmentsApi.getAll({
         limit: 500,
         ...(currentBuilding?.id ? { buildingId: currentBuilding.id } : {})
       });
@@ -564,7 +555,7 @@ export const AdminApartments = () => {
         if (!newOwnerData.firstName || !newOwnerData.lastName || !newOwnerData.email) {
           throw new Error('Por favor completa todos los datos del nuevo propietario');
         }
-        
+
         const newOwner = await usersApi.create({
           firstName: newOwnerData.firstName,
           lastName: newOwnerData.lastName,
@@ -648,22 +639,18 @@ export const AdminApartments = () => {
           {/* Header */}
           <div className="mb-6 flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Gestión de Departamentos</h1>
-              <p className="text-gray-600 mt-1">
-                Administra los departamentos del sistema
-              </p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-primary text-white px-8 py-3 rounded-[var(--radius-sm)] 
-                         hover:bg-primary/90 active:scale-[0.97] transition-all 
+              className="bg-[#001640] text-white px-8 py-3 rounded-xl 
+                         hover:bg-[#002b7a] active:scale-[0.97] transition-all 
                          flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest 
-                         shadow-lg shadow-primary/20 border border-primary/20"
+                         shadow-[var(--shadow-surgical)] border border-[#001640]/20"
             >
               <span className="material-symbols-outlined text-xl">add_box</span>
               NUEVO DEPARTAMENTO
             </button>
-            </div>
+          </div>
 
           {/* Filtros */}
           <ApartmentFilters
@@ -685,20 +672,20 @@ export const AdminApartments = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
             </div>
           ) : (
-            <div className="bg-white shadow-lg shadow-black/5 rounded-[var(--radius-sm)] overflow-hidden border border-black/5 animate-in fade-in duration-500">
+            <div className="bg-white shadow-[var(--shadow-surgical)] rounded-xl overflow-hidden border border-black/5 animate-in fade-in duration-500">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-[#001640]">
                     <tr>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Número</th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Torre / Edificio</th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Piso</th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Estacionamiento</th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Propietario</th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">RUT</th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Teléfono</th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Estado</th>
-                      {canDelete && <th className="px-6 py-4 text-right text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Acciones</th>}
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Número</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Torre / Edificio</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Piso</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Estacionamiento</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Propietario</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">RUT</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Teléfono</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Estado</th>
+                      {canDelete && <th className="px-6 py-4 text-right text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Acciones</th>}
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -739,9 +726,9 @@ export const AdminApartments = () => {
         <div className="mt-8 flex justify-end">
           <button
             onClick={() => setSelectedApartment(null)}
-            className="w-full bg-gray-900 text-white px-8 py-3 rounded-[var(--radius-sm)] 
-                       hover:bg-gray-800 active:scale-[0.97] transition-all 
-                       text-[11px] font-bold uppercase tracking-widest shadow-lg shadow-black/10"
+            className="w-full bg-[#001640] text-white px-8 py-3 rounded-xl 
+                       hover:bg-[#002b7a] active:scale-[0.97] transition-all 
+                       text-[11px] font-bold uppercase tracking-widest shadow-[var(--shadow-surgical)]"
           >
             CERRAR PORTAL DE DETALLES
           </button>

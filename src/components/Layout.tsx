@@ -2,10 +2,11 @@ import { useState, type ReactNode } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Notifications } from './Notifications';
+import { Breadcrumbs } from './Breadcrumbs';
 import {
   Home, Landmark, Users, Building2, Building,
   CalendarDays, ClipboardList, Calendar, FileText,
-  Menu, ArrowLeft, X,
+  Menu, ArrowLeft, X, LogOut
 } from 'lucide-react';
 
 interface LayoutProps { children: ReactNode }
@@ -55,9 +56,9 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 // Nav button — active uses bottom-border indicator (surgical precision signal)
-const btnBase   = 'relative flex items-center gap-1.5 px-3 h-full text-xs font-semibold tracking-wide uppercase transition-colors duration-150';
-const btnActive  = 'text-[var(--color-primary)] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[var(--color-primary)] after:rounded-t-sm';
-const btnDefault = 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]';
+const btnBase   = 'relative flex items-center gap-1.5 px-4 h-9 text-[10px] font-bold tracking-widest uppercase transition-all duration-200 rounded-lg';
+const btnActive  = 'bg-white text-[#001640] shadow-md';
+const btnDefault = 'text-white/70 hover:text-white hover:bg-white/5';
 
 export const Layout = ({ children }: LayoutProps) => {
   const { user, logout, impersonationMode, stopImpersonation, currentResidence, currentBuilding, selectResidence, selectBuilding } = useAuth();
@@ -69,7 +70,6 @@ export const Layout = ({ children }: LayoutProps) => {
   const navItems      = NAV[effectiveRole] ?? [];
   const homePath      = impersonationMode ? '/admin' : (HOME[user?.role ?? ''] ?? '/');
   const isActive      = (path: string) => location.pathname === path;
-  const showBanner    = impersonationMode || (user?.availableResidences && user.availableResidences.length > 1 && currentResidence);
 
   // User initials for the avatar chip
   const initials = [user?.firstName?.[0], user?.lastName?.[0]].filter(Boolean).join('').toUpperCase();
@@ -77,35 +77,10 @@ export const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
 
-      {/* Context banner */}
-      {showBanner && (
-        <div className="bg-primary border-b border-[var(--color-border)] text-white px-4 py-2 relative z-50">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <span className="flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-white/80">
-              <Building2 size={14} strokeWidth={1.5} aria-hidden="true" />
-              {currentBuilding?.name ? `${currentBuilding.name} (${currentResidence?.name})` : (currentResidence?.name || 'Torre Seleccionada')}
-            </span>
-            <button
-              onClick={impersonationMode
-                ? () => { stopImpersonation(); navigate('/superadmin'); }
-                : () => { 
-                    selectResidence(null); 
-                    selectBuilding(null); 
-                    navigate('/select-residence'); 
-                  }}
-              className="bg-[var(--color-surface)] text-[var(--color-primary)]
-                         px-3 py-1 rounded-[var(--radius-sm)]
-                         text-xs font-semibold tracking-wide hover:opacity-90 transition-opacity"
-            >
-              Cambiar Residencia
-            </button>
-          </div>
-        </div>
-      )}
 
       <nav
         aria-label="Navegación principal"
-        className="bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-40"
+        className="bg-[#001640] border-b border-white/10 sticky top-0 z-40"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -117,8 +92,8 @@ export const Layout = ({ children }: LayoutProps) => {
                 aria-controls="mobile-nav"
                 aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
                 className="md:hidden p-2 min-h-[44px] min-w-[44px] flex items-center justify-center
-                           rounded-[var(--radius-sm)] text-[var(--color-text-secondary)]
-                           hover:bg-[var(--color-background)] transition-colors"
+                           rounded-lg text-white
+                           hover:bg-white/10 transition-colors"
               >
                 {open
                   ? <X    size={18} strokeWidth={1.5} aria-hidden="true" />
@@ -131,17 +106,17 @@ export const Layout = ({ children }: LayoutProps) => {
                 className="flex items-center gap-2.5 min-h-[44px] group"
               >
                 <div className="flex items-center justify-center w-8 h-8
-                                bg-primary rounded-[var(--radius-sm)]
+                                bg-white rounded-lg
                                 group-hover:opacity-90 transition-opacity">
-                  <Building2 size={16} strokeWidth={1.5} className="text-white" aria-hidden="true" />
+                  <Building2 size={16} strokeWidth={2.5} className="text-[#001640]" aria-hidden="true" />
                 </div>
-                <span className="hidden sm:block text-xs font-bold tracking-widest uppercase text-[var(--color-text-primary)]">
+                <span className="hidden sm:block text-[10px] font-bold tracking-widest uppercase text-white">
                   {currentResidence?.name || 'Gestión Residencial'}
                 </span>
               </button>
             </div>
 
-            <div className="hidden md:flex items-stretch h-16">
+            <div className="hidden md:flex items-center h-16 gap-2">
               {navItems.map(({ path, label, icon: Icon }) => (
                 <button
                   key={path}
@@ -163,34 +138,34 @@ export const Layout = ({ children }: LayoutProps) => {
                 aria-label={`Perfil de ${user?.firstName} ${user?.lastName}`}
                 className="hidden sm:flex items-center gap-2 min-h-[44px] group"
               >
-                <div className="w-7 h-7 rounded-[var(--radius-sm)] bg-primary
+                <div className="w-7 h-7 rounded-lg bg-white
                                 flex items-center justify-center
-                                text-white text-xs font-bold tracking-wide
+                                text-[#001640] text-[10px] font-bold tracking-wide
                                 group-hover:opacity-90 transition-opacity"
                      aria-hidden="true">
                   {initials || '?'}
                 </div>
-                <span className="text-xs font-medium text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/70 group-hover:text-white transition-colors">
                   {ROLE_LABEL[user?.role ?? ''] ?? user?.role}
                 </span>
               </button>
 
-              {!impersonationMode && (
-                <button
-                  onClick={async () => { await logout(); navigate('/login'); }}
-                  className="text-xs font-semibold tracking-wide uppercase text-[var(--color-text-muted)]
-                             hover:text-[var(--color-danger)] transition-colors min-h-[44px] px-2"
-                >
-                  Salir
-                </button>
-              )}
+              <button
+                onClick={async () => { await logout(); navigate('/login'); }}
+                className="text-[10px] font-bold tracking-widest uppercase text-white/50
+                           hover:text-white transition-colors min-h-[44px] px-2 flex items-center gap-2"
+                title="Cerrar sesión"
+              >
+                <LogOut size={13} strokeWidth={2} className="opacity-70" />
+                Salir
+              </button>
             </div>
 
           </div>
         </div>
 
         {open && (
-          <div id="mobile-nav" className="md:hidden border-t border-[var(--color-border)] bg-[var(--color-surface)]">
+          <div id="mobile-nav" className="md:hidden border-t border-white/10 bg-[#001640]">
             <div className="px-2 py-3 space-y-0.5">
               {navItems.map(({ path, label, icon: Icon }) => (
                 <button
@@ -198,10 +173,10 @@ export const Layout = ({ children }: LayoutProps) => {
                   onClick={() => { navigate(path); setOpen(false); }}
                   aria-current={isActive(path) ? 'page' : undefined}
                   className={`w-full text-left flex items-center gap-2.5 px-3 py-2.5
-                              rounded-[var(--radius-sm)] text-sm font-medium transition-colors
-                              ${isActive(path)
-                                ? 'bg-[var(--color-primary-subtle)] text-[var(--color-primary)]'
-                                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-background)]'
+                              rounded-lg text-sm font-medium transition-colors
+                               ${isActive(path)
+                                ? 'bg-white text-[#001640] shadow-sm'
+                                : 'text-white/70 hover:bg-white/5'
                               }`}
                 >
                   <Icon size={14} strokeWidth={1.5} aria-hidden="true" />
@@ -209,19 +184,29 @@ export const Layout = ({ children }: LayoutProps) => {
                 </button>
               ))}
             </div>
-            <div className="px-4 py-3 border-t border-[var(--color-border)] flex items-center gap-2">
-              <div className="w-6 h-6 rounded-[var(--radius-sm)] bg-primary
-                              flex items-center justify-center text-white text-xs font-bold"
-                   aria-hidden="true">
-                {initials || '?'}
+            <div className="px-4 py-3 border-t border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-white
+                                flex items-center justify-center text-[#001640] text-[10px] font-bold"
+                     aria-hidden="true">
+                  {initials || '?'}
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-white/50">
+                  {user?.firstName} {user?.lastName} · {ROLE_LABEL[user?.role ?? ''] ?? user?.role}
+                </p>
               </div>
-              <p className="text-xs text-[var(--color-text-muted)]">
-                {user?.firstName} {user?.lastName} · {ROLE_LABEL[user?.role ?? ''] ?? user?.role}
-              </p>
+              <button
+                onClick={async () => { await logout(); navigate('/login'); }}
+                className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 transition-colors py-2"
+              >
+                Salir
+              </button>
             </div>
           </div>
         )}
       </nav>
+
+      <Breadcrumbs />
 
       {location.pathname !== homePath && (
         <button
@@ -229,7 +214,7 @@ export const Layout = ({ children }: LayoutProps) => {
           aria-label="Volver al inicio"
           className="fixed bottom-6 right-6 z-50 flex items-center gap-2
                      bg-primary text-white text-xs font-semibold tracking-wide uppercase
-                     px-4 py-3 min-h-[44px] rounded-[var(--radius-sm)]
+                     px-4 py-3 min-h-[44px] rounded-lg
                      hover:opacity-90 motion-safe:transition-opacity"
         >
           <ArrowLeft size={13} strokeWidth={1.5} aria-hidden="true" />
@@ -237,7 +222,9 @@ export const Layout = ({ children }: LayoutProps) => {
         </button>
       )}
 
-      <main>{children}</main>
+      <main key={location.pathname} className="animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out fill-mode-both">
+        {children}
+      </main>
     </div>
   );
 };

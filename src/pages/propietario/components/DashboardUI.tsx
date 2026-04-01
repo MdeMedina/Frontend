@@ -32,37 +32,32 @@ interface DashboardCardProps {
 export const DashboardCard: React.FC<DashboardCardProps> = ({ item, idx, onClick }) => (
   <div
     onClick={() => onClick(item.path)}
-    className="group cursor-pointer bg-white rounded-sm border-2 border-black/[0.12] p-7 shadow-sm hover:shadow-2xl hover:border-black/30 hover:translate-x-1 transition-all duration-500 relative overflow-hidden active:scale-[0.97] animate-in fade-in slide-in-from-left-6 fill-mode-both border-l-[6px] border-l-black group-hover:border-l-blue-600"
+    className="group cursor-pointer bg-white border border-black/[0.12] rounded-xl p-8 shadow-[var(--shadow-surgical)] hover:shadow-2xl hover:border-[#001640]/30 hover:translate-x-1 transition-all duration-500 relative overflow-hidden active:scale-[0.97] animate-in fade-in slide-in-from-left-6 fill-mode-both border-l-[6px] border-l-[#001640] group-hover:border-l-blue-600"
     style={{ animationDelay: `${idx * 60}ms` }}
+    role="button"
+    tabIndex={0}
+    onKeyDown={(e) => e.key === 'Enter' && onClick(item.path)}
+    aria-label={`Acceder a ${item.title}`}
   >
     <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 -mr-16 -mt-16 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-colors duration-700"></div>
-    
-    <div className="relative z-10 flex flex-col h-full">
-      <div className="flex items-start justify-between mb-10">
-        <div className="h-16 w-16 rounded-sm bg-gray-950 flex items-center justify-center text-white shadow-2xl shadow-black/40 group-hover:scale-110 group-hover:bg-blue-600 transition-all duration-500 border-2 border-white/10">
-          <span className="material-symbols-outlined text-[36px] font-bold">{item.icon}</span>
-        </div>
-        <span className="material-symbols-outlined text-gray-200 text-2xl group-hover:text-blue-600 group-hover:translate-x-2 transition-all duration-700 opacity-20 group-hover:opacity-100">
-          arrow_forward
-        </span>
+
+    <div className="relative z-10 flex items-center gap-6 h-full">
+      <div className="h-16 w-16 shrink-0 rounded-xl bg-[#001640] flex items-center justify-center text-white shadow-2xl shadow-[#001640]/20 group-hover:scale-110 group-hover:bg-blue-600 transition-all duration-500 border border-white/10">
+        <span className="material-symbols-outlined text-[32px] font-bold">{item.icon}</span>
       </div>
-      
-      <div className="flex-1">
-        <h2 className="text-[18px] font-bold text-gray-950 tracking-tight group-hover:text-blue-600 transition-colors mb-2 leading-none">
+
+      <div className="flex-1 pr-8">
+        <h3 className="text-[18px] font-bold text-gray-950 tracking-tight group-hover:text-blue-600 transition-colors mb-1.5 leading-none uppercase">
           {item.title}
-        </h2>
-        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-loose mb-4">
-          Protocolo_0{idx + 1}
-        </p>
-        <p className="text-[13px] font-medium text-gray-600 leading-relaxed max-w-[220px] group-hover:text-gray-900 transition-colors">
+        </h3>
+        <p className="text-[13px] font-medium text-gray-600 leading-relaxed group-hover:text-gray-900 transition-colors">
           {item.description}
         </p>
       </div>
 
-      <div className="mt-10 pt-6 border-t border-black/[0.06] flex items-center justify-between">
-        <span className="text-[10px] font-black text-gray-950 uppercase tracking-[0.25em] opacity-40 group-hover:opacity-100 transition-opacity">Ejecutar</span>
-        <span className="h-[2px] w-12 bg-gray-100 group-hover:w-20 group-hover:bg-blue-600 transition-all duration-700"></span>
-      </div>
+      <span className="absolute top-0 right-0 material-symbols-outlined text-gray-200 text-2xl group-hover:text-blue-600 group-hover:translate-x-2 transition-all duration-700 opacity-20 group-hover:opacity-100">
+        arrow_forward
+      </span>
     </div>
   </div>
 );

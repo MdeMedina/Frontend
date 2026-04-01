@@ -13,125 +13,186 @@
   ---------------------------------------------------------- */
 
   /* Primary — Deep Trust Blue */
-  --color-primary:         oklch(21% 0.09 254);      /* #002D72 */
-  --color-primary-hover:   oklch(27% 0.10 254);
-  --color-primary-subtle:  oklch(21% 0.09 254 / 0.08);
+  --color-primary: oklch(21% 0.09 254);
+  /* #002D72 */
+  --color-primary-hover: oklch(27% 0.10 254);
+  --color-primary-subtle: oklch(21% 0.09 254 / 0.08);
 
   /* Action / Success — Surgical Clinical Green (Vivid) */
-  --color-action:          oklch(62% 0.17 150);      /* High-precision vivid green */
-  --color-action-hover:    oklch(55% 0.19 150);
-  --color-action-subtle:   oklch(62% 0.17 150 / 0.12);
-  --color-action-text:     oklch(35% 0.12 150);      /* High contrast for text */
+  --color-action: oklch(62% 0.17 150);
+  /* High-precision vivid green */
+  --color-action-hover: oklch(55% 0.19 150);
+  --color-action-subtle: oklch(62% 0.17 150 / 0.12);
+  --color-action-text: oklch(35% 0.12 150);
+  /* High contrast for text */
 
   /* Surface & Background */
-  --color-surface:         oklch(100% 0 0);           /* #FFFFFF — Cards, panels */
-  --color-background:      oklch(98% 0.01 250);       /* Surgical cold gray */
+  --color-surface: oklch(100% 0 0);
+  /* #FFFFFF — Cards, panels */
+  --color-background: oklch(98% 0.01 250);
+  /* Surgical cold gray */
 
   /* Borders — 1px hard edges, zero shadows */
-  --color-border:          oklch(91% 0.01 250);       /* slate-200 equivalent */
-  --color-border-strong:   oklch(80% 0.015 250);
+  --color-border: oklch(91% 0.01 250);
+  /* slate-200 equivalent */
+  --color-border-strong: oklch(80% 0.015 250);
 
   /* Text scale */
-  --color-text-primary:    oklch(12% 0.01 250);       /* Near-black */
-  --color-text-secondary:  oklch(40% 0.015 250);      /* Muted */
-  --color-text-muted:      oklch(60% 0.01 250);       /* Placeholders */
-  --color-text-inverse:    oklch(100% 0 0);           /* White on dark */
+  --color-text-primary: oklch(12% 0.01 250);
+  /* Near-black */
+  --color-text-secondary: oklch(40% 0.015 250);
+  /* Muted */
+  --color-text-muted: oklch(60% 0.01 250);
+  /* Placeholders */
+  --color-text-inverse: oklch(100% 0 0);
+  /* White on dark */
 
   /* Status colors — surgical precision, no pastels */
-  --color-danger:          oklch(48% 0.18 22);        /* Error red */
-  --color-danger-subtle:   oklch(97% 0.02 22);
-  --color-warning:         oklch(68% 0.14 70);        /* Amber */
-  --color-warning-subtle:  oklch(97% 0.02 70);
-  --color-info:            oklch(55% 0.14 250);       /* Info blue */
-  --color-info-subtle:     oklch(97% 0.01 250);
+  --color-danger: oklch(48% 0.18 22);
+  /* Error red */
+  --color-danger-subtle: oklch(97% 0.02 22);
+  --color-warning: oklch(68% 0.14 70);
+  /* Amber */
+  --color-warning-subtle: oklch(97% 0.02 70);
+  --color-info: oklch(55% 0.14 250);
+  /* Info blue */
+  --color-info-subtle: oklch(97% 0.01 250);
 
   /* ----------------------------------------------------------
      TYPOGRAPHY — Inter fluid scale with optical sizing
   ---------------------------------------------------------- */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
-               system-ui, sans-serif;
+    system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
   /* Fluid type scale — optical sizing, 8px baseline aligned */
-  --text-xs:   0.75rem;    /* 12px */
-  --text-sm:   0.875rem;   /* 14px */
-  --text-base: 1rem;       /* 16px — body baseline */
-  --text-lg:   1.125rem;   /* 18px */
-  --text-xl:   1.25rem;    /* 20px — 1.25x scale for critical inputs/CTAs */
-  --text-2xl:  1.5rem;     /* 24px */
-  --text-3xl:  1.875rem;   /* 30px */
-  --text-4xl:  2.25rem;    /* 36px */
+  --text-xs: 0.75rem;
+  /* 12px */
+  --text-sm: 0.875rem;
+  /* 14px */
+  --text-base: 1rem;
+  /* 16px — body baseline */
+  --text-lg: 1.125rem;
+  /* 18px */
+  --text-xl: 1.25rem;
+  /* 20px — 1.25x scale for critical inputs/CTAs */
+  --text-2xl: 1.5rem;
+  /* 24px */
+  --text-3xl: 1.875rem;
+  /* 30px */
+  --text-4xl: 2.25rem;
+  /* 36px */
 
-  --font-weight-normal:   400;
-  --font-weight-medium:   500;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
   --font-weight-semibold: 600;
-  --font-weight-bold:     700;
+  --font-weight-bold: 700;
 
-  --leading-tight:  1.25;
-  --leading-snug:   1.375;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
   --leading-normal: 1.5;
 
   /* Letter spacing */
   --tracking-tight: -0.01em;
-  --tracking-fine:  -0.02em;  /* For large headings */
-  --tracking-wide:  0.06em;   /* For uppercase labels */
+  --tracking-fine: -0.02em;
+  /* For large headings */
+  --tracking-wide: 0.06em;
+  /* For uppercase labels */
 
   /* ----------------------------------------------------------
      SPACING — 8px baseline grid
   ---------------------------------------------------------- */
   --spacing-px: 1px;
-  --spacing-0:  0;
-  --spacing-1:  0.25rem;   /* 4px */
-  --spacing-2:  0.5rem;    /* 8px  — base unit */
-  --spacing-3:  0.75rem;   /* 12px */
-  --spacing-4:  1rem;      /* 16px */
-  --spacing-5:  1.25rem;   /* 20px */
-  --spacing-6:  1.5rem;    /* 24px */
-  --spacing-8:  2rem;      /* 32px */
-  --spacing-10: 2.5rem;    /* 40px */
-  --spacing-12: 3rem;      /* 48px */
-  --spacing-16: 4rem;      /* 64px */
-  --spacing-20: 5rem;      /* 80px */
-  --spacing-24: 6rem;      /* 96px */
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;
+  /* 4px */
+  --spacing-2: 0.5rem;
+  /* 8px  — base unit */
+  --spacing-3: 0.75rem;
+  /* 12px */
+  --spacing-4: 1rem;
+  /* 16px */
+  --spacing-5: 1.25rem;
+  /* 20px */
+  --spacing-6: 1.5rem;
+  /* 24px */
+  --spacing-8: 2rem;
+  /* 32px */
+  --spacing-10: 2.5rem;
+  /* 40px */
+  --spacing-12: 3rem;
+  /* 48px */
+  --spacing-16: 4rem;
+  /* 64px */
+  --spacing-20: 5rem;
+  /* 80px */
+  --spacing-24: 6rem;
+  /* 96px */
 
   /* ----------------------------------------------------------
      BORDER RADIUS — Strict maximum: rounded-sm (2px–4px)
      No rounded-md, rounded-lg, or rounded-full on structural elements.
   ---------------------------------------------------------- */
   --radius-none: 0;
-  --radius-sm:   2px;     /* Default — structural elements */
-  --radius:      4px;     /* Maximum allowed */
-  --radius-full: 9999px;  /* ONLY for pill badges / FAB — use sparingly */
+  --radius-sm: 2px;
+  /* Default — structural elements */
+  --radius: 4px;
+  /* Maximum allowed */
+  --radius-full: 9999px;
+  /* ONLY for pill badges / FAB — use sparingly */
 
   /* ----------------------------------------------------------
-     SHADOWS — ZERO SHADOW POLICY
-     All depth is expressed through 1px borders. No box-shadows.
+     SHADOWS — Surgical Shadow Policy
+     Subtle depth using the brand's primary navy for cohesion.
   ---------------------------------------------------------- */
+  --shadow-surgical: 0 16px 15px -12px rgba(45, 100, 227, 0.5);
 
   /* ----------------------------------------------------------
      TRANSITIONS
   ---------------------------------------------------------- */
-  --ease-surgical: cubic-bezier(0.16, 1, 0.3, 1);  /* Fast out, precise */
+  --ease-surgical: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Fast out, precise */
 
   /* ----------------------------------------------------------
      ANIMATION KEYFRAMES — Migrated from index.css
   ---------------------------------------------------------- */
   --animate-slide-in: slide-in 0.2s var(--ease-surgical) both;
-  --animate-fade-in:  fade-in 0.15s ease-out both;
+  --animate-fade-in: fade-in 0.15s ease-out both;
 
   @keyframes slide-in {
-    from { transform: translateX(100%); opacity: 0; }
-    to   { transform: translateX(0);   opacity: 1; }
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
   }
 
   @keyframes fade-in {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes fade-slide-up {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
@@ -140,6 +201,7 @@
    ============================================================ */
 
 @layer base {
+
   *,
   *::before,
   *::after {
@@ -154,7 +216,8 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; /* Inter optical features */
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    /* Inter optical features */
   }
 
   body {
@@ -165,7 +228,10 @@
   }
 
   /* Remove default button and input resets */
-  button, input, select, textarea {
+  button,
+  input,
+  select,
+  textarea {
     font-family: inherit;
     font-size: inherit;
   }
@@ -183,27 +249,65 @@
    ============================================================ */
 
 @layer utilities {
+
   /* Login page — staggered entrance animations */
-  .anim-1 { animation: fade-slide-up 0.4s var(--ease-surgical) 0.05s both; }
-  .anim-2 { animation: fade-slide-up 0.4s var(--ease-surgical) 0.15s both; }
-  .anim-3 { animation: fade-slide-up 0.4s var(--ease-surgical) 0.25s both; }
-  .anim-4 { animation: fade-slide-up 0.4s var(--ease-surgical) 0.35s both; }
+  .anim-1 {
+    animation: fade-slide-up 0.4s var(--ease-surgical) 0.05s both;
+  }
+
+  .anim-2 {
+    animation: fade-slide-up 0.4s var(--ease-surgical) 0.15s both;
+  }
+
+  .anim-3 {
+    animation: fade-slide-up 0.4s var(--ease-surgical) 0.25s both;
+  }
+
+  .anim-4 {
+    animation: fade-slide-up 0.4s var(--ease-surgical) 0.35s both;
+  }
 
   /* Fluid type helpers */
-  .text-fluid-hero       { font-size: clamp(2.5rem, 4vw, 4rem); }
-  .text-fluid-title      { font-size: clamp(1.75rem, 3vw, 2.25rem); }
-  .dashboard-hero-title  { font-size: clamp(2rem, 3.5vw, 3rem); }
+  .text-fluid-hero {
+    font-size: clamp(2.5rem, 4vw, 4rem);
+  }
+
+  .text-fluid-title {
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+  }
+
+  .dashboard-hero-title {
+    font-size: clamp(2rem, 3.5vw, 3rem);
+  }
 
   /* Brand surface utilities */
-  .bg-primary        { background-color: var(--color-primary); }
-  .text-action       { color: var(--color-action); }
-  .border-danger     { border-color: var(--color-danger); }
-  .bg-danger-subtle  { background-color: var(--color-danger-subtle); }
-  .text-danger       { color: var(--color-danger); }
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+
+  .text-action {
+    color: var(--color-action);
+  }
+
+  .border-danger {
+    border-color: var(--color-danger);
+  }
+
+  .bg-danger-subtle {
+    background-color: var(--color-danger-subtle);
+  }
+
+  .text-danger {
+    color: var(--color-danger);
+  }
 
   /* Reduced motion — disable entrance animations */
   @media (prefers-reduced-motion: reduce) {
-    .anim-1, .anim-2, .anim-3, .anim-4 {
+
+    .anim-1,
+    .anim-2,
+    .anim-3,
+    .anim-4 {
       animation: none;
       opacity: 1;
       transform: none;

@@ -5,10 +5,10 @@ import { residencesApi, type Residence } from '../../api/residences';
 import { buildingsApi } from '../../api/buildings';
 import { Layout } from '../../components/Layout';
 import { Modal } from '../../components/Modal';
-import { Landmark, Users, Building2, Building, Plus } from 'lucide-react';
+import { Landmark, Users, Building2, Building, Plus, Trash2 } from 'lucide-react';
 
-const card = 'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-sm)]';
-const skel = 'bg-[var(--color-background)] rounded-[var(--radius-sm)] animate-pulse';
+const card = 'bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-[var(--shadow-surgical)]';
+const skel = 'bg-[var(--color-background)] rounded-xl animate-pulse';
 
 const ACTIONS = [
   { label: 'Gestionar Residencias', sub: 'Crear, editar o desactivar residencias', icon: Landmark, path: '/superadmin/residences' },
@@ -17,7 +17,7 @@ const ACTIONS = [
 
 export function SuperAdminDashboard() {
   const navigate = useNavigate();
-  const { stopImpersonation, startImpersonation } = useAuth();
+  const { stopImpersonation, startImpersonation, selectResidence, selectBuilding } = useAuth();
   const [residences, setResidences] = useState<Residence[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,15 +39,20 @@ export function SuperAdminDashboard() {
   const [isCreating, setIsCreating] = useState(false);
   const [selectedResidenceId, setSelectedResidenceId] = useState<string | null>(null);
 
+  // States for residence creation
+  const [isResidenceModalOpen, setIsResidenceModalOpen] = useState(false);
+  const [newResidenceName, setNewResidenceName] = useState('');
+  const [isCreatingResidence, setIsCreatingResidence] = useState(false);
+
   const handleCreateTower = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTowerName.trim() || !selectedResidenceId) return;
-    
+
     try {
       setIsCreating(true);
-      await buildingsApi.create({ 
+      await buildingsApi.create({
         name: newTowerName.trim(),
-        residenceId: selectedResidenceId 
+        residenceId: selectedResidenceId
       });
       setNewTowerName('');
       setIsModalOpen(false);
@@ -60,32 +65,52 @@ export function SuperAdminDashboard() {
     }
   };
 
-  useEffect(() => { stopImpersonation(); fetchResidences(); }, []);
+  const handleDeleteTower = async (e: React.MouseEvent, towerId: string, towerName: string) => {
+    e.stopPropagation();
+    if (!window.confirm(`¿Está seguro de que desea eliminar la torre "${towerName}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
 
-  const stats = [
-    { label: 'Residencias', value: residences.length, color: 'bg-[var(--color-primary)]' },
-    { label: 'Usuarios', value: residences.reduce((s, r) => s + (r._count?.users || 0), 0), color: 'bg-blue-500' },
-    { label: 'Torres', value: residences.reduce((s, r) => s + (r._count?.buildings || 0), 0), color: 'bg-indigo-500' },
-    { label: 'Departamentos', value: residences.reduce((s, r) => s + (r._count?.apartments || 0), 0), color: 'bg-gray-500' },
-  ];
+    try {
+      await buildingsApi.delete(towerId);
+      fetchResidences();
+    } catch (err: any) {
+      alert(err.response?.data?.message || err.message || 'Error al eliminar la torre');
+    }
+  };
+
+  const handleCreateResidence = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newResidenceName.trim()) return;
+
+    try {
+      setIsCreatingResidence(true);
+      await residencesApi.create(newResidenceName.trim());
+      setNewResidenceName('');
+      setIsResidenceModalOpen(false);
+      fetchResidences();
+    } catch (err: any) {
+      alert(err.response?.data?.message || err.message || 'Error al crear la residencia');
+    } finally {
+      setIsCreatingResidence(false);
+    }
+  };
+
+  useEffect(() => { 
+    selectResidence(null);
+    selectBuilding(null);
+    stopImpersonation(); 
+    fetchResidences(); 
+  }, []);
+
 
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-        <div className="mb-10">
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[var(--color-primary)] mb-2">
-            Super Administrador
-          </p>
-          <h1 className="dashboard-hero-title font-bold tracking-tight text-[var(--color-text-primary)] leading-none">
-            Vista General
-          </h1>
-        </div>
-
         {error && (
           <div role="alert"
             className="flex items-center gap-3 border border-[var(--color-danger)] bg-[var(--color-danger-subtle)]
-                          rounded-[var(--radius-sm)] px-4 py-3 mb-8">
+                          rounded-lg px-4 py-3 mb-8">
             <p className="text-sm text-[var(--color-danger)]">{error}</p>
             <button onClick={fetchResidences}
               className="ml-auto text-xs font-semibold text-[var(--color-danger)] hover:opacity-70 transition-opacity">
@@ -94,126 +119,121 @@ export function SuperAdminDashboard() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Side: Residences (9/12 width) */}
-          <div className="lg:col-span-9">
-            <h2 className="text-xs font-semibold tracking-widest uppercase text-[var(--color-text-muted)] mb-5">
-              Gestión de Residencias
-            </h2>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xs font-semibold tracking-widest uppercase text-[var(--color-text-muted)]">
+            Gestión de Residencias
+          </h2>
+          <button
+            onClick={() => setIsResidenceModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-[var(--color-primary)] text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-lg hover:opacity-90 transition-all active:scale-[0.98] shadow-lg shadow-[var(--color-primary)]/20"
+          >
+            <Plus size={14} strokeWidth={3} />
+            Crear Residencia
+          </button>
+        </div>
 
-            <div className="max-h-[75vh] overflow-y-auto p-6 bg-[var(--color-background-subtle,rgba(0,0,0,0.02))] border border-[var(--color-border)] rounded-[var(--radius-sm)] shadow-inner custom-scrollbar">
-              {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className={`${skel} h-40`} />)}
-                </div>
-              ) : error ? null : residences.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-sm text-[var(--color-text-muted)] mb-4">No hay residencias registradas</p>
-                  <button
-                    onClick={() => navigate('/superadmin/residences')}
-                    className="bg-[var(--color-primary)] text-white text-sm font-semibold
-                               px-5 py-2.5 rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity">
-                    Crear primera residencia
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {residences.map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => navigate(`/superadmin/residences/${r.id}`)}
-                      className={`${card} flex flex-col p-6 text-left bg-[var(--color-surface)] hover:bg-[var(--color-background)] transition-all group hover:shadow-md`}
-                    >
-                      <div className="flex flex-col gap-4 mb-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center justify-center w-12 h-12 shrink-0 bg-[var(--color-primary-subtle)] rounded-[var(--radius-sm)] group-hover:scale-105 transition-transform border border-[var(--color-primary)]/10">
-                            <Landmark size={24} strokeWidth={1.5} className="text-[var(--color-primary)]" aria-hidden="true" />
-                          </div>
-                          <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-[var(--radius-sm)] shrink-0
-                            ${r.isActive ? 'bg-[var(--color-action-subtle)] text-[var(--action-text)]' : 'bg-[var(--color-danger-subtle)] text-[var(--color-danger)]'}`}>
-                            {r.isActive ? 'Activa' : 'Inactiva'}
-                          </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in duration-500">
+          {loading ? (
+            <>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className={`${skel} h-40`} />)}
+            </>
+          ) : error ? null : residences.length === 0 ? (
+            <div className="col-span-full text-center py-20 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-sm">
+              <p className="text-sm text-[var(--color-text-muted)] mb-4 uppercase tracking-widest font-bold">No hay residencias registradas</p>
+              <button
+                onClick={() => setIsResidenceModalOpen(true)}
+                className="bg-[var(--color-primary)] text-white text-[10px] font-bold uppercase tracking-widest
+                           px-6 py-2.5 rounded-lg hover:opacity-90 transition-opacity">
+                Crear primera residencia
+              </button>
+            </div>
+          ) : (
+            <>
+              {residences.map((r) => (
+                <div
+                  key={r.id}
+                  className={`${card} overflow-hidden flex flex-col p-0 text-left transition-all group animate-in fade-in slide-in-from-bottom duration-500`}
+                >
+                  <div className="h-2 bg-[#001640]" />
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="flex flex-col gap-4 mb-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center justify-center w-12 h-12 shrink-0 bg-[var(--color-primary-subtle)] rounded-lg group-hover:scale-105 transition-transform border border-[var(--color-primary)]/10">
+                          <Landmark size={24} strokeWidth={1.5} className="text-[var(--color-primary)]" aria-hidden="true" />
                         </div>
-                        <div>
-                          <p className="text-lg font-bold text-[var(--color-text-primary)] group-hover:text-[var(--color-primary)] transition-colors leading-tight line-clamp-2">
-                            {r.name}
-                          </p>
-                        </div>
+                        <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg shrink-0
+                          ${r.isActive ? 'bg-[var(--color-action-subtle)] text-[var(--action-text)]' : 'bg-[var(--color-danger-subtle)] text-[var(--color-danger)]'}`}>
+                          {r.isActive ? 'Activa' : 'Inactiva'}
+                        </span>
                       </div>
-                      <div className="flex-1 flex flex-col gap-2 overflow-y-auto max-h-[160px] pr-1 custom-scrollbar mb-4">
-                        {r.buildings && r.buildings.length > 0 ? (
-                          r.buildings.map(b => (
-                            <div
-                              key={b.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startImpersonation(r.id, r.name, b.id, b.name);
-                                navigate('/admin');
-                              }}
-                              className="px-3 py-2 bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-sm)] flex items-center justify-between group/tower hover:border-[var(--color-primary)] transition-colors cursor-pointer"
-                            >
-                              <span className="text-[11px] font-bold text-[var(--color-text-secondary)] group-hover/tower:text-[var(--color-primary)] transition-colors truncate uppercase tracking-wider">
-                                {b.name}
-                              </span>
-                              <div className={`w-1.5 h-1.5 rounded-full ${b.isActive ? 'bg-[var(--color-action)]' : 'bg-[var(--color-danger)]'}`} />
-                            </div>
-                          ))
-                        ) : (
-                          <div className="flex-1 flex items-center justify-center border border-dashed border-[var(--color-border)] rounded-[var(--radius-sm)] py-4">
-                            <span className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-widest">Sin torres</span>
+                      <div>
+                        <p className="text-lg font-bold text-[var(--color-text-primary)] leading-tight line-clamp-1 mb-1">
+                          {r.name}
+                        </p>
+                        {r.admins?.find(a => a.isMain) && (
+                          <div className="flex items-center gap-1.5 opacity-60">
+                            <Users size={12} strokeWidth={2} className="text-[var(--color-text-muted)] mt-[1px]" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest truncate">
+                              {(() => {
+                                const main = r.admins?.find(a => a.isMain);
+                                return `${main?.firstName} ${main?.lastName}`;
+                              })()}
+                            </span>
                           </div>
                         )}
                       </div>
+                    </div>
+                    <div className="flex-1 flex flex-col gap-2 overflow-y-auto max-h-[160px] pr-1 custom-scrollbar mb-4">
+                      {r.buildings && r.buildings.length > 0 ? (
+                        r.buildings.map(b => (
+                          <div
+                            key={b.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startImpersonation(r.id, r.name, b.id, b.name);
+                              navigate('/admin');
+                            }}
+                            className="px-3 py-2 bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg flex items-center justify-between group/tower hover:border-[var(--color-primary)] transition-colors cursor-pointer pr-2"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${b.isActive ? 'bg-[var(--color-action)]' : 'bg-[var(--color-danger)]'}`} />
+                              <span className="text-[10px] font-black text-[var(--color-text-secondary)] group-hover/tower:text-[var(--color-primary)] transition-colors truncate uppercase tracking-widest">
+                                {b.name}
+                              </span>
+                            </div>
+                            <button
+                              onClick={(e) => handleDeleteTower(e, b.id, b.name)}
+                              className="p-1.5 rounded-lg text-slate-300 hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-subtle)] transition-all opacity-0 group-hover/tower:opacity-100"
+                              title="Eliminar torre"
+                            >
+                              <Trash2 size={12} strokeWidth={2.5} />
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex-1 flex items-center justify-center border border-dashed border-[var(--color-border)] rounded-lg py-4">
+                          <span className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-widest">Sin torres</span>
+                        </div>
+                      )}
+                    </div>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedResidenceId(r.id);
-                          setIsModalOpen(true);
-                        }}
-                        className="w-full py-2.5 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] text-[11px] font-bold uppercase tracking-[0.1em] hover:bg-[var(--color-primary)] hover:text-white transition-all flex items-center justify-center gap-2"
-                      >
-                        <Plus size={14} strokeWidth={3} />
-                        Añadir torre
-                      </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedResidenceId(r.id);
+                        setIsModalOpen(true);
+                      }}
+                      className="w-full py-2.5 rounded-lg border border-dashed border-[var(--color-primary)] bg-[var(--color-primary-subtle)] text-[var(--color-primary)] text-[11px] font-bold uppercase tracking-[0.1em] hover:bg-[var(--color-primary)] hover:text-white transition-all flex items-center justify-center gap-2"
+                    >
+                      <Plus size={14} strokeWidth={3} />
+                      Añadir torre
                     </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Side: Stats Panel (3/12 width) */}
-          <div className="lg:col-span-3">
-            <h2 className="text-xs font-semibold tracking-widest uppercase text-[var(--color-text-muted)] mb-5">
-              Panel de Estadísticas
-            </h2>
-            <div className={`${card} p-6 flex flex-col gap-6 h-fit shadow-sm`}>
-              {loading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="flex items-center gap-6">
-                      <div className={`${skel} w-3 h-3 rounded-full`} />
-                      <div className={`${skel} w-6 h-6 rounded`} />
-                      <div className={`${skel} w-24 h-4 rounded`} />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                stats.map((s) => (
-                  <div key={s.label} className="flex flex-col gap-1.5 min-w-[100px]">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${s.color}`} />
-                      <span className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-[0.1em] whitespace-nowrap">{s.label}</span>
-                    </div>
-                    <span className="text-lg font-bold tabular-nums text-[var(--color-text-primary)] leading-none ml-4">{s.value}</span>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
+                </div>
+              ))}
+            </>
+          )}
         </div>
-
       </div>
 
       {/* Modal para añadir torre desde dashboard */}
@@ -234,11 +254,11 @@ export function SuperAdminDashboard() {
               onChange={(e) => setNewTowerName(e.target.value)}
               placeholder="Ej. Torre A, Edificio Norte..."
               autoFocus
-              className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-sm)] px-4 py-3 text-sm focus:border-[var(--color-primary)] focus:outline-none transition-colors"
+              className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-4 py-3 text-sm focus:border-[var(--color-primary)] focus:outline-none transition-colors"
               disabled={isCreating}
             />
           </div>
-          
+
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
@@ -251,7 +271,7 @@ export function SuperAdminDashboard() {
             <button
               type="submit"
               disabled={isCreating || !newTowerName.trim()}
-              className="bg-[var(--color-primary)] text-white px-6 py-2 rounded-[var(--radius-sm)] text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+              className="bg-[var(--color-primary)] text-white px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
             >
               {isCreating ? (
                 <>
@@ -259,6 +279,54 @@ export function SuperAdminDashboard() {
                   Creando...
                 </>
               ) : 'Crear Torre'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal para añadir nueva residencia */}
+      <Modal
+        isOpen={isResidenceModalOpen}
+        onClose={() => !isCreatingResidence && setIsResidenceModalOpen(false)}
+        title="Crear Nueva Residencia"
+      >
+        <form onSubmit={handleCreateResidence} className="space-y-6 py-2">
+          <div>
+            <label htmlFor="residenceName" className="block text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
+              Nombre de la Residencia
+            </label>
+            <input
+              id="residenceName"
+              type="text"
+              value={newResidenceName}
+              onChange={(e) => setNewResidenceName(e.target.value)}
+              placeholder="Ej. Condominio Vicuña, Edificio Almagro..."
+              autoFocus
+              className="w-full bg-[var(--color-background)] border border-[var(--color-border)] rounded-lg px-4 py-3 text-sm focus:border-[var(--color-primary)] focus:outline-none transition-colors"
+              disabled={isCreatingResidence}
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsResidenceModalOpen(false)}
+              disabled={isCreatingResidence}
+              className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isCreatingResidence || !newResidenceName.trim()}
+              className="bg-[var(--color-primary)] text-white px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+            >
+              {isCreatingResidence ? (
+                <>
+                  <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Iniciando...
+                </>
+              ) : 'Crear Residencia'}
             </button>
           </div>
         </form>

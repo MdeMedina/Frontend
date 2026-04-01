@@ -36,11 +36,11 @@ export const AuditFilters: React.FC<AuditFiltersProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-sm border-2 border-black/[0.08] p-5 mb-6 shadow-xl shadow-black/[0.02] relative group hover:shadow-black/[0.04] transition-all duration-500">
-      <div className="absolute top-0 left-0 w-1 bg-black h-full group-hover:bg-blue-600 transition-colors duration-500"></div>
-      <div className="flex justify-between items-center mb-5 border-b-2 border-black/[0.04] pb-3.5">
+    <div className="bg-white rounded-xl border border-[var(--color-border)] p-6 mb-6 shadow-[var(--shadow-surgical)] relative group hover:shadow-md transition-all duration-500">
+      <div className="absolute top-0 left-0 w-1 bg-black h-full group-hover:bg-[#001640] transition-colors duration-500 rounded-l-xl"></div>
+      <div className="flex justify-between items-center mb-5 border-b border-black/[0.04] pb-3.5">
         <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-950 flex items-center gap-2 group-hover:translate-x-1 transition-transform">
-          <span className="material-symbols-outlined text-[16px] text-blue-600">filter_list</span>
+          <span className="material-symbols-outlined text-[16px] text-[#001640]">filter_list</span>
           Parámetros de Búsqueda
         </h2>
         <button
@@ -62,7 +62,7 @@ export const AuditFilters: React.FC<AuditFiltersProps> = ({
               placeholder="Identificador..."
               value={username}
               onChange={(e) => handleFilterChange(setUsername, e.target.value)}
-              className="w-full bg-gray-50/30 border-2 border-black/[0.06] rounded-sm px-3.5 py-1.5 text-[11px] font-bold focus:outline-none focus:ring-0 focus:border-black focus:bg-white focus:shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all placeholder:text-gray-300 shadow-sm"
+              className="w-full bg-gray-50/50 border border-black/[0.05] rounded-xl px-3.5 py-1.5 text-[11px] font-bold focus:outline-none focus:ring-0 focus:border-black focus:bg-white focus:shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all placeholder:text-gray-300 shadow-sm"
             />
           </div>
         </div>
@@ -76,7 +76,7 @@ export const AuditFilters: React.FC<AuditFiltersProps> = ({
               placeholder="Palabra clave..."
               value={search}
               onChange={(e) => handleFilterChange(setSearch, e.target.value)}
-              className="w-full bg-gray-50/30 border-2 border-black/[0.06] rounded-sm px-3.5 py-1.5 text-[11px] font-bold focus:outline-none focus:ring-0 focus:border-black focus:bg-white focus:shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all placeholder:text-gray-300 shadow-sm"
+              className="w-full bg-gray-50/50 border border-black/[0.05] rounded-xl px-3.5 py-1.5 text-[11px] font-bold focus:outline-none focus:ring-0 focus:border-black focus:bg-white focus:shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all placeholder:text-gray-300 shadow-sm"
             />
           </div>
         </div>
@@ -90,7 +90,7 @@ export const AuditFilters: React.FC<AuditFiltersProps> = ({
               placeholder="Número..."
               value={apartment}
               onChange={(e) => handleFilterChange(setApartment, e.target.value)}
-              className="w-full bg-gray-50/30 border-2 border-black/[0.06] rounded-sm px-3.5 py-1.5 text-[11px] font-bold focus:outline-none focus:ring-0 focus:border-black focus:bg-white focus:shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all placeholder:text-gray-300 shadow-sm"
+              className="w-full bg-gray-50/50 border border-black/[0.05] rounded-xl px-3.5 py-1.5 text-[11px] font-bold focus:outline-none focus:ring-0 focus:border-black focus:bg-white focus:shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all placeholder:text-gray-300 shadow-sm"
             />
           </div>
         </div>
@@ -102,7 +102,7 @@ export const AuditFilters: React.FC<AuditFiltersProps> = ({
             <select
               value={category}
               onChange={(e) => handleFilterChange(setCategory, e.target.value)}
-              className="w-full bg-gray-50/30 border-2 border-black/[0.06] rounded-sm px-3 py-1.5 text-[11px] font-bold focus:outline-none focus:ring-0 focus:border-black focus:bg-white transition-all cursor-pointer shadow-sm appearance-none"
+              className="w-full bg-gray-50/50 border border-black/[0.05] rounded-xl px-3 py-1.5 text-[11px] font-bold focus:outline-none focus:ring-0 focus:border-black focus:bg-white transition-all cursor-pointer shadow-sm appearance-none"
             >
               {categoryOptions.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -118,7 +118,7 @@ export const AuditFilters: React.FC<AuditFiltersProps> = ({
             date={startDate}
             onChange={(d) => handleFilterChange(setStartDate, d)}
             placeholder="Desde..."
-            inputClassName="w-full bg-gray-50/30 border-2 border-black/[0.06] rounded-sm pl-10 pr-3.5 py-1.5 text-[11px] font-bold focus:outline-none focus:ring-0 focus:border-black focus:bg-white focus:shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all placeholder:text-gray-300 shadow-sm"
+            inputClassName="w-full bg-gray-50/50 border border-black/[0.05] rounded-xl pl-10 pr-3.5 py-1.5 text-[11px] font-bold focus:outline-none focus:ring-0 focus:border-black focus:bg-white focus:shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all placeholder:text-gray-300 shadow-sm"
             labelClassName="block text-[9px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-1.5 leading-none transition-colors"
           />
         </div>
@@ -129,7 +129,7 @@ export const AuditFilters: React.FC<AuditFiltersProps> = ({
             onChange={(d) => handleFilterChange(setEndDate, d)}
             placeholder="Hasta..."
             minDate={startDate || undefined}
-            inputClassName="w-full bg-gray-50/30 border-2 border-black/[0.06] rounded-sm pl-10 pr-3.5 py-1.5 text-[11px] font-bold focus:outline-none focus:ring-0 focus:border-black focus:bg-white focus:shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all placeholder:text-gray-300 shadow-sm"
+            inputClassName="w-full bg-gray-50/50 border border-black/[0.05] rounded-xl pl-10 pr-3.5 py-1.5 text-[11px] font-bold focus:outline-none focus:ring-0 focus:border-black focus:bg-white focus:shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all placeholder:text-gray-300 shadow-sm"
             labelClassName="block text-[9px] font-bold text-gray-400 uppercase tracking-[0.12em] mb-1.5 leading-none transition-colors"
           />
         </div>

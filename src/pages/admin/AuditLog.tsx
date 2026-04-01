@@ -89,15 +89,6 @@ export const AdminAuditLog = () => {
       <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-white font-sans text-gray-900 animate-in fade-in duration-700">
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50/30">
           <div className="max-w-7xl mx-auto p-6 animate-in slide-in-from-bottom-6 duration-1000 delay-150 fill-mode-both">
-            {/* Header */}
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900">
-                Registros de Auditoría
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Bitácora de acciones y eventos del sistema
-              </p>
-            </div>
 
             {error && (
               <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-950 rounded-sm flex justify-between items-center shadow-lg shadow-red-500/5 animate-in slide-in-from-top-4 duration-300">
@@ -109,8 +100,6 @@ export const AdminAuditLog = () => {
               </div>
             )}
 
-            {/* Estadísticas */}
-            {stats && <AuditStatCards stats={stats} />}
 
             {/* Filtros */}
             <AuditFilters
@@ -126,7 +115,7 @@ export const AdminAuditLog = () => {
             />
 
             {/* Lista de Registros */}
-            <div className="bg-white rounded-sm border-2 border-black/[0.08] overflow-hidden shadow-2xl shadow-black/[0.02] transition-all">
+            <div className="bg-white rounded-xl border border-[var(--color-border)] overflow-hidden shadow-[var(--shadow-surgical)] transition-all">
               {loading ? (
                 <div className="flex flex-col justify-center items-center h-80 bg-gray-50/10">
                   <div className="relative">
@@ -149,7 +138,7 @@ export const AdminAuditLog = () => {
                     {logs.filter((log, index, self) => {
                       if (log.action === 'PETITION_CREATED') {
                         const hasReviewLog = self.some((otherLog, otherIndex) =>
-                          otherIndex < index && 
+                          otherIndex < index &&
                           otherLog.entityType === 'Petition' &&
                           otherLog.entityId === log.entityId &&
                           (otherLog.action === 'PETITION_APPROVED' || otherLog.action === 'PETITION_REJECTED')
@@ -159,7 +148,7 @@ export const AdminAuditLog = () => {
                       return true;
                     }).map((log, idx) => (
                       <div key={log.id} className="animate-in fade-in slide-in-from-left-2 duration-500 fill-mode-both" style={{ animationDelay: `${idx * 30}ms` }}>
-                        {log.entityType === 'Petition' 
+                        {log.entityType === 'Petition'
                           ? <PetitionLogRow log={log} />
                           : <StandardLogRow log={log} />
                         }
@@ -168,10 +157,10 @@ export const AdminAuditLog = () => {
                   </div>
 
                   {/* Paginación */}
-                  <div className="px-8 py-6 bg-gray-50/20 border-t-2 border-black/[0.04] flex items-center justify-between">
+                  <div className="px-8 py-6 bg-gray-50/20 border-t border-black/5 flex items-center justify-between">
                     <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
-                      Entrada <span className="text-gray-950 font-black bg-gray-200 px-2 py-0.5 rounded-sm mx-1">{page}</span> 
-                      <span className="mx-2 opacity-30">/</span> 
+                      Entrada <span className="text-gray-950 font-black bg-gray-200 px-2 py-0.5 rounded-sm mx-1">{page}</span>
+                      <span className="mx-2 opacity-30">/</span>
                       Total <span className="text-gray-950 font-bold">{totalPages}</span>
                     </div>
                     <div className="flex gap-3">
@@ -195,38 +184,6 @@ export const AdminAuditLog = () => {
                   </div>
                 </>
               )}
-            </div>
-
-            {/* Nota informativa */}
-            <div className="mt-16 bg-gray-950 rounded-sm p-10 text-white shadow-2xl shadow-black/40 relative overflow-hidden border-t-4 border-blue-600">
-              <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/5 -mr-40 -mt-40 rounded-full blur-[100px] pointer-events-none animate-pulse"></div>
-              <div className="absolute top-0 right-0 p-10 opacity-[0.02] pointer-events-none">
-                <span className="material-symbols-outlined text-[160px] font-black">verified_user</span>
-              </div>
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-500 mb-8 flex items-center gap-4">
-                <span className="h-px w-10 bg-blue-600/40"></span>
-                Protocolo de Auditoría y Control
-                <span className="h-px flex-1 bg-white/5"></span>
-              </h3>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-6 relative z-10">
-                {[
-                  'Trazabilidad íntegra de peticiones y revisiones administrativas',
-                  'Control estricto de ciclo de vida de usuarios y privilegios',
-                  'Gestión auditada de responsables y activos del edificio',
-                  'Seguimiento en tiempo real de reservas y flujos de estancia',
-                  'Logs de seguridad avanzada e inicios de sesión críticos',
-                  'Registro de importaciones masivas y cambios estructurales'
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-4 text-[13px] text-gray-400 font-medium leading-relaxed group cursor-default">
-                    <span className="text-blue-500 font-bold mt-1 group-hover:translate-x-1 transition-transform duration-300">/</span>
-                    <span className="group-hover:text-white transition-colors duration-300">{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-10 pt-6 border-t border-white/5 flex justify-between items-center opacity-20 grayscale">
-                <span className="text-[8px] font-bold uppercase tracking-[0.4em]">SYSTEM_VERSION_4.2.0</span>
-                <span className="text-[8px] font-bold uppercase tracking-[0.4em]">ENCRYPTION_AES_256</span>
-              </div>
             </div>
           </div>
         </div>

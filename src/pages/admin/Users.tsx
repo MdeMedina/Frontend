@@ -40,7 +40,7 @@ const UserActionButtons = ({ user, onEdit, onToggleActive, onReset, onDelete, ca
     return <span className="text-gray-400 italic text-xs">Gestionado por Propietario</span>;
   }
 
-  const btnClass = isOwnerView 
+  const btnClass = isOwnerView
     ? "text-xs font-bold uppercase tracking-wide transition-colors"
     : "font-semibold text-xs uppercase transition-colors";
 
@@ -97,7 +97,7 @@ const UserTableRow = ({ user, canManage, onEdit, onToggleActive, onReset, onDele
     <td className="px-6 py-4">
       <div className="flex items-center">
         <div className="h-10 w-10 flex-shrink-0">
-          <div className={`h-10 w-10 rounded-[var(--radius-sm)] flex items-center justify-center text-white font-bold text-xs tracking-wider shadow-sm ${user.role === 'ADMIN' ? 'bg-[#D32F2F]' :
+          <div className={`h-10 w-10 rounded-xl flex items-center justify-center text-white font-bold text-xs tracking-wider shadow-sm ${user.role === 'ADMIN' ? 'bg-[#D32F2F]' :
             user.role === 'OWNER' ? 'bg-primary' :
               user.role === 'ASSIGNED_MANAGER' ? 'bg-[#7B1FA2]' : 'bg-[#2E7D32]'
             }`}>
@@ -113,7 +113,7 @@ const UserTableRow = ({ user, canManage, onEdit, onToggleActive, onReset, onDele
     </td>
     <td className="px-6 py-4 whitespace-nowrap">
       <div className="flex items-center gap-1.5">
-        <span className={`px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-md border border-black/5 ${roleColors[user.role]}`}>
+        <span className={`px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-lg border border-black/5 ${roleColors[user.role]}`}>
           {roleLabels[user.role]}
         </span>
         {user.role === 'ADMIN' && (user as any).isMainAdmin && (
@@ -122,20 +122,20 @@ const UserTableRow = ({ user, canManage, onEdit, onToggleActive, onReset, onDele
       </div>
     </td>
     <td className="px-6 py-4 whitespace-nowrap">
-      <span className={`px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-md border border-black/5 ${user.isActive ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900'}`}>
+      <span className={`px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-lg border border-black/5 ${user.isActive ? 'bg-green-100 text-green-900' : 'bg-red-100 text-red-900'}`}>
         {user.isActive ? 'Activo' : 'Inactivo'}
       </span>
     </td>
     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(user.lastLogin)}</td>
     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(user.createdAt)}</td>
     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-      <UserActionButtons 
-        user={user} 
-        canManage={canManage} 
-        onEdit={onEdit} 
-        onToggleActive={onToggleActive} 
-        onReset={onReset} 
-        onDelete={onDelete} 
+      <UserActionButtons
+        user={user}
+        canManage={canManage}
+        onEdit={onEdit}
+        onToggleActive={onToggleActive}
+        onReset={onReset}
+        onDelete={onDelete}
       />
     </td>
   </tr>
@@ -152,8 +152,8 @@ interface HierarchyOwnerCardProps {
   onDelete?: (user: any) => void;
 }
 
-const HierarchyOwnerCard = ({ 
-  owner, isExpanded, onToggleExpand, canDelete, onEdit, onToggleActive, onReset, onDelete 
+const HierarchyOwnerCard = ({
+  owner, isExpanded, onToggleExpand, canDelete, onEdit, onToggleActive, onReset, onDelete
 }: HierarchyOwnerCardProps) => (
   <div key={owner.id} className="bg-white">
     {/* Owner Row */}
@@ -169,7 +169,7 @@ const HierarchyOwnerCard = ({
           <div className="text-lg font-bold text-[var(--color-text-primary)] tracking-tight">
             {owner.firstName} {owner.lastName}
             {!owner.isActive && (
-              <span className="ml-2 px-2.5 py-1 text-[10px] bg-red-50 text-red-700 border border-red-200 rounded-md uppercase font-bold tracking-widest shadow-sm">
+              <span className="ml-2 px-2.5 py-1 text-[10px] bg-red-50 text-red-700 border border-red-200 rounded-lg uppercase font-bold tracking-widest shadow-sm">
                 Inactivo
               </span>
             )}
@@ -179,17 +179,17 @@ const HierarchyOwnerCard = ({
       </div>
       <div className="flex items-center gap-4">
         <div className="flex items-center mr-4" onClick={(e) => e.stopPropagation()}>
-          <UserActionButtons 
-            user={owner} 
-            canManage={true} 
-            onEdit={onEdit} 
-            onToggleActive={onToggleActive} 
-            onReset={onReset} 
-            onDelete={onDelete} 
-            isOwnerView 
+          <UserActionButtons
+            user={owner}
+            canManage={true}
+            onEdit={onEdit}
+            onToggleActive={onToggleActive}
+            onReset={onReset}
+            onDelete={onDelete}
+            isOwnerView
           />
         </div>
-        <span className="px-4 py-1.5 bg-primary text-white border border-primary/20 rounded-md text-[11px] font-bold uppercase tracking-[0.1em] shadow-sm transform group-hover:scale-105 transition-transform">
+        <span className="px-4 py-1.5 bg-primary text-white border border-primary/20 rounded-xl text-[11px] font-bold uppercase tracking-[0.1em] shadow-sm transform group-hover:scale-105 transition-transform">
           {owner.ownedApartments.length} DEPARTAMENTO(S)
         </span>
         <span className={`text-2xl text-gray-400 transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
@@ -206,7 +206,7 @@ const HierarchyOwnerCard = ({
         ) : (
           <div className="space-y-3">
             {owner.ownedApartments.map((apt) => (
-              <div key={apt.id} className="bg-white rounded-[var(--radius-sm)] p-5 border border-[var(--color-border)] shadow-sm hover:border-primary/30 transition-colors">
+              <div key={apt.id} className="bg-white rounded-xl p-5 border border-[var(--color-border)] shadow-[var(--shadow-surgical)] hover:border-[#001640]/30 transition-colors">
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="font-bold text-[var(--color-text-primary)] flex items-center gap-2">
@@ -299,8 +299,8 @@ const UserModalContent = ({
               required
               value={formData.firstName}
               onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-3 py-2 
-                         focus:outline-none focus:ring-1 focus:ring-primary text-sm bg-white"
+              className="w-full border border-[var(--color-border)] rounded-xl px-3 py-2 
+                         focus:outline-none focus:ring-1 focus:ring-[#001640] text-sm bg-white"
             />
           </div>
           <div>
@@ -310,8 +310,8 @@ const UserModalContent = ({
               required
               value={formData.lastName}
               onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-3 py-2 
-                         focus:outline-none focus:ring-1 focus:ring-primary text-sm bg-white"
+              className="w-full border border-[var(--color-border)] rounded-xl px-3 py-2 
+                         focus:outline-none focus:ring-1 focus:ring-[#001640] text-sm bg-white"
             />
           </div>
         </div>
@@ -323,8 +323,8 @@ const UserModalContent = ({
             required
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-3 py-2 
-                       focus:outline-none focus:ring-1 focus:ring-primary text-sm bg-white"
+            className="w-full border border-[var(--color-border)] rounded-xl px-3 py-2 
+                       focus:outline-none focus:ring-1 focus:ring-[#001640] text-sm bg-white"
           />
         </div>
 
@@ -338,8 +338,8 @@ const UserModalContent = ({
               setFormData({ ...formData, rut: formatted });
             }}
             maxLength={12}
-            className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-3 py-2 
-                       focus:outline-none focus:ring-1 focus:ring-primary text-sm bg-white"
+            className="w-full border border-[var(--color-border)] rounded-xl px-3 py-2 
+                       focus:outline-none focus:ring-1 focus:ring-[#001640] text-sm bg-white"
             placeholder="12.345.678-9"
           />
           <p className="text-[10px] text-[var(--color-text-muted)] mt-2 italic leading-relaxed">
@@ -362,8 +362,8 @@ const UserModalContent = ({
             required
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-            className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] px-3 py-2 
-                       focus:outline-none focus:ring-1 focus:ring-primary text-sm bg-white font-medium"
+            className="w-full border border-[var(--color-border)] rounded-xl px-3 py-2 
+                       focus:outline-none focus:ring-1 focus:ring-[#001640] text-sm bg-white font-medium"
           >
             {(currentUser?.role === 'SUPERADMIN' || (currentUser?.role === 'ADMIN' && isMainAdminFor(currentResidenceId || ''))) && (
               <option value="ADMIN">Administrador</option>
@@ -372,7 +372,7 @@ const UserModalContent = ({
             <option value="CONCIERGE">Conserje</option>
           </select>
           <p className="text-[10px] text-gray-500 mt-2 font-medium leading-relaxed">
-            {(currentUser?.role === 'ADMIN' && !isMainAdminFor(currentResidenceId || '')) 
+            {(currentUser?.role === 'ADMIN' && !isMainAdminFor(currentResidenceId || ''))
               ? 'Como Administrador, puedes gestionar Propietarios y Conserjes. Solo el Administrador Principal puede crear otros administradores.'
               : 'Los Responsables Asignados solo pueden ser creados por Propietarios'}
           </p>
@@ -389,9 +389,9 @@ const UserModalContent = ({
         <div className="flex gap-3 ml-auto">
           <button
             type="submit"
-            className="bg-primary text-white px-8 py-3 rounded-[var(--radius-sm)] 
-                       hover:bg-primary/90 active:scale-[0.97] transition-all 
-                       text-[11px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20 border border-primary/20"
+            className="bg-[#001640] text-white px-8 py-3 rounded-xl 
+                       hover:bg-[#002b7a] active:scale-[0.97] transition-all 
+                       text-[11px] font-bold uppercase tracking-widest shadow-[var(--shadow-surgical)] border border-[#001640]/20"
           >
             {editingUser ? 'ACTUALIZAR' : 'CREAR USUARIO'}
           </button>
@@ -410,7 +410,7 @@ export const AdminUsers = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showModal, setShowModal] = useState(false);
-  
+
   // Link state
   const [setupLink, setSetupLink] = useState<string | null>(null);
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -439,6 +439,8 @@ export const AdminUsers = () => {
   const [filterRole, setFilterRole] = useState<UserRole | ''>('');
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
 
   const [formData, setFormData] = useState<CreateUserDto>({
     email: '',
@@ -501,7 +503,7 @@ export const AdminUsers = () => {
           payload.residenceId = impersonatedResidenceId;
         }
         const createdUserResult = await usersApi.create(payload);
-        
+
         // Show setup link if returned
         // La API puede devolver la data directamente o envuelta dependiento de Axios
         const userData = (createdUserResult as any).data || createdUserResult;
@@ -639,6 +641,19 @@ export const AdminUsers = () => {
     });
   }, [users, filterRole, filterActive, searchTerm]);
 
+  // Resetear página cuando cambian los filtros o la búsqueda
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterRole, filterActive]);
+
+  // Usuarios paginados para la vista de lista
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredUsers, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
   // Filtrar jerarquía (Optimizado)
   const filteredHierarchy = useMemo(() => {
     return hierarchy.filter(owner => {
@@ -683,8 +698,6 @@ export const AdminUsers = () => {
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
-              <p className="text-gray-600 mt-1">Administra todos los usuarios del sistema</p>
             </div>
             <button
               onClick={() => {
@@ -692,10 +705,10 @@ export const AdminUsers = () => {
                 resetForm();
                 setShowModal(true);
               }}
-              className="bg-primary text-white px-8 py-3 rounded-[var(--radius-sm)] 
-                         hover:bg-primary/90 active:scale-[0.97] transition-all 
+              className="bg-[#001640] text-white px-8 py-3 rounded-xl 
+                         hover:bg-[#002b7a] active:scale-[0.97] transition-all 
                          flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest 
-                         shadow-lg shadow-primary/20 border border-primary/20"
+                         shadow-[var(--shadow-surgical)] border border-[#001640]/20"
             >
               <span className="material-symbols-outlined text-xl">person_add</span>
               NUEVO USUARIO
@@ -706,14 +719,14 @@ export const AdminUsers = () => {
 
 
           {/* Barra de Búsqueda y Filtros */}
-          <div className="flex flex-col gap-4 mb-6">
+          <div className="bg-white rounded-xl border border-[var(--color-border)] shadow-[var(--shadow-surgical)] p-6 mb-6">
             <div className="flex flex-col md:flex-row gap-4 justify-between items-end">
               {/* Tabs */}
               <div className="flex gap-2">
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-[var(--radius-sm)] font-bold text-[10px] tracking-[0.15em] uppercase transition-all duration-200 border ${viewMode === 'list'
-                    ? 'bg-primary text-white border-primary shadow-md'
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-[10px] tracking-[0.15em] uppercase transition-all duration-200 border ${viewMode === 'list'
+                    ? 'bg-[#001640] text-white border-[#001640] shadow-md'
                     : 'bg-[#F8FAFC] text-gray-500 border-gray-200 hover:text-gray-900 hover:border-gray-400'
                     }`}
                 >
@@ -722,8 +735,8 @@ export const AdminUsers = () => {
                 </button>
                 <button
                   onClick={() => setViewMode('hierarchy')}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-[var(--radius-sm)] font-bold text-[10px] tracking-[0.15em] uppercase transition-all duration-200 border ${viewMode === 'hierarchy'
-                    ? 'bg-primary text-white border-primary shadow-md'
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-[10px] tracking-[0.15em] uppercase transition-all duration-200 border ${viewMode === 'hierarchy'
+                    ? 'bg-[#001640] text-white border-[#001640] shadow-md'
                     : 'bg-[#F8FAFC] text-gray-500 border-gray-200 hover:text-gray-900 hover:border-gray-400'
                     }`}
                 >
@@ -734,13 +747,25 @@ export const AdminUsers = () => {
 
               {/* Filtros Globales */}
               <div className="flex gap-4 w-full md:w-auto">
+
+                <select
+                  value={filterActive}
+                  onChange={(e) => setFilterActive(e.target.value as 'all' | 'active' | 'inactive')}
+                  className="border border-[var(--color-border)] rounded-xl px-3 py-2 
+                               focus:outline-none focus:ring-1 focus:ring-[#001640] text-sm bg-white"
+                >
+                  <option value="all">Todos los estados</option>
+                  <option value="active">Activos</option>
+                  <option value="inactive">Inactivos</option>
+                </select>
+
                 {/* Filtro por Rol (Global) */}
                 <div className="w-full md:w-48">
                   <select
                     value={filterRole}
                     onChange={(e) => setFilterRole(e.target.value as UserRole | '')}
-                    className="w-full border border-gray-200 rounded-[var(--radius-sm)] px-4 py-2 
-                               focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary h-[42px] 
+                    className="w-full border border-gray-200 rounded-xl px-4 py-2 
+                               focus:outline-none focus:ring-2 focus:ring-[#001640]/20 focus:border-[#001640] h-[42px] 
                                text-[11px] font-bold uppercase tracking-widest bg-white text-gray-700 shadow-sm transition-all"
                   >
                     <option value="">Todos los roles</option>
@@ -765,11 +790,72 @@ export const AdminUsers = () => {
                     }
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full border border-[var(--color-border)] rounded-[var(--radius-sm)] pl-10 pr-4 py-2.5 
-                               focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm bg-white"
+                    className="w-full border border-[var(--color-border)] rounded-xl pl-10 pr-4 py-2.5 
+                               focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm bg-white shadow-[var(--shadow-surgical)]"
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-black/5 flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em]">
+                {viewMode === 'list' ? (
+                  <>MOSTRANDO {Math.min(currentPage * itemsPerPage, filteredUsers.length)} DE {filteredUsers.length} USUARIOS</>
+                ) : (
+                  <>MOSTRANDO {filteredHierarchy.length} DE {hierarchy.length} PROPIETARIOS</>
+                )}
+              </div>
+
+              {viewMode === 'list' && totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    <span className="material-symbols-outlined text-sm">chevron_left</span>
+                  </button>
+
+                  <div className="flex items-center">
+                    {[...Array(totalPages)].map((_, i) => {
+                      const pageNum = i + 1;
+                      // Mostrar solo algunas páginas si hay muchas
+                      if (
+                        totalPages > 7 &&
+                        pageNum !== 1 &&
+                        pageNum !== totalPages &&
+                        Math.abs(pageNum - currentPage) > 1
+                      ) {
+                        if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                          return <span key={pageNum} className="px-1 text-gray-400">...</span>;
+                        }
+                        return null;
+                      }
+
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`min-w-[28px] h-7 rounded-lg text-[10px] font-bold transition-all border ${currentPage === pageNum
+                            ? 'bg-[#001640] text-white border-[#001640] shadow-sm'
+                            : 'text-gray-500 border-transparent hover:bg-gray-50'
+                            }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="p-1.5 rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    <span className="material-symbols-outlined text-sm">chevron_right</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -779,40 +865,21 @@ export const AdminUsers = () => {
             </div>
           ) : viewMode === 'list' ? (
             /* Vista Lista */
-            <div className="bg-[var(--color-surface)] rounded-[var(--radius-sm)] border border-[var(--color-border)] overflow-hidden shadow-sm animate-in fade-in duration-500">
+            <div className="bg-white rounded-xl border border-black/5 overflow-hidden shadow-[var(--shadow-surgical)] animate-in fade-in duration-500">
               {/* Filtros */}
-              <div className="p-4 bg-gray-50 border-b flex gap-4 flex-wrap">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                  <select
-                    value={filterActive}
-                    onChange={(e) => setFilterActive(e.target.value as 'all' | 'active' | 'inactive')}
-                    className="border border-[var(--color-border)] rounded-[var(--radius-sm)] px-3 py-2 
-                               focus:outline-none focus:ring-1 focus:ring-primary text-sm bg-white"
-                  >
-                    <option value="all">Todos</option>
-                    <option value="active">Activos</option>
-                    <option value="inactive">Inactivos</option>
-                  </select>
-                </div>
-                <div className="flex items-end">
-                  <span className="text-sm text-gray-600">
-                    {filteredUsers.length} de {users.length} usuarios
-                  </span>
-                </div>
-              </div>
+
 
               {/* Tabla */}
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-[#001640]">
                     <tr>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Usuario</th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Rol</th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Estado</th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Último Acceso</th>
-                      <th className="px-6 py-4 text-left text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Creado</th>
-                      <th className="px-6 py-4 text-right text-[11px] font-bold text-gray-900 uppercase tracking-widest border-b">Acciones</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Usuario</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Rol</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Estado</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Último Acceso</th>
+                      <th className="px-6 py-4 text-left text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Creado</th>
+                      <th className="px-6 py-4 text-right text-[11px] font-bold text-white uppercase tracking-widest border-b border-white/10">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -825,7 +892,7 @@ export const AdminUsers = () => {
                               {searchTerm ? 'No se encontraron usuarios que coincidan' : 'No hay usuarios registrados'}
                             </div>
                             {searchTerm && (
-                              <button 
+                              <button
                                 onClick={() => setSearchTerm('')}
                                 className="text-primary text-[10px] font-bold uppercase tracking-widest hover:underline"
                               >
@@ -836,36 +903,54 @@ export const AdminUsers = () => {
                         </td>
                       </tr>
                     ) : (
-                      filteredUsers.map((user) => (
-                        <UserTableRow 
-                          key={user.id} 
-                          user={user} 
-                          canManage={canAdminManage(user)} 
-                          onEdit={handleEdit} 
-                          onToggleActive={handleToggleActive} 
-                          onReset={handleGenerateResetLink} 
-                          onDelete={canDelete ? handleDelete : undefined} 
+                      paginatedUsers.map((user) => (
+                        <UserTableRow
+                          key={user.id}
+                          user={user}
+                          canManage={canAdminManage(user)}
+                          onEdit={handleEdit}
+                          onToggleActive={handleToggleActive}
+                          onReset={handleGenerateResetLink}
+                          onDelete={canDelete ? handleDelete : undefined}
                         />
                       ))
                     )}
                   </tbody>
                 </table>
               </div>
+              {/* Paginador Inferior (Solo si hay muchas páginas) */}
+              {viewMode === 'list' && totalPages > 1 && (
+                <div className="px-6 py-4 bg-gray-50/50 border-t border-black/[0.03] flex justify-end items-center gap-3">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="h-8 w-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 bg-white hover:border-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    >
+                      <span className="material-symbols-outlined text-sm">chevron_left</span>
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="h-8 w-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 bg-white hover:border-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    >
+                      <span className="material-symbols-outlined text-sm">chevron_right</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             /* Vista Jerárquica */
-            <div className="bg-[var(--color-surface)] rounded-[var(--radius-sm)] border border-[var(--color-border)] overflow-hidden shadow-sm animate-in fade-in duration-500">
-              <div className="p-5 bg-[var(--color-background-subtle)] border-b border-[var(--color-border)]">
-                <h2 className="text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">account_tree</span>
-                  Propietarios → Responsables → Departamentos
+            <div className="bg-white rounded-xl border border-black/5 overflow-hidden shadow-[var(--shadow-surgical)] animate-in fade-in duration-500">
+              <div className="p-5 bg-[#001640] border-b border-white/10">
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <span className="material-symbols-outlined text-white/50">account_tree</span>
+                  Propietarios → Departamentos → Responsables
                 </h2>
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-sm text-gray-600">Haz clic en un propietario para expandir su información</p>
-                  <span className="text-sm text-gray-500">
-                    {filteredHierarchy.length} de {hierarchy.length} propietarios
-                  </span>
-                </div>
               </div>
 
               <div className="divide-y divide-gray-200">
@@ -877,7 +962,7 @@ export const AdminUsers = () => {
                         {searchTerm ? 'No se encontraron registros que coincidan' : 'No hay propietarios registrados'}
                       </div>
                       {searchTerm && (
-                        <button 
+                        <button
                           onClick={() => setSearchTerm('')}
                           className="text-primary text-[10px] font-bold uppercase tracking-widest hover:underline"
                         >
@@ -888,16 +973,16 @@ export const AdminUsers = () => {
                   </div>
                 ) : (
                   filteredHierarchy.map((owner) => (
-                    <HierarchyOwnerCard 
-                      key={owner.id} 
-                      owner={owner} 
-                      isExpanded={expandedOwners.has(owner.id)} 
-                      onToggleExpand={toggleOwnerExpand} 
-                      canDelete={canDelete} 
-                      onEdit={handleEdit} 
-                      onToggleActive={handleToggleActive} 
-                      onReset={handleGenerateResetLink} 
-                      onDelete={canDelete ? handleDelete : undefined} 
+                    <HierarchyOwnerCard
+                      key={owner.id}
+                      owner={owner}
+                      isExpanded={expandedOwners.has(owner.id)}
+                      onToggleExpand={toggleOwnerExpand}
+                      canDelete={canDelete}
+                      onEdit={handleEdit}
+                      onToggleActive={handleToggleActive}
+                      onReset={handleGenerateResetLink}
+                      onDelete={canDelete ? handleDelete : undefined}
                     />
                   ))
                 )}
@@ -917,7 +1002,7 @@ export const AdminUsers = () => {
         }}
         title={editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
       >
-        <UserModalContent 
+        <UserModalContent
           editingUser={editingUser}
           formData={formData}
           setFormData={setFormData}
@@ -933,7 +1018,7 @@ export const AdminUsers = () => {
       </Modal>
 
       {/* Modal for Setup Link */}
-      <SetupLinkModal 
+      <SetupLinkModal
         isOpen={showLinkModal}
         onClose={() => setShowLinkModal(false)}
         setupLink={setupLink}
